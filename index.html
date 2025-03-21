@@ -29,6 +29,16 @@
     <link href="css/content.css" rel="stylesheet">
     <link href="css/contact.css" rel="stylesheet">
     <script src="js/content-loader.js"></script>
+    <!-- 添加 highlight.js 样式 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <!-- 添加 highlight.js 主库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <!-- 添加常用语言支持 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
 </head>
 <body class="bg-white text-primary min-h-screen flex flex-col">
     <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -389,5 +399,12 @@
             window.contentManager.hideContent();
         });
     </script>
+    <!-- 自动高亮所有代码块 -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        hljs.highlightAll();
+      });
+    </script>
+
 </body>
 </html>
