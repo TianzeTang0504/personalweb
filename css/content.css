@@ -91,19 +91,20 @@
 
 /* Code blocks */
 .content-body pre {
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin: 2rem 0;
+    background-color: #f6f8fa;
+    border-radius: 6px;
+    padding: 16px;
+    overflow: auto;
+    margin: 1em 0;
+    font-family: 'SF Mono', 'Consolas', 'Liberation Mono', 'Menlo', 'Courier', monospace;
 }
 
 .content-body code {
-    font-family: 'SF Mono', monospace;
-    font-size: 0.875rem;
-    background-color: #f8f9fa;
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.25rem;
+    font-family: 'SF Mono', 'Consolas', 'Liberation Mono', 'Menlo', 'Courier', monospace;
+    font-size: 0.9em;
+    padding: 0.2em 0.4em;
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
 }
 
 .content-body pre code {
@@ -199,4 +200,101 @@
     50% {
         transform: translateY(-0.25rem);
     }
+}
+
+/* 代码块滚动条样式 */
+.content-body pre::-webkit-scrollbar {
+    height: 8px;
+}
+
+.content-body pre::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.content-body pre::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.content-body pre::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 代码高亮主题自定义 */
+.content-body pre code .hljs {
+    background: transparent;
+    padding: 0;
+}
+
+.content-body pre code .hljs-keyword,
+.content-body pre code .hljs-selector-tag,
+.content-body pre code .hljs-title,
+.content-body pre code .hljs-section,
+.content-body pre code .hljs-doctag,
+.content-body pre code .hljs-subst {
+    color: #d73a49;
+}
+
+.content-body pre code .hljs-string,
+.content-body pre code .hljs-attr,
+.content-body pre code .hljs-template-tag {
+    color: #032f62;
+}
+
+.content-body pre code .hljs-comment,
+.content-body pre code .hljs-quote {
+    color: #6a737d;
+    font-style: italic;
+}
+
+.content-body pre code .hljs-number,
+.content-body pre code .hljs-literal {
+    color: #005cc5;
+}
+
+.content-body pre code .hljs-variable,
+.content-body pre code .hljs-template-variable {
+    color: #24292e;
+}
+
+.content-body pre code .hljs-function {
+    color: #6f42c1;
+}
+
+.content-body pre code .hljs-built_in {
+    color: #005cc5;
+}
+
+.content-body pre code .hljs-class .hljs-title {
+    color: #22863a;
+}
+
+.content-body pre code .hljs-tag {
+    color: #22863a;
+}
+
+.content-body pre code .hljs-meta {
+    color: #6a737d;
+}
+
+.content-body pre code .hljs-symbol,
+.content-body pre code .hljs-bullet,
+.content-body pre code .hljs-addition,
+.content-body pre code .hljs-variable,
+.content-body pre code .hljs-template-tag,
+.content-body pre code .hljs-template-variable {
+    color: #22863a;
+}
+
+.content-body pre code .hljs-emphasis {
+    font-style: italic;
+}
+
+.content-body pre code .hljs-strong {
+    font-weight: bold;
+}
+
+.content-body pre code .hljs-link {
+    text-decoration: underline;
 }
