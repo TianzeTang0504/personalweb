@@ -240,7 +240,7 @@ import tensorflow as tf
 
 app = FastAPI()
 
-// Load NLP models
+# Load NLP models
 intent_model = tf.saved_model.load("./models/intent_classifier")
 entity_model = tf.saved_model.load("./models/entity_recognizer")
 response_model = tf.saved_model.load("./models/response_generator")
@@ -257,16 +257,16 @@ class Response(BaseModel):
 
 @app.post("/api/chat", response_model=Response)
 async def process_message(message: Message):
-    // Extract intent and entities
+    # Extract intent and entities
     intent = intent_model(message.text)
     entities = entity_model(message.text)
     
-    // Generate appropriate response
+    # Generate appropriate response
     response_text, confidence = response_model(
         message.text, intent, entities, message.user_id, message.conversation_id
     )
     
-    // Get suggested next actions
+    # Get suggested next actions
     suggested_actions = get_suggested_actions(intent, entities)
     
     return Response(
@@ -1202,6 +1202,9 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
             
             // Set content
             contentContainer.innerHTML = contentHTML;
+            
+            // 初始化代码高亮
+            hljs.highlightAll();
             
             // Add event listeners for interactive elements
             this.setupInteractiveElements();
