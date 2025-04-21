@@ -1,27 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Projects data for the "Load More" functionality
     const additionalProjects = [
-        {
-            title: "Voice Recognition System",
-            description: "A real-time speech recognition system that accurately transcribes audio input into text.",
-            tags: ["TensorFlow", "PyTorch", "WebRTC"],
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>`,
-            id: "project4"
-        },
-        {
-            title: "Computer Vision for Healthcare",
-            description: "AI models that assist radiologists in detecting irregularities in medical images.",
-            tags: ["Python", "OpenCV", "Deep Learning"],
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
-            id: "project5"
-        },
-        {
-            title: "Recommendation Engine",
-            description: "A content recommendation system using collaborative filtering and neural networks.",
-            tags: ["Machine Learning", "Flask", "PostgreSQL"],
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-            id: "project6"
-        }
+        // {
+        //     title: "Voice Recognition System",
+        //     description: "A real-time speech recognition system that accurately transcribes audio input into text.",
+        //     tags: ["TensorFlow", "PyTorch", "WebRTC"],
+        //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>`,
+        //     id: "project4"
+        // },
+        // {
+        //     title: "Computer Vision for Healthcare",
+        //     description: "AI models that assist radiologists in detecting irregularities in medical images.",
+        //     tags: ["Python", "OpenCV", "Deep Learning"],
+        //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
+        //     id: "project5"
+        // },
+        // {
+        //     title: "Recommendation Engine",
+        //     description: "A content recommendation system using collaborative filtering and neural networks.",
+        //     tags: ["Machine Learning", "Flask", "PostgreSQL"],
+        //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+        //     id: "project6"
+        // }
     ];
 
     // Function to create project element

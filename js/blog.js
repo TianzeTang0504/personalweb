@@ -1,30 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Blog post data for a potential "Load More" functionality
-    const additionalBlogPosts = [
-        {
-            title: "Reinforcement Learning: A Practical Introduction",
-            excerpt: "Learn the basics of reinforcement learning and how it's being applied across different domains.",
-            date: "January 15, 2023",
-            readTime: "7 min read",
-            tags: ["AI", "Machine Learning"],
-            id: "blog4"
-        },
-        {
-            title: "Setting Up Your Deep Learning Environment",
-            excerpt: "A comprehensive guide to configuring your machine for deep learning with CUDA, PyTorch, and TensorFlow.",
-            date: "December 3, 2022",
-            readTime: "10 min read",
-            tags: ["Deep Learning", "Setup"],
-            id: "blog5"
-        },
-        {
-            title: "Transfer Learning: Leveraging Pre-Trained Models",
-            excerpt: "How to use transfer learning to achieve state-of-the-art results with limited data and computational resources.",
-            date: "November 18, 2022",
-            readTime: "8 min read",
-            tags: ["Deep Learning", "Transfer Learning"],
-            id: "blog6"
-        }
+    // Blog data for the "Load More" functionality
+    const additionalBlogs = [
+        // {
+        //     title: "The Future of AI in Healthcare",
+        //     excerpt: "Exploring how artificial intelligence is revolutionizing patient care and medical research.",
+        //     date: "2024-02-15",
+        //     readTime: "8 min read",
+        //     id: "blog4"
+        // },
+        // {
+        //     title: "Building Scalable Microservices",
+        //     excerpt: "Best practices and patterns for designing and implementing microservices architecture.",
+        //     date: "2024-02-10",
+        //     readTime: "10 min read",
+        //     id: "blog5"
+        // },
+        // {
+        //     title: "The Ethics of AI Development",
+        //     excerpt: "A deep dive into the ethical considerations and responsibilities in AI development.",
+        //     date: "2024-02-05",
+        //     readTime: "12 min read",
+        //     id: "blog6"
+        // }
     ];
 
     // Function to create blog post element
@@ -61,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const blogGrid = document.querySelector('#blog .grid');
             if (blogGrid) {
-                additionalBlogPosts.forEach(blog => {
+                additionalBlogs.forEach(blog => {
                     const blogElement = createBlogElement(blog);
                     blogGrid.appendChild(blogElement);
                 });
@@ -85,18 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const wordCount = text.split(/\s+/).length;
         const readingTimeMinutes = Math.ceil(wordCount / 200); // Assuming average reading speed of 200 wpm
         
-        // Add reading time indicator if it doesn't exist yet
-        if (!excerpt.nextElementSibling || !excerpt.nextElementSibling.classList.contains('reading-time')) {
-            const readingTime = document.createElement('div');
-            readingTime.className = 'text-xs text-gray-500 mb-4 reading-time';
-            readingTime.innerHTML = `
-                <svg class="inline-block h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                </svg>
-                ${readingTimeMinutes} min read
-            `;
-            excerpt.after(readingTime);
-        }
     });
     
     // Add click event listeners to blog post links

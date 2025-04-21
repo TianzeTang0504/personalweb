@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         project: {
             project1: {
                 title: "Natural Language Processing API",
-                date: "October 2023",
+                date: "April 2025",
                 tags: ["Python", "Flask", "HuggingFace", "NLP", "API"],
                 content: `
                     <div class="content-body">
@@ -332,107 +332,117 @@ async def process_message(message: Message):
         },
         blog: {
             blog1: {
-                title: "GPT-4 and the Future of AI",
-                date: "April 12, 2023",
-                author: "Alex Mitchell",
-                readTime: "7 min read",
+                title: "Use Agent AI and Cursor to build a personal website",
+                date: "April 12, 2025",
+                author: "TTZ",
+                readTime: "3 min read",
                 content: `
                     <div class="content-body">
-                        <p>With the release of GPT-4, we've reached another milestone in artificial intelligence. This exploration looks at GPT-4's capabilities and what they mean for the future of AI and its applications across various industries.</p>
+                        <p><em>The source code of this personal website can be found on <a href="https://github.com/TianzeTang0504/personalweb" target="_blank">GitHub</a>.</em></p>
+                        <p>Although large language models (such as GPT) have shown strong capabilities in code and engineering, they still encounter some difficulties for complex multi-step tasks and work that requires external tools. Compared with humans, traditional large language models are more like a fully automatic encyclopedia. Many people have noticed this problem and hope that AI can truly solve problems in human ways of thinking.</p>
                         
-                        <h2>The Evolution of Language Models</h2>
-                        <p>GPT-4 represents a significant leap forward in language model capabilities. While its architecture remains similar to its predecessor, GPT-3, the improvements in its performance, reliability, and versatility are substantial. GPT-4 demonstrates enhanced understanding of nuance, context, and intent, enabling it to produce more coherent, creative, and accurate outputs.</p>
+                        <p>Some time ago, I noticed an AI called <strong><a href="https://flowith.io/blank" target="_blank">Flowith</a></strong>. The team claims that Flowith can conduct complete, engineering-style multi-step thinking for the questions you ask, and can complete a complete project from scratch. If it is really that easy to use, combined with Cursor, I should be able to build a personal website very quickly (It turned out to be true. Without knowing any front-end or back-end languages, it took me less than three hours to build and launch this website from scratch).</p>
                         
-                        <p>The evolution of these models follows an interesting trajectory:</p>
-                        <ul>
-                            <li><strong>GPT-1 (2018):</strong> Introduced the basic transformer architecture for language modeling</li>
-                            <li><strong>GPT-2 (2019):</strong> Scaled up the model by 10x, showing surprising emergent abilities</li>
-                            <li><strong>GPT-3 (2020):</strong> Scaled up by another 100x, demonstrating impressive few-shot learning abilities</li>
-                            <li><strong>GPT-4 (2023):</strong> Multi-modal capabilities and significant improvements in reasoning</li>
-                        </ul>
+                        <h2>Use Flowith to get the whole workflow and a demo</h2>
+                        <p>This part is what I really want to share from this project.
+                        Before I use Flowith, I had the idea to build this website.
+                        I also know that I can use GPT to help me.
+                        But asking GPT to build a website is not a good idea because I need to know waht I should ask.
+                        But I do not know website building at all. So I just give up.
+                        </p>
+
+                        <p>
+                        So when I see Flowith which can complete a project from scratch, I thought it may work.
+                        The actual experience is much better than I expected.
+                        I only told Flowith "I want to build a personla website."
+                        Then Flowith asked me 5 questions:
+                        <ol>
+                            <li>
+                                <strong>What is the purpose of the website?</strong>
+                                </li>
+                            <li>
+                                <strong>What is the design style of the website?</strong>
+                                </li>
+                            <li>
+                                <strong>Do you need any specific functions?</strong>
+                                </li>
+                            <li>
+                                <strong>Do you have any reference websites?</strong>
+                                </li>
+                            <li>
+                                <strong>Do you have any experience with website building?</strong>
+                                </li>
+                                
+                        </ol>
+                        </p>
+                        <p>
+                        After answering these questions, Flowith started to work for like 15 mins.
+                        It devided the project into 5 parts:
+                        <ol>
+                            <li>
+                                <strong>How to generate the website?</strong>
+                                </li>
+                            <li>
+                                <strong>How to design the website?</strong>
+                                </li>
+                            <li>
+                                <strong>How to register the domain name?</strong>
+                                </li>
+                            <li>
+                                <strong>Where to host the website?</strong>
+                                </li>
+                            <li>
+                                <strong>Specific instructions for hosting the website.</strong>
+                                </li>
+                                
+                        </ol>
+                        </p>
+                        <p>
+                        For each part, Flowith will give me a detailed plan like comparison of domain providers, common mistakes when hosting a website, etc.
+                        I believe that even though it is your first day on the Internet, you can at least know the basic process of building a website.
+                        And the most important, <strong>you will know what questions to ask when you build a website.</strong>
+                        </p>
+                        <p>
+                        At last, Flowith gave me a demo of the website which was already very good.
+                        80% of the website you see now are the same as the demo.
+                        </p>
+
                         
-                        <h2>Key Capabilities of GPT-4</h2>
-                        <p>GPT-4 introduces several noteworthy capabilities that set it apart from previous models:</p>
+                        <h2>Use Cursor to complete the entire page</h2>
+                        <p>The demo from Flowith is already very good.
+                        I just need to use Cursor to adjust some details.
+                        For example, I want to add a navigation bar to the website, I only need to tell Cursor to add a navigation bar on main page, and it will scan the whole project and complete the entire work.
+                        It is so easy and convenient.
+                        The only thing I need to do is to tell Cursor what I want to do.
+                        However, here I have two suggestions for you:
+                        <ol>
+                            <li>
+                                <strong>Make sure you have a good version control system like GitHub.</strong>
+                                When you use Cursor to complete the entire page, it will generate a lot of changes.
+                                Sometimes after many changes you find that the original code is better, but you can find it (I waste a lot of time on this).
+                                If you don't have a good version control system, you may not be able to manage the changes and the code may be lost.
+                                </li>
+                            <li>
+                                <strong>Make sure you at least understand the basic structure of the project and what is going on.</strong>
+                                Even though I do not learn about js and css at all, I have basic knowledge about other languages.
+                                So at least I know each file and parts' function.
+                                When the project is complex, totally rely on Cursor may not be a good idea.
+                                </li>
+                                    
+                        </ol>
+                        </p>
                         
-                        <h3>Multimodal Understanding</h3>
-                        <p>Unlike its predecessors, GPT-4 can process both text and images as inputs. This allows it to interpret visual information and provide responses based on the combined context, opening up many new application possibilities in fields like accessibility, education, and visual reasoning.</p>
-                        
-                        <h3>Enhanced Reasoning</h3>
-                        <p>Perhaps the most significant improvement in GPT-4 is its reasoning capabilities. The model demonstrates a better understanding of logic, causality, and complex instructions. It can break down multi-step problems, maintain logical consistency across longer outputs, and handle nuanced scenarios more effectively.</p>
-                        
-                        <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                            <p class="font-medium mb-2">Example: Solving a physics problem</p>
-                            <p><strong>Prompt:</strong> A ball is thrown upward with an initial velocity of 15 m/s from a height of 2 meters. Assuming gravity is 9.8 m/s², when will the ball hit the ground?</p>
-                            <p><strong>GPT-4 Response:</strong> To solve this problem, I'll use the kinematic equation:</p>
-                            <p>y = y₀ + v₀t - (1/2)gt²</p>
-                            <p>Where:</p>
-                            <ul>
-                                <li>y is the final position (0 when the ball hits the ground)</li>
-                                <li>y₀ is the initial height (2 meters)</li>
-                                <li>v₀ is the initial velocity (15 m/s upward)</li>
-                                <li>g is the acceleration due to gravity (9.8 m/s²)</li>
-                                <li>t is the time it takes for the ball to hit the ground</li>
-                            </ul>
-                            <p>Substituting our values:</p>
-                            <p>0 = 2 + 15t - (1/2)(9.8)t²</p>
-                            <p>0 = 2 + 15t - 4.9t²</p>
-                            <p>Rearranging to standard form:</p>
-                            <p>4.9t² - 15t - 2 = 0</p>
-                            <p>Using the quadratic formula: t = [-b ± √(b² - 4ac)]/2a</p>
-                            <p>t = [15 ± √(15² - 4(4.9)(-2))]/2(4.9)</p>
-                            <p>t = [15 ± √(225 + 39.2)]/9.8</p>
-                            <p>t = [15 ± √264.2]/9.8</p>
-                            <p>t = [15 ± 16.25]/9.8</p>
-                            <p>t = 3.19 seconds or t = -0.13 seconds</p>
-                            <p>Since we can't have negative time in this physical scenario, the ball hits the ground after approximately 3.19 seconds.</p>
-                        </div>
-                        
-                        <h3>Improved Factuality</h3>
-                        <p>GPT-4 shows reduced hallucinations and improved factual accuracy compared to GPT-3.5. This is crucial for applications requiring reliable information, though it's important to note that the model can still make errors and is not designed to be a replacement for expert knowledge or fact-checking.</p>
-                        
-                        <h2>Implications for Various Industries</h2>
-                        
-                        <h3>Healthcare</h3>
-                        <p>GPT-4's enhanced capabilities could transform healthcare through improved medical documentation, patient triage, and information retrieval. Its ability to process both text and images opens up possibilities for analyzing medical images alongside clinical notes, providing more comprehensive assistance to healthcare professionals.</p>
-                        
-                        <p>However, significant challenges remain, particularly around safety, regulatory compliance, and the risk of misinformation. GPT-4 is not a medical device and should not be used to diagnose or treat patients without proper medical oversight.</p>
-                        
-                        <h3>Education</h3>
-                        <p>In education, GPT-4 can provide personalized learning experiences, generate educational content, and assist teachers with administrative tasks. Its ability to understand complex concepts and explain them at different levels of complexity makes it a powerful tool for personalized education.</p>
-                        
-                        <p>The model can adapt to different learning styles and paces, providing explanations tailored to individual students' needs. It can also generate practice problems, offer immediate feedback, and help students explore concepts from multiple angles.</p>
-                        
-                        <h3>Legal</h3>
-                        <p>The legal industry stands to benefit from GPT-4's enhanced reasoning and document processing capabilities. The model can assist with contract review, legal research, and document drafting, potentially reducing the time lawyers spend on routine tasks and allowing them to focus on more complex aspects of their work.</p>
-                        
-                        <h2>Ethical Considerations and Limitations</h2>
-                        <p>While GPT-4 represents significant progress, it's essential to acknowledge its limitations and the ethical considerations surrounding its use:</p>
-                        
-                        <h3>Bias and Fairness</h3>
-                        <p>Like all AI systems trained on human-generated data, GPT-4 can reflect and potentially amplify biases present in its training data. Efforts have been made to reduce harmful biases, but vigilance is required when deploying these models, especially in sensitive contexts.</p>
-                        
-                        <h3>Transparency and Explainability</h3>
-                        <p>The complexity of large language models like GPT-4 makes them difficult to fully understand and audit. This lack of transparency can be problematic, especially in high-stakes decisions where explainability is crucial.</p>
-                        
-                        <h3>Environmental Impact</h3>
-                        <p>The computational resources required to train models like GPT-4 have significant environmental implications. The AI community needs to prioritize more energy-efficient approaches to model development and deployment.</p>
-                        
-                        <h2>Looking Ahead: The Future of AI</h2>
-                        <p>GPT-4 offers a glimpse into the future direction of AI development. Several trends are likely to shape the field in the coming years:</p>
-                        
-                        <h3>Integration with Other Systems</h3>
-                        <p>Future AI systems will likely combine language models like GPT-4 with other specialized components, creating more comprehensive and capable systems that can interact with the world in more meaningful ways.</p>
-                        
-                        <h3>Specialized Domain Models</h3>
-                        <p>While general-purpose models like GPT-4 are impressive, there's growing interest in developing specialized models fine-tuned for specific domains such as medicine, law, or scientific research, where domain-specific knowledge and constraints are crucial.</p>
-                        
-                        <h3>Human-AI Collaboration</h3>
-                        <p>The most promising path forward involves humans and AI systems working together, leveraging the strengths of both. This collaborative approach can mitigate many of the risks associated with AI while maximizing its benefits.</p>
-                        
-                        <h2>Conclusion</h2>
-                        <p>GPT-4 represents an important step forward in artificial intelligence, demonstrating improved capabilities across numerous dimensions. While it's not without limitations and risks, it opens up new possibilities for how we can use AI to enhance human creativity, productivity, and knowledge.</p>
-                        
-                        <p>As we continue to develop and deploy these powerful technologies, a thoughtful and responsible approach is essential. By considering the ethical implications, addressing limitations, and focusing on human-AI collaboration, we can work toward a future where AI systems like GPT-4 serve as tools that augment our capabilities and help us address important challenges.</p>
+                        <h2>Host this website on Edgeone Pages from Tencent</h2>
+                        <p>
+                        When I was looking for a place to host this website, I found that <strong><a href="https://edgeone.ai/document/160427672992178176" target="_blank">Edgeone Pages</a></strong> from Tencent is a good choice.
+                        It is a free service provided by Tencent, and it is very easy to use.
+                        I have used Alibaba Cloud before, but it is paid and the interface is cumbersome to use, and it is very troublesome to access from outside of mainland China.
+                        Edgeone Pages is very convenient, free, and accessible from anywhere.
+                        The only thing I need to do is to upload the source code to GitHub and connect it to Edgeone Pages.
+                        Then, I can access the website by visiting the URL provided by Edgeone Pages.
+                        If you have your own domain name, you can also connect it to Edgeone Pages (I buy one on <strong>Namecheap</strong>, also very cheap).
+                        Also, when you update your code on GitHub, Edgeone Pages will automatically deploy the latest version of the website.
+                        </p>
                     </div>
                 `
             },
