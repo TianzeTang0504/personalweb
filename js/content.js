@@ -822,6 +822,20 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
                 console.error(`Content not found: ${type}/${id}`);
                 return;
             }
+
+            // Update navigation highlight
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            navLinks.forEach(link => {
+                link.classList.remove('text-accent');
+                link.classList.remove('bg-white/5');
+                
+                // Mapping type to href ID (project -> projects, blog -> blog)
+                const targetId = type === 'project' ? 'projects' : type;
+                if (link.getAttribute('href') === `#${targetId}`) {
+                    link.classList.add('text-accent');
+                    link.classList.add('bg-white/5');
+                }
+            });
             
             // Hide main content and show content view with fade effect
             mainContent.style.opacity = '0';

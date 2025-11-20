@@ -125,7 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Active section highlighting
-    const sections = document.querySelectorAll('section[id]');
+    // Update selector to include div elements that are scroll targets (projects, blog)
+    const sections = document.querySelectorAll('section[id], div[id="projects"], div[id="blog"]');
     const navLinks = document.querySelectorAll('nav a[href^="#"]');
 
     window.addEventListener('scroll', () => {
@@ -135,12 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         let current = '';
+        const scrollPosition = window.scrollY;
         
         sections.forEach(section => {
-            const sectionTop = section.offsetTop;
+            // Use getBoundingClientRect for accurate position relative to viewport + scrollY
+            const sectionTop = section.getBoundingClientRect().top + window.scrollY;
             const sectionHeight = section.clientHeight;
             
-            if (pageYOffset >= sectionTop - 160) {
+            if (scrollPosition >= sectionTop - 160) {
                 current = section.getAttribute('id');
             }
         });
