@@ -1,48 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Projects data for the "Load More" functionality
-    const additionalProjects = [
-        // {
-        //     title: "Voice Recognition System",
-        //     description: "A real-time speech recognition system that accurately transcribes audio input into text.",
-        //     tags: ["TensorFlow", "PyTorch", "WebRTC"],
-        //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>`,
-        //     id: "project4"
-        // },
-        // {
-        //     title: "Computer Vision for Healthcare",
-        //     description: "AI models that assist radiologists in detecting irregularities in medical images.",
-        //     tags: ["Python", "OpenCV", "Deep Learning"],
-        //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
-        //     id: "project5"
-        // },
-        // {
-        //     title: "Recommendation Engine",
-        //     description: "A content recommendation system using collaborative filtering and neural networks.",
-        //     tags: ["Machine Learning", "Flask", "PostgreSQL"],
-        //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-        //     id: "project6"
-        // }
+    // All Projects Data
+    const projectsData = [
+        {
+            title: "NLP API",
+            description: "A robust API for text analysis, sentiment detection, and language translation using transformer models.",
+            tags: ["Python", "Flask", "HuggingFace"],
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>`,
+            id: "project1"
+        },
+        {
+            title: "Image Generation App",
+            description: "This web application generates creative images from text prompts using Stable Diffusion models.",
+            tags: ["React", "Node.js", "Stable Diffusion"],
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`,
+            id: "project2"
+        }
     ];
+
+    const projectsGrid = document.querySelector('#projects .grid');
+    const loadMoreButton = document.getElementById('loadMoreProjects');
+    const INITIAL_COUNT = 3;
+    let currentCount = 0;
 
     // Function to create project element
     function createProjectElement(project) {
         const div = document.createElement('div');
-        div.className = 'bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md';
+        // Updated to match dark theme / glassmorphism
+        div.className = 'project-card glass rounded-lg overflow-hidden border border-gray-800 group';
         div.innerHTML = `
             <div class="p-6">
                 <div class="flex items-center mb-4">
-                    <div class="bg-accent/10 rounded-md p-3">
+                    <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
                         ${project.icon}
                     </div>
-                    <h3 class="ml-3 text-lg font-semibold text-gray-900">${project.title}</h3>
+                    <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">${project.title}</h3>
                 </div>
-                <p class="text-gray-600 mb-4">
+                <p class="text-gray-400 mb-4 text-sm">
                     ${project.description}
                 </p>
                 <div class="flex flex-wrap gap-2 mb-4">
-                    ${project.tags.map(tag => `<span class="text-xs bg-gray-100 px-2 py-1 rounded-md">${tag}</span>`).join('')}
+                    ${project.tags.map(tag => `<span class="project-tag">${tag}</span>`).join('')}
                 </div>
-                <a href="#" class="text-sm text-accent font-medium hover:underline view-project" data-id="${project.id}">View Project →</a>
+                <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="${project.id}">
+                    View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
             </div>
         `;
         
@@ -53,39 +54,54 @@ document.addEventListener('DOMContentLoaded', () => {
         return div;
     }
 
-    // Load more projects functionality
-    const loadMoreButton = document.getElementById('loadMoreProjects');
-    if (loadMoreButton) {
-        loadMoreButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            const projectsGrid = document.querySelector('#projects .grid');
+    function init() {
+        if (projectsGrid) {
+            projectsGrid.innerHTML = ''; // Clear HTML content
             
-            if (projectsGrid) {
-                // Add new projects to the grid
-                additionalProjects.forEach(project => {
-                    const projectElement = createProjectElement(project);
-                    projectsGrid.appendChild(projectElement);
-                });
-                
-                // Hide the button after loading all projects
-                loadMoreButton.style.display = 'none';
-                
-                // Add event listeners to the new project links
-                projectsGrid.querySelectorAll('.view-project').forEach(link => {
-                    link.addEventListener('click', handleProjectClick);
-                });
+            // Render all projects since count is 2 which is < INITIAL_COUNT
+            const initialProjects = projectsData.slice(0, INITIAL_COUNT);
+            initialProjects.forEach(project => {
+                projectsGrid.appendChild(createProjectElement(project));
+            });
+            currentCount = INITIAL_COUNT;
+
+            // Handle button visibility
+            if (projectsData.length > INITIAL_COUNT) {
+                if (loadMoreButton) {
+                    loadMoreButton.style.display = 'inline-flex';
+                    loadMoreButton.onclick = (e) => {
+                        e.preventDefault();
+                        const remainingProjects = projectsData.slice(currentCount);
+                        remainingProjects.forEach(project => {
+                            projectsGrid.appendChild(createProjectElement(project));
+                        });
+                        currentCount += remainingProjects.length;
+                        loadMoreButton.style.display = 'none';
+                    };
+                }
+            } else {
+                if (loadMoreButton) loadMoreButton.style.display = 'none';
             }
-        });
+        }
+        
+        // Event delegation on the grid
+        if (projectsGrid) {
+            projectsGrid.addEventListener('click', (e) => {
+                const link = e.target.closest('.view-project');
+                if (link) {
+                    handleProjectClick.call(link, e);
+                }
+            });
+        }
     }
-    
-    // Add click event listeners to project links
-    document.querySelectorAll('.view-project').forEach(link => {
-        link.addEventListener('click', handleProjectClick);
-    });
 
     function handleProjectClick(e) {
         e.preventDefault();
         const projectId = this.getAttribute('data-id');
-        window.contentManager.showContent('project', projectId);
+        if (window.contentManager) {
+            window.contentManager.showContent('project', projectId);
+        }
     }
+
+    init();
 });

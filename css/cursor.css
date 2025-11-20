@@ -1,0 +1,66 @@
+/* Custom Cursor Styles */
+body.custom-cursor-enabled {
+    cursor: none; /* Hide default cursor only when JS is active */
+}
+
+/* Fallback: if user prefers reduced motion or touch device */
+@media (hover: none) or (prefers-reduced-motion: reduce) {
+    body.custom-cursor-enabled {
+        cursor: auto;
+    }
+    .cursor-dot, .cursor-outline {
+        display: none !important;
+    }
+}
+
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 0 10px var(--accent-color);
+}
+
+.cursor-outline {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--accent-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    z-index: 9998;
+    pointer-events: none;
+    transition: width 0.2s, height 0.2s, background-color 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+    opacity: 0.5;
+}
+
+/* Hover state */
+body.hovering .cursor-outline {
+    width: 30px;
+    height: 30px;
+    background-color: rgba(0, 255, 157, 0.1);
+    border-color: transparent;
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+}
+
+body.hovering .cursor-dot {
+    opacity: 0; /* Optional: hide dot when hovering for cleaner look */
+}
+
+/* Click state */
+body.clicking .cursor-outline {
+    width: 30px;
+    height: 30px;
+    background-color: var(--accent-color);
+    opacity: 0.8;
+}
+

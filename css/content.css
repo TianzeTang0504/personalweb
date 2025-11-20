@@ -1,7 +1,7 @@
 /* Content page styling */
 #contentView {
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 6rem auto 2rem;
     padding: 4rem 1rem;
 }
 
@@ -17,14 +17,15 @@
 .content-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--text-color);
     line-height: 1.2;
     margin-bottom: 1.5rem;
+    font-family: 'SF Mono', monospace;
 }
 
 .content-meta {
     font-size: 0.875rem;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .content-meta-item {
@@ -40,21 +41,23 @@
 .content-body {
     font-size: 1.125rem;
     line-height: 1.8;
-    color: #333;
+    color: var(--text-color);
 }
 
 .content-body h2 {
     font-size: 1.875rem;
     font-weight: 600;
     margin: 3rem 0 1.5rem;
-    color: #1a1a1a;
+    color: var(--accent-color);
+    font-family: 'SF Mono', monospace;
 }
 
 .content-body h3 {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 2rem 0 1rem;
-    color: #1a1a1a;
+    color: var(--text-color);
+    font-family: 'SF Mono', monospace;
 }
 
 .content-body p {
@@ -62,7 +65,7 @@
 }
 
 .content-body a {
-    color: #0077ff;
+    color: var(--accent-color);
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
@@ -70,6 +73,7 @@
 
 .content-body a:hover {
     text-decoration-thickness: 2px;
+    text-shadow: 0 0 5px var(--accent-color);
 }
 
 .content-body ul, .content-body ol {
@@ -83,15 +87,22 @@
 
 .content-body ul li {
     list-style-type: disc;
+    color: var(--accent-color);
+}
+
+.content-body ul li span {
+    color: var(--text-color);
 }
 
 .content-body ol li {
     list-style-type: decimal;
+    color: var(--accent-color);
 }
 
 /* Code blocks */
 .content-body pre {
-    background-color: #f6f8fa;
+    background-color: #111;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 16px;
     overflow: auto;
@@ -103,23 +114,27 @@
     font-family: 'SF Mono', 'Consolas', 'Liberation Mono', 'Menlo', 'Courier', monospace;
     font-size: 0.9em;
     padding: 0.2em 0.4em;
-    background-color: rgba(27, 31, 35, 0.05);
+    background-color: rgba(0, 255, 157, 0.1);
     border-radius: 3px;
+    color: var(--accent-color);
 }
 
 .content-body pre code {
     padding: 0;
     background-color: transparent;
     border-radius: 0;
+    color: inherit;
 }
 
 /* Blockquotes */
 .content-body blockquote {
-    border-left: 4px solid #e5e7eb;
+    border-left: 4px solid var(--accent-color);
     padding-left: 1rem;
-    color: #4b5563;
+    color: var(--text-muted);
     font-style: italic;
     margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1rem;
 }
 
 /* Images */
@@ -128,6 +143,7 @@
     height: auto;
     border-radius: 0.5rem;
     margin: 2rem 0;
+    border: 1px solid var(--border-color);
 }
 
 .content-body figure {
@@ -136,23 +152,25 @@
 
 .content-body figcaption {
     text-align: center;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 0.875rem;
     margin-top: 0.5rem;
 }
 
 /* Interactive elements */
 .interactive-demo {
-    background-color: #f8f9fa;
+    background-color: rgba(255, 255, 255, 0.05);
     padding: 2rem;
     border-radius: 0.5rem;
     margin: 3rem 0;
+    border: 1px solid var(--border-color);
 }
 
 .interactive-demo-header {
     font-weight: 600;
     margin-bottom: 1.5rem;
-    color: #1a1a1a;
+    color: var(--text-color);
+    font-family: 'SF Mono', monospace;
 }
 
 /* Tags */
@@ -164,11 +182,12 @@
 }
 
 .content-tag {
-    background-color: #f0f0f0;
+    background-color: rgba(0, 255, 157, 0.1);
     padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    border-radius: 4px;
     font-size: 0.875rem;
-    color: #666;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
 }
 
 .typing-indicator {
@@ -179,10 +198,11 @@
     display: inline-block;
     width: 0.5rem;
     height: 0.5rem;
-    background-color: #666;
+    background-color: var(--accent-color);
     border-radius: 50%;
     margin-right: 0.25rem;
     animation: bounce 1s infinite;
+    box-shadow: 0 0 5px var(--accent-color);
 }
 
 .typing-indicator div:nth-child(2) {
@@ -208,83 +228,80 @@
 }
 
 .content-body pre::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #0a0a0a;
     border-radius: 4px;
 }
 
 .content-body pre::-webkit-scrollbar-thumb {
-    background: #888;
+    background: #333;
     border-radius: 4px;
 }
 
 .content-body pre::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--accent-color);
 }
 
-/* 代码高亮主题自定义 */
+/* 代码高亮主题自定义 - Dracular/Dark theme colors */
 .content-body pre code .hljs {
     background: transparent;
     padding: 0;
+    color: #f8f8f2;
 }
 
 .content-body pre code .hljs-keyword,
 .content-body pre code .hljs-selector-tag,
-.content-body pre code .hljs-title,
+.content-body pre code .hljs-literal,
 .content-body pre code .hljs-section,
-.content-body pre code .hljs-doctag,
+.content-body pre code .hljs-link {
+    color: #ff79c6;
+}
+
+.content-body pre code .hljs-function .hljs-keyword {
+    color: #ff79c6;
+}
+
 .content-body pre code .hljs-subst {
-    color: #d73a49;
+    color: #f8f8f2;
 }
 
 .content-body pre code .hljs-string,
 .content-body pre code .hljs-attr,
-.content-body pre code .hljs-template-tag {
-    color: #032f62;
-}
-
-.content-body pre code .hljs-comment,
-.content-body pre code .hljs-quote {
-    color: #6a737d;
-    font-style: italic;
-}
-
-.content-body pre code .hljs-number,
-.content-body pre code .hljs-literal {
-    color: #005cc5;
-}
-
-.content-body pre code .hljs-variable,
-.content-body pre code .hljs-template-variable {
-    color: #24292e;
-}
-
-.content-body pre code .hljs-function {
-    color: #6f42c1;
-}
-
-.content-body pre code .hljs-built_in {
-    color: #005cc5;
-}
-
-.content-body pre code .hljs-class .hljs-title {
-    color: #22863a;
-}
-
-.content-body pre code .hljs-tag {
-    color: #22863a;
-}
-
-.content-body pre code .hljs-meta {
-    color: #6a737d;
-}
-
 .content-body pre code .hljs-symbol,
 .content-body pre code .hljs-bullet,
 .content-body pre code .hljs-addition,
 .content-body pre code .hljs-variable,
 .content-body pre code .hljs-template-tag,
 .content-body pre code .hljs-template-variable {
-    color: #22863a;
+    color: #f1fa8c;
+}
+
+.content-body pre code .hljs-comment,
+.content-body pre code .hljs-quote,
+.content-body pre code .hljs-meta {
+    color: #6272a4;
+    font-style: italic;
+}
+
+.content-body pre code .hljs-number,
+.content-body pre code .hljs-built_in,
+.content-body pre code .hljs-type {
+    color: #bd93f9;
+}
+
+.content-body pre code .hljs-function,
+.content-body pre code .hljs-title,
+.content-body pre code .hljs-attribute {
+    color: #50fa7b;
+}
+
+.content-body pre code .hljs-class .hljs-title {
+    color: #8be9fd;
+}
+
+.content-body pre code .hljs-tag,
+.content-body pre code .hljs-name,
+.content-body pre code .hljs-regexp {
+    color: #ff79c6;
 }
 
 .content-body pre code .hljs-emphasis {
@@ -293,8 +310,4 @@
 
 .content-body pre code .hljs-strong {
     font-weight: bold;
-}
-
-.content-body pre code .hljs-link {
-    text-decoration: underline;
 }

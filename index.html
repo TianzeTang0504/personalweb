@@ -1,22 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Portfolio & Blog</title>
+    <title>AI Portfolio & Blog | Geek Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        primary: '#000000',
-                        secondary: '#f5f5f7',
-                        accent: '#0077ff',
+                        primary: '#e0e0e0', // Light gray text
+                        secondary: '#1a1a1a', // Dark surface
+                        dark: '#050505', // Deep background
+                        accent: '#00ff9d', // Cyberpunk Green
+                        'accent-hover': '#00cc7d',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        'geist-mono': ['SF Mono', 'monospace']
+                        mono: ['SF Mono', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+                        'geist-mono': ['SF Mono', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
                     }
                 }
             }
@@ -28,9 +32,10 @@
     <link href="css/blog.css" rel="stylesheet">
     <link href="css/content.css" rel="stylesheet">
     <link href="css/contact.css" rel="stylesheet">
+    <link href="css/cursor.css" rel="stylesheet">
     <script src="js/content-loader.js"></script>
     <!-- 添加 highlight.js 样式 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/dracula.min.css">
     <!-- 添加 highlight.js 主库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <!-- 添加常用语言支持 -->
@@ -40,353 +45,492 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
 </head>
-<body class="bg-white text-primary min-h-screen flex flex-col">
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <a href="#home" class="flex items-center logo-link">
-                        <svg class="h-8 w-8 mr-2" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 5C11.729 5 5 11.729 5 20C5 28.271 11.729 35 20 35C28.271 35 35 28.271 35 20C35 11.729 28.271 5 20 5ZM20 10C22.761 10 25 12.239 25 15C25 17.761 22.761 20 20 20C17.239 20 15 17.761 15 15C15 12.239 17.239 10 20 10ZM20 30C16.25 30 12.953 28.469 10.625 25.938C10.688 22.969 16.25 21.25 20 21.25C23.75 21.25 29.312 22.969 29.375 25.938C27.047 28.469 23.75 30 20 30Z" fill="currentColor"/>
-                        </svg>
-                        <span class="text-xl font-semibold font-geist-mono">TTZ AI</span>
-                    </a>
-                </div>
-                <nav class="hidden md:flex space-x-8">
-                    <a href="#home" class="text-gray-900 hover:text-accent px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
-                    <a href="#projects" class="text-gray-900 hover:text-accent px-3 py-2 rounded-md text-sm font-medium transition-colors">Projects</a>
-                    <a href="#blog" class="text-gray-900 hover:text-accent px-3 py-2 rounded-md text-sm font-medium transition-colors">Blog</a>
-                    <a href="#contact" class="text-gray-900 hover:text-accent px-3 py-2 rounded-md text-sm font-medium transition-colors">Contact</a>
-                </nav>
-                <button id="mobileMenuButton" class="md:hidden flex items-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
+<body class="bg-dark text-primary min-h-screen flex flex-col font-mono selection:bg-accent selection:text-black">
+    <header class="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
+        <!-- Music Toggle (Global Nav) -->
+        <button id="navMusicBtn" class="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full text-gray-400 hover:text-accent hover:bg-white/5 transition-all z-[60]" aria-label="Toggle Music">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+        </button>
+
+        <div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-4 relative">
+            
+            <!-- Left: Logo / System ID -->
+            <div>
+                <a href="#home" class="group flex items-center gap-2 focus:outline-none focus:shadow-none hover:drop-shadow-[0_0_8px_rgba(0,255,157,0.6)] transition-all duration-300">
+                    <div class="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+                    <span class="font-mono font-bold text-white text-lg tracking-widest group-hover:text-accent transition-colors">
+                        TTZ_AI<span class="text-gray-600 group-hover:text-gray-400 transition-colors">.sys</span>
+                    </span>
+                </a>
             </div>
+
+            <!-- Center: Decorative Line (Hidden on mobile) -->
+            <div class="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+
+            <!-- Right: Nav Links (Tactical Style) -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#home" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                    <span class="text-gray-600 mr-1">01.</span>HOME
+                </a>
+                <a href="#projects" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                    <span class="text-gray-600 mr-1">02.</span>PROJECT
+                </a>
+                <a href="#blog" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                    <span class="text-gray-600 mr-1">03.</span>BLOG
+                </a>
+                <a href="#contact" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                    <span class="text-gray-600 mr-1">04.</span>CONTACT
+                </a>
+            </nav>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobileMenuButton" class="md:hidden text-white hover:text-accent transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
         </div>
-        <div id="mobileMenu" class="hidden md:hidden px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-100">
-            <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Home</a>
-            <a href="#projects" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Projects</a>
-            <a href="#blog" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Blog</a>
-            <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Contact</a>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobileMenu" class="hidden md:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-b border-gray-800">
+            <div class="px-6 py-6 space-y-6 font-mono text-sm">
+                <a href="#home" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">01. HOME</a>
+                <a href="#projects" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">02. PROJECTS</a>
+                <a href="#blog" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">03. BLOGS</a>
+                <a href="#contact" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">04. CONTACT</a>
+            </div>
         </div>
     </header>
 
-    <main class="flex-grow">
+    <main class="flex-grow relative">
         <div id="mainContent">
             <!-- Hero Section -->
-            <section id="home" class="pt-20 pb-24 relative overflow-hidden">
-                <div class="absolute inset-0 z-0">
-                    <svg class="profile-bg" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#f5f5f7" stop-opacity="0.7" />
-                                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.2" />
-                            </linearGradient>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#grad1)" />
-                        <circle cx="20%" cy="30%" r="5%" fill="#f0f0f2" />
-                        <circle cx="80%" cy="70%" r="8%" fill="#f5f5f7" />
-                        <circle cx="70%" cy="20%" r="3%" fill="#f0f0f2" />
-                    </svg>
+            <section id="home" class="pt-0 relative overflow-hidden min-h-screen flex items-center justify-center">
+                <!-- System Status Widget -->
+                <div class="sys-status" style="top: 8rem; right: 14rem;">
+                    <div class="sys-dot"></div>
+                    <span>SYSTEM ONLINE :: Vienna-NODE-01 ACTIVE</span>
                 </div>
-                
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div class="lg:grid lg:grid-cols-12 lg:gap-8">
-                        <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
-                            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl lg:text-5xl xl:text-6xl">
-                                <span class="block">Welcome to</span>
-                                <span class="block text-accent">TTZ AI</span>
+
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full -mt-16">
+                    <div class="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
+                        
+                        <!-- Left Column: Text -->
+                        <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-7 lg:text-left animate-fade-in">
+                            <div class="inline-block px-3 py-1 mb-4 text-xs font-mono text-accent bg-accent/10 rounded border border-accent/20">
+                                &gt; RESEARCH FELLOW @ MedUniWien
+                            </div>
+                            <h1 class="text-5xl tracking-tight font-extrabold text-white sm:text-6xl md:text-7xl mb-6 leading-none">
+                                <span class="bg-accent text-black px-2 -ml-2 selection:bg-white selection:text-black">HELLO,</span><br>
+                                I'M <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-white">TIANZE</span>
                             </h1>
-                            <p class="mt-6 text-base text-gray-500 sm:text-lg sm:max-w-xl sm:mx-auto md:text-xl lg:mx-0">
-                                Welcome to my personal portfolio where I showcase my AI projects and share knowledge through my blog. This website is very new, I will gradually update my projects and blogs on this website.
+                            
+                            <p class="mt-4 text-lg text-gray-400 leading-relaxed font-mono max-w-xl">
+                                Exploring the frontier of <strong class="text-white">Medical AI</strong>, <strong class="text-white">Diffusion Models</strong> and <strong class="text-white">Generative Models</strong>. Building models that bridge the gap between data and diagnosis.
                             </p>
-                            <p class="mt-6 text-base text-gray-500 sm:text-lg sm:max-w-xl sm:mx-auto md:text-xl lg:mx-0">
-                                My name is Tianze Tang, a master student at NYU GPH. My research experience mainly includes <strong>AI in health</strong>, especially in the field of <strong>madical imaging</strong>. I have also conducted research on <strong>NLP</strong> topic modeling and deep learning of high-dimensional genomic data. My interests cover the mainstream directions in AI, including <strong>LMM</strong>, <strong>GenAI</strong> and <strong>Agent</strong>.
-                            </p>
-                            <div class="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                                <div class="flex flex-col sm:flex-row gap-4 sm:justify-center lg:justify-start">   
-                                    <a href="#projects" class="rounded-md shadow px-5 py-3 bg-black text-white font-medium hover:bg-gray-900 transition-colors">
-                                        View Projects
-                                    </a>
-                                    <a href="#contact" class="rounded-md px-5 py-3 bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 transition-colors">
-                                        Contact Me
-                                    </a>
-                                </div>
+
+                            <div class="mt-8 flex flex-col sm:flex-row gap-4 sm:justify-center lg:justify-start">   
+                                <a href="#projects" class="btn-primary text-center group">
+                                    <span class="group-hover:mr-2 transition-all">View Projects</span> &rarr;
+                                </a>
+                                <a href="#contact" class="btn-secondary text-center">
+                                    Contact Me
+                                </a>
                             </div>
                         </div>
-                        <div class="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
-                            <div class="relative mx-auto w-full rounded-lg shadow-lg lg:max-w-md">
-                                <div class="relative block w-full bg-white rounded-lg overflow-hidden">
-                                    <div class="aspect-w-16 aspect-h-9">
-                                        <div class="w-full h-full bg-gradient-to-r from-gray-900 to-black rounded-lg flex items-center justify-center p-8">
-                                            <svg width="100%" height="100%" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                                                <rect width="200" height="200" fill="none" />
-                                                <g fill="white">
-                                                    <circle cx="100" cy="100" r="40" />
-                                                    <path d="M100 180C55.8172 180 20 144.183 20 100C20 55.8172 55.8172 20 100 20C144.183 20 180 55.8172 180 100C180 144.183 144.183 180 100 180ZM100 160C133.137 160 160 133.137 160 100C160 66.8629 133.137 40 100 40C66.8629 40 40 66.8629 40 100C40 133.137 66.8629 160 100 160Z" />
-                                                    <circle cx="80" cy="80" r="10" />
-                                                    <circle cx="120" cy="80" r="10" />
-                                                </g>
-                                            </svg>
+
+                        <!-- Right Column: Terminal Window (Visual Content) -->
+                        <div class="mt-12 lg:mt-0 lg:col-span-5 relative z-20">
+                            <div class="terminal-window glass-no-float transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                                <div class="terminal-header">
+                                    <div class="terminal-buttons">
+                                        <div class="terminal-btn red"></div>
+                                        <div class="terminal-btn yellow"></div>
+                                        <div class="terminal-btn green"></div>
+                                    </div>
+                                    <div class="terminal-title">user@ttz-ai:~/profile</div>
+                                </div>
+                                <div class="terminal-body">
+                                    <div id="typewriter-text"></div>
+                                    <span class="code-cursor"></span>
+                                </div>
+                            </div>
+                            <!-- Decorative backdrop glow -->
+                            <div class="absolute -inset-4 bg-accent/20 blur-3xl -z-10 rounded-full opacity-20"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Infinite Skill Ticker -->
+                <div class="ticker-wrap">
+                    <div class="ticker">
+                        <div class="ticker-item"><span>//</span> PYTHON</div>
+                        <div class="ticker-item"><span>//</span> PYTORCH</div>
+                        <div class="ticker-item"><span>//</span> TENSORFLOW</div>
+                        <div class="ticker-item"><span>//</span> MEDICAL IMAGING</div>
+                        <div class="ticker-item"><span>//</span> NLP</div>
+                        <div class="ticker-item"><span>//</span> LLM AGENTS</div>
+                        <div class="ticker-item"><span>//</span> GENOMICS</div>
+                        <div class="ticker-item"><span>//</span> FLASK</div>
+                        <div class="ticker-item"><span>//</span> REACT</div>
+                        <div class="ticker-item"><span>//</span> TAILWIND</div>
+                        <!-- Duplicate for seamless loop -->
+                        <div class="ticker-item"><span>//</span> PYTHON</div>
+                        <div class="ticker-item"><span>//</span> PYTORCH</div>
+                        <div class="ticker-item"><span>//</span> TENSORFLOW</div>
+                        <div class="ticker-item"><span>//</span> MEDICAL IMAGING</div>
+                        <div class="ticker-item"><span>//</span> NLP</div>
+                        <div class="ticker-item"><span>//</span> LLM AGENTS</div>
+                        <div class="ticker-item"><span>//</span> GENOMICS</div>
+                        <div class="ticker-item"><span>//</span> FLASK</div>
+                        <div class="ticker-item"><span>//</span> REACT</div>
+                        <div class="ticker-item"><span>//</span> TAILWIND</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Main Content & Sidebar Layout -->
+            <section class="w-full relative z-20 py-12">
+                <!-- Background with dots pattern -->
+                <div class="absolute inset-0 bg-dots-pattern z-0"></div>
+
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div class="flex flex-col lg:flex-row gap-12">
+                    
+                    <!-- Left Column: Content (Projects & Blog) -->
+                    <div class="w-full lg:w-3/4 space-y-24 relative z-30">
+                        
+                        <!-- Projects Section -->
+                        <div id="projects" class="relative scroll-mt-24">
+                            <div class="flex items-center mb-8 relative z-30">
+                                <h2 class="text-2xl font-extrabold text-white sm:text-3xl font-mono relative z-30 drop-shadow-md">
+                                    <span class="text-accent">&lt;</span> AI Projects <span class="text-accent">/&gt;</span>
+                                </h2>
+                                <div class="h-px bg-gray-800 flex-grow ml-6"></div>
+                            </div>
+                            <!-- Subtitle -->
+                            <p class="mb-8 text-sm text-gray-400 font-mono">
+                                // A showcase of my work in artificial intelligence and machine learning.
+                            </p>
+                            
+                            <!-- Projects Grid (Vertical/List View for sidebar layout) -->
+                            <div class="grid gap-6 grid-cols-1">
+                                <!-- Project 1 -->
+                                <div class="project-card glass rounded-lg overflow-hidden border border-gray-800 group">
+                                    <div class="p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                                </svg>
+                                            </div>
+                                            <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">NLP API</h3>
                                         </div>
+                                        <p class="text-gray-400 mb-4 text-sm">
+                                            A robust API for text analysis, sentiment detection, and language translation using transformer models.
+                                        </p>
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="project-tag">Python</span>
+                                            <span class="project-tag">Flask</span>
+                                            <span class="project-tag">HuggingFace</span>
+                                        </div>
+                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="project1">
+                                            View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Project 2 (Placeholder) -->
+                                <div class="project-card glass rounded-lg overflow-hidden border border-gray-800 group">
+                                    <div class="p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                                </svg>
+                                            </div>
+                                            <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">Voice Recognition System</h3>
+                                        </div>
+                                        <p class="text-gray-400 mb-4 text-sm">
+                                            A real-time speech recognition system that accurately transcribes audio input into text.
+                                        </p>
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="project-tag">TensorFlow</span>
+                                            <span class="project-tag">PyTorch</span>
+                                            <span class="project-tag">WebRTC</span>
+                                        </div>
+                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="project2">
+                                            View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Project 3 (Placeholder) -->
+                                <div class="project-card glass rounded-lg overflow-hidden border border-gray-800 group">
+                                    <div class="p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                            </div>
+                                            <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">Computer Vision for Healthcare</h3>
+                                        </div>
+                                        <p class="text-gray-400 mb-4 text-sm">
+                                            AI models that assist radiologists in detecting irregularities in medical images.
+                                        </p>
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="project-tag">Python</span>
+                                            <span class="project-tag">OpenCV</span>
+                                            <span class="project-tag">Deep Learning</span>
+                                        </div>
+                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="project3">
+                                            View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Projects Section -->
-            <section id="projects" class="py-16 bg-gray-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center">
-                        <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                            AI Projects
-                        </h2>
-                        <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-                            A showcase of my work in artificial intelligence and machine learning.
-                        </p>
-                    </div>
-                    
-                    <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        <!-- Project 1 -->
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md">
-                            <div class="p-6">
-                                <div class="flex items-center mb-4">
-                                    <div class="bg-accent/10 rounded-md p-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                        </svg>
-                                    </div>
-                                    <h3 class="ml-3 text-lg font-semibold text-gray-900">Natural Language Processing API</h3>
-                                </div>
-                                <p class="text-gray-600 mb-4">
-                                    A robust API for text analysis, sentiment detection, and language translation using transformer models.
-                                </p>
-                                <div class="flex flex-wrap gap-2 mb-4">
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">Python</span>
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">Flask</span>
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">HuggingFace</span>
-                                </div>
-                                <a href="#" class="text-sm text-accent font-medium hover:underline view-project" data-id="project1">View Project →</a>
-                            </div>
-                        </div>
-
-                        <!-- Project 2 -->
-                        <!-- <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md">
-                            <div class="p-6">
-                                <div class="flex items-center mb-4">
-                                    <div class="bg-accent/10 rounded-md p-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                        </svg>
-                                    </div>
-                                    <h3 class="ml-3 text-lg font-semibold text-gray-900">Image Generation App</h3>
-                                </div>
-                                <p class="text-gray-600 mb-4">
-                                    A web application that generates creative images from text prompts using diffusion models.
-                                </p>
-                                <div class="flex flex-wrap gap-2 mb-4">
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">React</span>
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">Node.js</span>
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">Stable Diffusion</span>
-                                </div>
-                                <a href="#" class="text-sm text-accent font-medium hover:underline view-project" data-id="project2">View Project →</a>
-                            </div>
-                        </div> -->
-
-                        <!-- Project 3 -->
-                        <!-- <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md">
-                            <div class="p-6">
-                                <div class="flex items-center mb-4">
-                                    <div class="bg-accent/10 rounded-md p-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                        </svg>
-                                    </div>
-                                    <h3 class="ml-3 text-lg font-semibold text-gray-900">AI Chatbot Assistant</h3>
-                                </div>
-                                <p class="text-gray-600 mb-4">
-                                    A conversational AI assistant that helps users find information and complete tasks through natural dialogue.
-                                </p>
-                                <div class="flex flex-wrap gap-2 mb-4">
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">TensorFlow</span>
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">FastAPI</span>
-                                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-md">Vue.js</span>
-                                </div>
-                                <a href="#" class="text-sm text-accent font-medium hover:underline view-project" data-id="project3">View Project →</a>
-                            </div>
-                        </div> -->
-                    </div>
-
-                    <div class="mt-12 text-center">
-                        <button id="loadMoreProjects" class="inline-flex items-center px-5 py-3 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                            Load More Projects
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Blog Section -->
-            <section id="blog" class="py-16">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center">
-                        <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                            Blogs
-                        </h2>
-                        <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-                            Thoughts, insights, and tutorials on AI and software development.
-                        </p>
-                    </div>
-                    
-                    <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        <!-- Blog Post 1 -->
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md">
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-3">
-                                    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span>April 12, 2025</span>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Use Agent AI and Cursor to build a personal website</h3>
-                                <p class="text-gray-600 mb-4">
-                                    This website is built using Flowith, Cursor, and Tencent Edgeone Pages.
-                                </p>
-                                <a href="#" class="text-sm text-accent font-medium hover:underline view-blog" data-id="blog1">Read More →</a>
+        
+                            <div class="mt-8 text-center lg:text-left">
+                                <button id="loadMoreProjects" class="btn-secondary text-sm">
+                                    Load More Projects
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Blog Post 2 -->
-                        <!-- <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md">
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-3">
-                                    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span>March 8, 2023</span>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Building a Python NLP Pipeline</h3>
-                                <p class="text-gray-600 mb-4">
-                                    A step-by-step tutorial on creating an efficient natural language processing pipeline using Python and NLTK.
-                                </p>
-                                <a href="#" class="text-sm text-accent font-medium hover:underline view-blog" data-id="blog2">Read More →</a>
+                        <!-- Blog Section -->
+                        <div id="blog" class="relative scroll-mt-24">
+                            <div class="flex items-center mb-8">
+                                <h2 class="text-2xl font-extrabold text-white sm:text-3xl font-mono">
+                                    <span class="text-accent">#</span> Blogs
+                                </h2>
+                                <div class="h-px bg-gray-800 flex-grow ml-6"></div>
                             </div>
-                        </div> -->
+                             <p class="mb-8 text-sm text-gray-400 font-mono">
+                                /* Thoughts, insights, and tutorials on AI and software development */
+                            </p>
+                            
+                            <div class="grid gap-6 grid-cols-1">
+                                <!-- Blog Post 1 -->
+                                <div class="blog-card glass">
+                                    <div class="p-6">
+                                        <div class="flex items-center text-xs text-accent mb-3 font-mono">
+                                            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span>2025-04-12</span>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-white mb-2 hover:text-accent transition-colors">Use Agent AI and Cursor to build a personal website</h3>
+                                        <p class="text-gray-400 mb-4 text-sm">
+                                            This website is built using Flowith, Cursor, and Tencent Edgeone Pages.
+                                        </p>
+                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-blog inline-flex items-center" data-id="blog1">
+                                            read_more() <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </a>
+                                    </div>
+                                </div>
 
-                        <!-- Blog Post 3 -->
-                        <!-- <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 transition-all hover:shadow-md">
-                            <div class="p-6">
-                                <div class="flex items-center text-sm text-gray-500 mb-3">
-                                    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span>February 22, 2023</span>
+                                <!-- Blog Post 2 (Placeholder) -->
+                                <div class="blog-card glass">
+                                    <div class="p-6">
+                                        <div class="flex items-center text-xs text-accent mb-3 font-mono">
+                                            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span>2025-03-28</span>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-white mb-2 hover:text-accent transition-colors">Deep Learning in Medical Imaging</h3>
+                                        <p class="text-gray-400 mb-4 text-sm">
+                                            Exploring how CNNs are revolutionizing early diagnosis in radiology.
+                                        </p>
+                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-blog inline-flex items-center" data-id="blog2">
+                                            read_more() <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </a>
+                                    </div>
                                 </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">The Ethics of AI Development</h3>
-                                <p class="text-gray-600 mb-4">
-                                    Exploring the ethical considerations that developers should keep in mind when building AI systems.
-                                </p>
-                                <a href="#" class="text-sm text-accent font-medium hover:underline view-blog" data-id="blog3">Read More →</a>
                             </div>
-                        </div> -->
+        
+                            <div class="mt-8 text-center lg:text-left">
+                                <a href="#" class="btn-secondary text-sm">
+                                    View All Articles
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="mt-12 text-center">
-                        <a href="#" class="inline-flex items-center px-5 py-3 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                            View All Articles
-                        </a>
-                    </div>
+                    <!-- Right Column: Sidebar -->
+                    <aside class="hidden lg:block w-1/4 relative">
+                        <div class="sticky top-28 space-y-8">
+                            
+                            <!-- Music Widget -->
+                            <div class="glass rounded-xl p-4 border border-gray-800">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-xs font-bold font-mono text-accent tracking-wider">NOW_PLAYING</h3>
+                                    <div class="flex space-x-0.5">
+                                        <div class="w-0.5 h-3 bg-accent animate-pulse"></div>
+                                        <div class="w-0.5 h-2 bg-accent animate-pulse delay-75"></div>
+                                        <div class="w-0.5 h-3 bg-accent animate-pulse delay-150"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative group w-full h-32 mb-3 bg-black/40 rounded-lg overflow-hidden border border-gray-800/50">
+                                     <!-- Play/Pause Overlay (Always visible now) -->
+                                     <div class="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm transition-all">
+                                         <button id="musicToggleBtn" class="w-10 h-10 rounded-full bg-accent text-black flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_15px_rgba(0,255,157,0.4)]">
+                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                                         </button>
+                                     </div>
+                                </div>
+                                
+                                <div class="space-y-1">
+                                    <div class="text-sm text-white font-bold truncate">Stardew_Valley_Overture</div>
+                                    <div class="text-xs text-gray-500 font-mono truncate">ConcernedApe</div>
+                                </div>
+                            </div>
+
+                            <!-- Game Widget -->
+                            <div class="glass rounded-xl p-5 border border-gray-800">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xs font-bold font-mono text-accent tracking-wider">MINI_GAME</h3>
+                                    <span class="text-[10px] text-gray-500 bg-gray-900 px-1.5 py-0.5 rounded">SNAKE_V1.0</span>
+                                </div>
+                                
+                                <div class="relative aspect-square bg-black/80 rounded-lg border border-gray-800 overflow-hidden">
+                                    <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+                                    
+                                    <!-- Game Overlay -->
+                                    <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10">
+                                        <p class="text-accent font-mono text-xs mb-3">PRESS START</p>
+                                        <button id="gameStartBtn" class="px-3 py-1.5 bg-accent/10 border border-accent/50 text-accent text-xs font-mono rounded hover:bg-accent hover:text-black transition-all">
+                                            START
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 flex justify-between items-center text-xs font-mono text-gray-500">
+                                    <span>SCORE: <span id="scoreVal" class="text-white">0</span></span>
+                                    <span class="text-[10px]">ARROWS TO MOVE</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </aside>
                 </div>
+            </div>
             </section>
+
+            <div class="section-divider"></div>
 
             <!-- Contact Section -->
-            <section id="contact" class="py-16 bg-gray-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="max-w-3xl mx-auto">
-                        <div class="text-center">
-                            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                                Get in Touch
+            <section id="contact" class="py-24 bg-transparent relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+                
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        
+                        <!-- Left: Header & Prompt -->
+                        <div>
+                            <h2 class="text-3xl font-bold text-white font-mono mb-6">
+                                <span class="text-accent mr-2">[</span>GET IN TOUCH<span class="text-accent ml-2">]</span>
                             </h2>
-                            <p class="mt-3 text-xl text-gray-500 sm:mt-4">
-                                Have a question or want to collaborate? Let's connect.
+                            <p class="text-gray-400 font-mono text-sm leading-relaxed mb-8 max-w-md">
+                                // Ready to initiate a collaboration or discuss AI research?<br>
+                                // My communication channels are open.
                             </p>
-                        </div>
-
-                        <div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-accent/10 text-accent mx-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <h3 class="mt-4 text-lg font-medium text-gray-900">Email</h3>
-                                <p class="mt-1 text-gray-500">tt2631@nyu.edu</p>
-                            </div>
-
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-accent/10 text-accent mx-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 class="mt-4 text-lg font-medium text-gray-900">Location</h3>
-                                <p class="mt-1 text-gray-500">New York, NY</p>
-                            </div>
-
-                            <div class="text-center">
-                                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-accent/10 text-accent mx-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                </div>
-                                <h3 class="mt-4 text-lg font-medium text-gray-900">Social Media</h3>
-                                <div class="mt-1 flex justify-center space-x-3">
-                                    <a href="https://www.linkedin.com/in/tianze-tang-27741621a/" target="_blank" class="text-gray-400 hover:text-accent">
-                                        <span class="sr-only">LinkedIn</span>
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.338 16.338H13.67V12.16c0-1-.02-2.29-1.39-2.29-1.39 0-1.601 1.09-1.601 2.22v4.25H8.014V8.59h2.559v1.172h.036c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v3.873zm-9.794 0H3.87V8.591h2.674v7.747zM4.707 6.75a1.551 1.551 0 11-.003-3.101 1.551 1.551 0 01.003 3.101z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    </a>
-                                    <a href="https://github.com/TianzeTang0504" target="_blank" class="text-gray-400 hover:text-accent">
-                                        <span class="sr-only">GitHub</span>
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    </a>
-                                </div>
+                            
+                            <!-- Simulated Input Field -->
+                            <div class="flex items-center font-mono text-sm text-gray-500 mt-8">
+                                <span class="text-accent mr-2">$</span>
+                                <span class="mr-2">mail</span>
+                                <span class="typing-cursor w-2 h-4 bg-accent animate-pulse inline-block"></span>
                             </div>
                         </div>
+
+                        <!-- Right: Contact List (Terminal Style) -->
+                        <div class="font-mono text-sm">
+                            <div class="mb-2 text-gray-500 border-b border-gray-800 pb-2 flex justify-between">
+                                <span>PARAMETER</span>
+                                <span>VALUE</span>
+                            </div>
+                            
+                            <div class="space-y-4 mt-4">
+                                <div class="flex flex-col sm:flex-row sm:justify-between group">
+                                    <span class="text-accent opacity-70 mb-1 sm:mb-0">> EMAIL_ADDRESS</span>
+                                    <a href="mailto:tt2631@nyu.edu" class="text-gray-300 hover:text-accent transition-colors">tianze.tang@meduniwien.ac.at</a>
+                                </div>
+                                
+                                <div class="flex flex-col sm:flex-row sm:justify-between group">
+                                    <span class="text-accent opacity-70 mb-1 sm:mb-0">> CURRENT_LOC</span>
+                                    <span class="text-gray-300">Vienna, Austria</span>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row sm:justify-between group">
+                                    <span class="text-accent opacity-70 mb-1 sm:mb-0">> CONNECT_LINK</span>
+                                    <a href="https://www.linkedin.com/in/tianze-tang-27741621a/" target="_blank" class="text-gray-300 hover:text-accent transition-colors decoration-1 underline underline-offset-4 decoration-gray-700 hover:decoration-accent">LinkedIn Profile</a>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row sm:justify-between group">
+                                    <span class="text-accent opacity-70 mb-1 sm:mb-0">> REPO_SOURCE</span>
+                                    <a href="https://github.com/TianzeTang0504" target="_blank" class="text-gray-300 hover:text-accent transition-colors decoration-1 underline underline-offset-4 decoration-gray-700 hover:decoration-accent">GitHub/TianzeTang0504</a>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 pt-4 border-t border-gray-800 text-xs text-gray-600">
+                                STATUS: WAITING_FOR_INPUT...
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </section>
         </div>
 
         <!-- Content View for Projects and Blog Posts -->
-        <div id="contentView" class="hidden py-16">
+        <div id="contentView" class="hidden py-16 min-h-screen glass glass-no-float rounded-xl border border-gray-800">
             <div id="contentContainer"></div>
-            <!-- Back to Top Button -->
-            <button id="contentTopButton" class="hidden fixed bottom-8 right-8 bg-accent text-white p-3 rounded-full shadow-lg hover:bg-accent-dark transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-            </button>
         </div>
 
+        <!-- Back to Top Button -->
+        <button id="contentTopButton" class="hidden fixed bottom-8 right-8 bg-accent text-black font-bold p-3 rounded-full shadow-[0_0_15px_var(--accent-color)] hover:scale-110 transition-transform z-50 items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+        </button>
+
         <!-- Back Button -->
-        <button id="backButton" class="hidden fixed bottom-8 right-8 bg-accent text-white p-3 rounded-full shadow-lg hover:bg-accent-dark transition-colors">
+        <button id="backButton" class="hidden fixed bottom-8 right-8 bg-accent text-black font-bold p-3 rounded-full shadow-[0_0_15px_var(--accent-color)] hover:scale-110 transition-transform z-50">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
         </button>
     </main>
 
+    <!-- Test Script -->
+    <!-- <script src="js/geek-background.js"></script> -->
+    <!-- Temporarily move script to end of body to ensure load -->
+    <!-- <script src="js/geek-background.js"></script> -->
+    <script>
+      // Inline script to ensure immediate execution and style application
+      document.addEventListener('DOMContentLoaded', () => {
+         // Ensure body background is transparent so canvas shows through
+         document.body.style.backgroundColor = 'transparent';
+         document.documentElement.style.backgroundColor = '#050505'; // Fallback color for html
+      });
+    </script>
+    <script src="js/geek-background.js"></script>
+    <script src="js/audio-manager.js"></script>
     <script src="js/content.js"></script>
     <script src="js/projects.js"></script>
     <script src="js/blog.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/floating-player.js"></script>
+    <script src="js/cursor.js"></script>
     <script src="js/main.js"></script>
     <script>
         window.addEventListener("wheel", (e)=> {
@@ -408,3 +552,5 @@
 
 </body>
 </html>
+
+

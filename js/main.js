@@ -6,13 +6,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentView = document.getElementById('contentView');
     const contentTopButton = document.getElementById('contentTopButton');
 
+    // --- Music Button Logic (Global Nav) ---
+    const navMusicBtn = document.getElementById('navMusicBtn');
+    if (navMusicBtn && window.sharedAudio) {
+        const musicIcon = navMusicBtn.querySelector('svg');
+        
+        // Handle Click
+        navMusicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.sharedAudio.toggle();
+        });
+
+        // Sync State
+        window.sharedAudio.subscribe((isPlaying) => {
+            if (isPlaying) {
+                navMusicBtn.classList.remove('text-gray-400'); // Remove default color to ensure green works
+                navMusicBtn.classList.add('text-accent');
+                musicIcon.classList.add('rotating');
+            } else {
+                navMusicBtn.classList.remove('text-accent');
+                navMusicBtn.classList.add('text-gray-400'); // Restore default color
+                musicIcon.classList.remove('rotating');
+            }
+        });
+    }
+    // ---------------------------------------
+
     // 控制回到顶部按钮的显示和隐藏
     const toggleTopButton = () => {
         if (contentView && !contentView.classList.contains('hidden')) {
             if (window.scrollY > 300) {
                 contentTopButton.classList.remove('hidden');
+                contentTopButton.classList.add('flex'); // 确保使用 flex 布局以居中图标
             } else {
                 contentTopButton.classList.add('hidden');
+                contentTopButton.classList.remove('flex');
             }
         }
     };
@@ -119,9 +147,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
         navLinks.forEach(link => {
             link.classList.remove('text-accent');
+            link.classList.remove('bg-white/5');
             if (link.getAttribute('href') === `#${current}`) {
                 link.classList.add('text-accent');
+                link.classList.add('bg-white/5');
             }
         });
     });
+
+    // === Typewriter Effect for Terminal ===
+    const typeWriterElement = document.getElementById('typewriter-text');
+    
+    if (typeWriterElement) {
+        const textLines = [
+            { text: "class Scientist(Human):", class: "code-keyword" },
+            { text: "    def __init__(self):", class: "" },
+            { text: "        self.name = 'Tianze Tang'", class: "" },
+            { text: "        self.role = 'AI Researcher'", class: "" },
+            { text: "        self.lab = 'MedUniWien'", class: "" },
+            { text: "        self.stack = ['PyTorch', 'Generative', 'LMM']", class: "" },
+            { text: "    ", class: "" },
+            { text: "    def research(self):", class: "code-function" },
+            { text: "        # Medical Imaging & GenAI", class: "code-comment" },
+            { text: "        return Innovation.create()", class: "" }
+        ];
+
+        let lineIndex = 0;
+        let charIndex = 0;
+        
+        function type() {
+            if (lineIndex < textLines.length) {
+                const currentLine = textLines[lineIndex];
+                
+                // Create line div if starting new line
+                if (charIndex === 0) {
+                    const lineDiv = document.createElement('div');
+                    if (currentLine.class) lineDiv.className = currentLine.class;
+                    typeWriterElement.appendChild(lineDiv);
+                }
+                
+                // Append character
+                const currentDiv = typeWriterElement.lastElementChild;
+                currentDiv.textContent += currentLine.text.charAt(charIndex);
+                charIndex++;
+                
+                // Check if line finished
+                if (charIndex >= currentLine.text.length) {
+                    lineIndex++;
+                    charIndex = 0;
+                    setTimeout(type, 100); // Delay between lines
+                } else {
+                    setTimeout(type, 30); // Typing speed
+                }
+            }
+        }
+        
+        // Start typing with a slight delay
+        setTimeout(type, 1000);
+    }
 });

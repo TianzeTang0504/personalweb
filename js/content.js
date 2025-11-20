@@ -201,133 +201,6 @@ function ImageGenerator() {
                         </ul>
                     </div>
                 `
-            },
-            project3: {
-                title: "AI Chatbot Assistant",
-                date: "June 2023",
-                tags: ["TensorFlow", "FastAPI", "Vue.js", "NLP"],
-                content: `
-                    <div class="content-body">
-                        <p>This conversational AI assistant helps users find information and complete tasks through natural dialogue, leveraging advanced language models to understand context and provide relevant responses.</p>
-                        
-                        <h2>Project Overview</h2>
-                        <p>The AI Chatbot Assistant is designed to provide a natural, conversational interface for users to interact with systems and retrieve information. Unlike traditional chatbots that follow rigid, pre-defined paths, this assistant uses contextual understanding to provide more helpful and natural responses.</p>
-                        
-                        <img src="https://images.unsplash.com/photo-1635002952774-0a116223378e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Chatbot interface visualization" class="rounded-lg shadow-md">
-                        
-                        <h2>Key Capabilities</h2>
-                        <ul>
-                            <li>Natural language understanding for complex queries</li>
-                            <li>Context retention across multiple conversation turns</li>
-                            <li>Integration with external systems (calendar, email, databases)</li>
-                            <li>Multi-language support for global accessibility</li>
-                            <li>Personality customization to match brand voice</li>
-                        </ul>
-                        
-                        <h2>Technical Architecture</h2>
-                        <p>The assistant is built using a three-layer architecture:</p>
-                        <ol>
-                            <li><strong>Understanding layer:</strong> Processes incoming messages using TensorFlow-based NLP models to extract intent, entities, and context.</li>
-                            <li><strong>Reasoning layer:</strong> Decides how to respond to the user's query based on available information and services.</li>
-                            <li><strong>Generation layer:</strong> Creates natural, human-like responses that address the user's needs.</li>
-                        </ol>
-                        
-                        <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                            <pre><code class="language-python">from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
-import tensorflow as tf
-
-app = FastAPI()
-
-# Load NLP models
-intent_model = tf.saved_model.load("./models/intent_classifier")
-entity_model = tf.saved_model.load("./models/entity_recognizer")
-response_model = tf.saved_model.load("./models/response_generator")
-
-class Message(BaseModel):
-    text: str
-    user_id: str
-    conversation_id: Optional[str] = None
-
-class Response(BaseModel):
-    text: str
-    suggested_actions: List[str] = []
-    confidence: float
-
-@app.post("/api/chat", response_model=Response)
-async def process_message(message: Message):
-    # Extract intent and entities
-    intent = intent_model(message.text)
-    entities = entity_model(message.text)
-    
-    # Generate appropriate response
-    response_text, confidence = response_model(
-        message.text, intent, entities, message.user_id, message.conversation_id
-    )
-    
-    # Get suggested next actions
-    suggested_actions = get_suggested_actions(intent, entities)
-    
-    return Response(
-        text=response_text,
-        suggested_actions=suggested_actions,
-        confidence=confidence
-    )</code></pre>
-                        </div>
-                        
-                        <h2>Frontend Implementation</h2>
-                        <p>The frontend is implemented using Vue.js to create a responsive and accessible chat interface. The design follows best practices for conversational UIs, including:</p>
-                        <ul>
-                            <li>Clear message threading and conversation history</li>
-                            <li>Typing indicators to show when the assistant is responding</li>
-                            <li>Message status indicators (sent, delivered, read)</li>
-                            <li>Rich message formatting for complex responses (cards, carousels, buttons)</li>
-                        </ul>
-                        
-                        <h2>Data Privacy and Security</h2>
-                        <p>The assistant is designed with privacy as a core principle:</p>
-                        <ul>
-                            <li>All conversation data is encrypted both in transit and at rest</li>
-                            <li>User data retention policies are configurable</li>
-                            <li>The system can be deployed on-premises for sensitive applications</li>
-                            <li>User consent mechanisms are built into the conversation flow</li>
-                        </ul>
-                        
-                        <div class="interactive-demo">
-                            <div class="interactive-demo-header">Try a Conversation</div>
-                            <div class="bg-gray-50 p-3 rounded mb-3 min-h-[100px]" id="chatHistory">
-                                <div class="mb-2">
-                                    <div class="bg-gray-200 rounded-lg px-3 py-2 inline-block max-w-[80%]">
-                                        <p class="text-sm">Hello! How can I assist you today?</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex">
-                                <input type="text" id="chatInput" class="flex-1 p-2 border border-gray-300 rounded-l" placeholder="Type a message...">
-                                <button id="sendMessage" class="px-4 py-2 bg-black text-white rounded-r hover:bg-gray-800">Send</button>
-                            </div>
-                        </div>
-                        
-                        <h2>Performance Metrics</h2>
-                        <p>The assistant has been trained and evaluated on multiple benchmarks:</p>
-                        <ul>
-                            <li>Intent recognition accuracy: 94.3%</li>
-                            <li>Entity extraction F1 score: 0.89</li>
-                            <li>Response relevance (human evaluated): 4.6/5</li>
-                            <li>Average response time: 230ms</li>
-                        </ul>
-                        
-                        <h2>Future Roadmap</h2>
-                        <p>Planned enhancements include:</p>
-                        <ul>
-                            <li>Voice interface for hands-free interaction</li>
-                            <li>Improved contextual understanding for more complex conversations</li>
-                            <li>Expanded domain-specific knowledge for targeted applications</li>
-                            <li>Multi-modal capabilities (image recognition, document processing)</li>
-                        </ul>
-                    </div>
-                `
             }
         },
         blog: {
@@ -447,16 +320,16 @@ async def process_message(message: Message):
                 `
             },
             blog2: {
-                title: "Building a Python NLP Pipeline",
+                title: "Deep Learning in Medical Imaging",
                 date: "March 8, 2023",
                 author: "Maya Johnson",
                 readTime: "10 min read",
                 content: `
                     <div class="content-body">
-                        <p>Natural Language Processing (NLP) is one of the most exciting fields in artificial intelligence, enabling computers to understand, interpret, and generate human language. This tutorial walks through creating an efficient NLP pipeline in Python, from text preprocessing to implementing advanced models.</p>
+                        <p>Deep learning models, particularly Convolutional Neural Networks (CNNs), are revolutionizing the field of medical imaging. This article explores how these algorithms are assisting radiologists in diagnosing diseases earlier and more accurately.</p>
                         
-                        <h2>Understanding NLP Pipelines</h2>
-                        <p>An NLP pipeline is a series of data processing steps that transform raw text into structured information that can be analyzed or used to train machine learning models. A well-designed pipeline creates a foundation for accurate and efficient text processing.</p>
+                        <h2>The Rise of AI in Radiology</h2>
+                        <p>Medical imaging data—X-rays, CT scans, MRIs—is growing exponentially. Radiologists are under immense pressure to interpret these images quickly and accurately. Artificial intelligence, specifically deep learning, offers a powerful solution to augment human capabilities.</p>
                         
                         <p>A typical NLP pipeline includes these stages:</p>
                         <ol>
@@ -928,206 +801,6 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
                         </div>
                     </div>
                 `
-            },
-            blog3: {
-                title: "The Ethics of AI Development",
-                date: "February 22, 2023",
-                author: "Jamal Rahman",
-                readTime: "8 min read",
-                content: `
-                    <div class="content-body">
-                        <p>As artificial intelligence becomes increasingly integrated into our daily lives, the ethical considerations surrounding its development have never been more important. This article explores the key ethical issues that AI developers should keep in mind when building these powerful systems.</p>
-                        
-                        <h2>The Growing Importance of AI Ethics</h2>
-                        <p>Artificial intelligence is no longer confined to research labs or science fiction. It now powers recommendation systems, content moderation tools, hiring algorithms, medical diagnosis systems, and countless other applications that impact millions of people daily. With this widespread deployment comes a responsibility to consider the ethical implications of these systems.</p>
-                        
-                        <p>The field of AI ethics examines questions like:</p>
-                        <ul>
-                            <li>How can we ensure AI systems don't perpetuate or amplify social biases?</li>
-                            <li>Who is responsible when an AI system makes a harmful decision?</li>
-                            <li>How much transparency should AI systems provide about their decision-making?</li>
-                            <li>What privacy safeguards should be in place for data used to train AI?</li>
-                            <li>How can we ensure equitable access to AI benefits across society?</li>
-                        </ul>
-                        
-                        <h2>Key Ethical Considerations for AI Developers</h2>
-                        
-                        <h3>1. Fairness and Bias</h3>
-                        <p>AI systems learn from data, and if that data contains historical biases, the resulting systems can perpetuate or even amplify those biases. For example, hiring algorithms trained on historical hiring decisions might discriminate against women or minorities if those groups were underrepresented in past hiring.</p>
-                        
-                        <p><strong>Developer Responsibility:</strong> Carefully examine training data for potential biases, use diverse and representative datasets, implement fairness metrics, and regularly audit systems for biased outcomes across different demographic groups.</p>
-                        
-                        <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                            <h4 class="font-bold mb-2">Case Study: Amazon's Experimental Hiring Algorithm</h4>
-                            <p>In 2018, Amazon scrapped an AI hiring tool that showed bias against women. The system was trained on resumes submitted to Amazon over a 10-year period, most of which came from men, reflecting the male dominance in the tech industry. The algorithm learned to penalize resumes that included the word "women's" (as in "women's chess club captain") and downgraded graduates from women's colleges.</p>
-                            <p>This case illustrates how AI can amplify existing biases in training data and the importance of testing for fairness before deployment.</p>
-                        </div>
-                        
-                        <h3>2. Transparency and Explainability</h3>
-                        <p>Many advanced AI systems, particularly deep learning models, function as "black boxes" where it's difficult to understand how they reach specific conclusions. This opacity becomes problematic when these systems make significant decisions affecting people's lives.</p>
-                        
-                        <p><strong>Developer Responsibility:</strong> Prioritize explainable AI techniques when possible, provide meaningful explanations of how AI systems work to end users, and be transparent about limitations and potential errors.</p>
-                        
-                        <p>The right level of transparency depends on the application context:</p>
-                        <ul>
-                            <li>In healthcare or criminal justice, high explainability is essential</li>
-                            <li>For recommendation systems, simpler explanations might suffice</li>
-                            <li>For some applications, the ability to appeal or override decisions may be more important than detailed explanations</li>
-                        </ul>
-                        
-                        <h3>3. Privacy and Data Governance</h3>
-                        <p>AI development often requires large amounts of data, some of which may be sensitive or personal. Responsible AI development includes careful stewardship of this data.</p>
-                        
-                        <p><strong>Developer Responsibility:</strong> Obtain proper consent for data use, anonymize data when appropriate, secure data against breaches, minimize data collection to what's necessary, and comply with relevant regulations like GDPR or CCPA.</p>
-                        
-                        <p>Consider implementing techniques like:</p>
-                        <ul>
-                            <li>Differential privacy to provide mathematical guarantees against identifying individuals</li>
-                            <li>Federated learning to train models without centralizing sensitive data</li>
-                            <li>Data minimization strategies to reduce privacy risks</li>
-                        </ul>
-                        
-                        <h3>4. Accountability and Oversight</h3>
-                        <p>When AI systems make mistakes or cause harm, clear accountability structures should determine responsibility and provide recourse.</p>
-                        
-                        <p><strong>Developer Responsibility:</strong> Establish clear lines of accountability, implement robust testing and monitoring, provide mechanisms for users to appeal decisions, and consider third-party auditing for high-stakes applications.</p>
-                        
-                        <h3>5. Environmental and Social Impact</h3>
-                        <p>AI development can have broader societal and environmental impacts that extend beyond the immediate application.</p>
-                        
-                        <p><strong>Developer Responsibility:</strong> Consider the energy consumption and carbon footprint of training and running AI models, assess potential job displacement effects, and evaluate how the technology might affect different communities.</p>
-                        
-                        <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                            <h4 class="font-bold mb-2">The Environmental Cost of AI</h4>
-                            <p>Training a single large language model can generate as much carbon dioxide as five cars emit during their entire lifetimes. As models grow larger, their environmental impact increases dramatically.</p>
-                            <p>Researchers are working on more efficient training methods, but developers should consider whether the benefits of increasingly large models justify their environmental costs.</p>
-                        </div>
-                        
-                        <h2>Practical Frameworks for Ethical AI Development</h2>
-                        <p>Moving from abstract principles to practical implementation requires structured approaches. Here are several frameworks that developers can adopt:</p>
-                        
-                        <h3>Ethics by Design</h3>
-                        <p>Similar to "security by design" or "privacy by design," ethics by design integrates ethical considerations throughout the development lifecycle rather than treating them as an afterthought.</p>
-                        
-                        <p>Key practices include:</p>
-                        <ul>
-                            <li>Conducting ethical risk assessments at project inception</li>
-                            <li>Incorporating diverse perspectives in design processes</li>
-                            <li>Establishing ethical metrics alongside performance metrics</li>
-                            <li>Using checklists and review processes at key development milestones</li>
-                        </ul>
-                        
-                        <h3>The OECD AI Principles</h3>
-                        <p>The Organisation for Economic Co-operation and Development (OECD) has established principles for responsible AI that have been adopted by over 40 countries. These principles emphasize:</p>
-                        <ul>
-                            <li>Inclusive growth, sustainable development and well-being</li>
-                            <li>Human-centered values and fairness</li>
-                            <li>Transparency and explainability</li>
-                            <li>Robustness, security and safety</li>
-                            <li>Accountability</li>
-                        </ul>
-                        
-                        <h3>Impact Assessments</h3>
-                        <p>Algorithmic Impact Assessments (AIAs) help organizations evaluate potential social, ethical, and legal impacts of AI systems before deployment. Similar to environmental impact assessments, AIAs involve:</p>
-                        <ul>
-                            <li>Identifying stakeholders who might be affected by the system</li>
-                            <li>Assessing potential positive and negative impacts</li>
-                            <li>Implementing mitigation strategies for identified risks</li>
-                            <li>Establishing monitoring mechanisms for ongoing assessment</li>
-                        </ul>
-                        
-                        <h2>Implementing Ethical AI in Practice</h2>
-                        <p>Translating ethical principles into daily development practices requires concrete steps:</p>
-                        
-                        <h3>1. Diverse Teams</h3>
-                        <p>Teams with diverse backgrounds and perspectives are better equipped to identify potential ethical issues. This diversity should include not just technical expertise but also backgrounds in social sciences, law, ethics, and other relevant fields.</p>
-                        
-                        <h3>2. Ethics Training</h3>
-                        <p>AI developers should receive training in identifying and addressing ethical issues specific to AI. This includes understanding concepts like algorithmic bias, explainability, and privacy implications.</p>
-                        
-                        <h3>3. Documentation</h3>
-                        <p>Thoroughly document decisions made during development, including:</p>
-                        <ul>
-                            <li>Data sources and collection methods</li>
-                            <li>Preprocessing steps</li>
-                            <li>Model selection rationale</li>
-                            <li>Performance across different demographic groups</li>
-                            <li>Limitations and potential risks</li>
-                        </ul>
-                        
-                        <p>Tools like Model Cards and Datasheets for Datasets provide standardized formats for this documentation.</p>
-                        
-                        <h3>4. Ongoing Monitoring</h3>
-                        <p>Ethical considerations don't end at deployment. Implement systems to:</p>
-                        <ul>
-                            <li>Monitor performance across different user groups</li>
-                            <li>Track user feedback and complaints</li>
-                            <li>Detect and address "concept drift" where model performance degrades over time</li>
-                            <li>Regularly audit for bias or other ethical concerns</li>
-                        </ul>
-                        
-                        <h3>5. User Feedback Mechanisms</h3>
-                        <p>Create channels for users to report issues, appeal decisions, or provide feedback about AI systems. This feedback loop is essential for identifying unforeseen problems.</p>
-                        
-                        <div class="interactive-demo">
-                            <div class="interactive-demo-header">AI Ethics Checklist</div>
-                            <p class="text-sm mb-2">Use this interactive checklist to assess your AI project:</p>
-                            <div class="mb-3">
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics1" class="mr-2">
-                                    <label for="ethics1" class="text-sm">We've examined our training data for potential biases</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics2" class="mr-2">
-                                    <label for="ethics2" class="text-sm">We've tested model performance across diverse demographic groups</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics3" class="mr-2">
-                                    <label for="ethics3" class="text-sm">Our system provides appropriate explanations for its decisions</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics4" class="mr-2">
-                                    <label for="ethics4" class="text-sm">We've implemented proper consent and privacy protections</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics5" class="mr-2">
-                                    <label for="ethics5" class="text-sm">We've documented limitations and potential risks of our system</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics6" class="mr-2">
-                                    <label for="ethics6" class="text-sm">We have mechanisms for users to appeal decisions</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics7" class="mr-2">
-                                    <label for="ethics7" class="text-sm">We've considered environmental impacts of model training and deployment</label>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <input type="checkbox" id="ethics8" class="mr-2">
-                                    <label for="ethics8" class="text-sm">We've consulted with diverse stakeholders about potential impacts</label>
-                                </div>
-                            </div>
-                            <button id="checkEthics" class="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">Evaluate Project</button>
-                            <div id="ethicsResult" class="mt-3 p-3 bg-gray-50 rounded hidden"></div>
-                        </div>
-                        
-                        <h2>Balancing Innovation and Ethics</h2>
-                        <p>Some developers worry that ethical considerations might slow innovation or impose burdensome constraints. However, building ethics into AI development is increasingly seen as essential rather than optional:</p>
-                        
-                        <ul>
-                            <li><strong>Legal requirements:</strong> Regulations like the EU's proposed AI Act are creating legal obligations for ethical AI</li>
-                            <li><strong>Business necessity:</strong> Ethical failures can lead to reputational damage and lost trust</li>
-                            <li><strong>Sustainability:</strong> Addressing ethical issues early prevents costly fixes or rewrites later</li>
-                            <li><strong>Market advantage:</strong> Responsible AI can be a competitive differentiator</li>
-                        </ul>
-                        
-                        <p>Rather than viewing ethics as a constraint, developers can see it as a design requirement that leads to more robust, trustworthy systems that better serve human needs.</p>
-                        
-                        <h2>Conclusion</h2>
-                        <p>As AI systems become more powerful and more deeply integrated into society, the ethical dimensions of their development grow increasingly important. By adopting structured ethical frameworks, implementing practical steps throughout the development lifecycle, and fostering a culture that values responsible innovation, AI developers can create systems that not only perform well technically but also align with human values and societal needs.</p>
-                        
-                        <p>The most successful AI of the future will be not just technologically sophisticated but also ethically sound. By embracing this broader view of excellence in AI development, today's developers can help ensure that these powerful technologies fulfill their potential to benefit humanity.</p>
-                    </div>
-                `
             }
         }
     };
@@ -1139,6 +812,10 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
         showContent: function(type, id) {
             this.scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
             
+            // No need to manually stop sidebar music anymore, SharedAudioManager handles state
+            // But we do want to hide the sidebar player UI? The UI structure hides the mainContent which contains sidebar.
+            // The floating player will sync with current audio state automatically.
+
             // Get the content to show
             const content = contentDatabase[type][id];
             if (!content) {
@@ -1154,21 +831,22 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
                 contentView.classList.remove('hidden');
                 contentView.style.opacity = '0';
                 contentView.style.transition = 'opacity 0.3s ease';
+                
+                // Reset scroll position instantly before showing content
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'instant'
+                });
+                
                 setTimeout(() => {
                     contentView.style.opacity = '1';
                 }, 50);
             }, 300);
             
-            // Scroll to top smoothly
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            
             // Create content HTML
             let contentHTML = `
                 <div class="content-header">
-                    <button onclick="window.contentManager.hideContent()" class="mb-4 flex items-center text-gray-600 hover:text-gray-900">
+                    <button onclick="window.contentManager.hideContent()" class="mb-4 flex items-center text-gray-400 hover:text-accent transition-colors">
                         <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
                         </svg>
@@ -1229,6 +907,14 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
                 window.addEventListener('popstate', this.handlePopState.bind(this));
                 this.popStateListenerAdded = true;
             }
+            
+            // Initialize Floating Music Player
+            if (window.FloatingMusicPlayer) {
+                // Check if already exists to avoid duplicates
+                if (!this.floatingPlayer) {
+                     this.floatingPlayer = new window.FloatingMusicPlayer(document.body);
+                }
+            }
         },
         
         handlePopState: function(event) {
@@ -1243,6 +929,13 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
                 contentView.classList.add('hidden');
                 mainContent.classList.remove('hidden');
                 mainContent.style.opacity = '1';
+                
+                // 隐藏回到顶部按钮
+                const contentTopButton = document.getElementById('contentTopButton');
+                if (contentTopButton) {
+                    contentTopButton.classList.add('hidden');
+                    contentTopButton.classList.remove('flex');
+                }
                 
                 // Restore scroll position smoothly
                 window.scrollTo({
@@ -1262,6 +955,19 @@ for text, pred, prob in zip(new_texts, predictions, probabilities):
             contentView.style.opacity = '0';
             contentView.style.transition = 'opacity 0.3s ease';
             
+            // Destroy floating player when leaving content view
+            if (this.floatingPlayer) {
+                this.floatingPlayer.destroy();
+                this.floatingPlayer = null;
+            }
+
+            // Hide content top button immediately
+            const contentTopButton = document.getElementById('contentTopButton');
+            if (contentTopButton) {
+                contentTopButton.classList.add('hidden');
+                contentTopButton.classList.remove('flex');
+            }
+
             setTimeout(() => {
                 contentContainer.innerHTML = '';
                 contentView.classList.add('hidden');
