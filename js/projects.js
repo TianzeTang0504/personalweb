@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createProjectElement(project) {
         const div = document.createElement('div');
         // Updated to match dark theme / glassmorphism
-        div.className = 'project-card glass rounded-lg overflow-hidden border border-gray-800 group';
+        div.className = 'project-card glass group';
         div.innerHTML = `
             <div class="p-6">
                 <div class="flex items-center mb-4">
@@ -46,18 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
             </div>
         `;
-        
+
         // Add animation to make the new elements fade in
         div.style.opacity = '0';
         div.style.animation = 'fadeIn 0.5s forwards';
-        
+
         return div;
     }
 
     function init() {
         if (projectsGrid) {
             projectsGrid.innerHTML = ''; // Clear HTML content
-            
+
             // Render all projects since count is 2 which is < INITIAL_COUNT
             const initialProjects = projectsData.slice(0, INITIAL_COUNT);
             initialProjects.forEach(project => {
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (loadMoreButton) loadMoreButton.style.display = 'none';
             }
         }
-        
+
         // Event delegation on the grid
         if (projectsGrid) {
             projectsGrid.addEventListener('click', (e) => {

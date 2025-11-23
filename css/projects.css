@@ -1,6 +1,9 @@
 /* Project card styling */
 .project-card {
     /* Transition handled by .glass class */
+    border-radius: 0.5rem;
+    overflow: hidden;
+    height: 100%;
 }
 
 .project-card:hover {
@@ -26,7 +29,8 @@
 .project-card:hover .project-tag {
     border-color: transparent;
     color: var(--text-color);
-    background-color: rgba(255, 255, 255, 0.15); /* Slightly lighter bg on card hover instead */
+    background-color: rgba(255, 255, 255, 0.15);
+    /* Slightly lighter bg on card hover instead */
 }
 
 /* Project gallery */

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -45,42 +46,55 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
 </head>
+
 <body class="bg-dark text-primary min-h-screen flex flex-col font-mono selection:bg-accent selection:text-black">
     <header class="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <!-- Music Toggle (Global Nav) -->
-        <button id="navMusicBtn" class="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full text-gray-400 hover:text-accent hover:bg-white/5 transition-all z-[60]" aria-label="Toggle Music">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        <button id="navMusicBtn"
+            class="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full text-gray-400 hover:text-accent hover:bg-white/5 transition-all z-[60]"
+            aria-label="Toggle Music">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
         </button>
 
         <div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-4 relative">
-            
+
             <!-- Left: Logo / System ID -->
             <div>
-                <a href="#home" class="group flex items-center gap-2 focus:outline-none focus:shadow-none hover:drop-shadow-[0_0_8px_rgba(0,255,157,0.6)] transition-all duration-300">
+                <a href="#home"
+                    class="group flex items-center gap-2 focus:outline-none focus:shadow-none hover:drop-shadow-[0_0_8px_rgba(0,255,157,0.6)] transition-all duration-300">
                     <div class="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
-                    <span class="font-mono font-bold text-white text-lg tracking-widest group-hover:text-accent transition-colors">
+                    <span
+                        class="font-mono font-bold text-white text-lg tracking-widest group-hover:text-accent transition-colors">
                         TTZ_AI<span class="text-gray-600 group-hover:text-gray-400 transition-colors">.sys</span>
                     </span>
                 </a>
             </div>
 
             <!-- Center: Decorative Line (Hidden on mobile) -->
-            <div class="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50"></div>
+            <div
+                class="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-50">
+            </div>
 
             <!-- Right: Nav Links (Tactical Style) -->
             <nav class="hidden md:flex items-center gap-8">
-                <a href="#home" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                <a href="#home"
+                    class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
                     <span class="text-gray-600 mr-1">01.</span>HOME
                 </a>
-                <a href="#projects" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                <a href="#projects"
+                    class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
                     <span class="text-gray-600 mr-1">02.</span>PROJECT
                 </a>
-                <a href="#blog" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                <a href="#blog"
+                    class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
                     <span class="text-gray-600 mr-1">03.</span>BLOG
                 </a>
-                <a href="#contact" class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
+                <a href="#contact"
+                    class="text-sm font-mono text-gray-400 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all tracking-widest">
                     <span class="text-gray-600 mr-1">04.</span>CONTACT
                 </a>
             </nav>
@@ -88,18 +102,28 @@
             <!-- Mobile Menu Button -->
             <button id="mobileMenuButton" class="md:hidden text-white hover:text-accent transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
                 </svg>
             </button>
         </div>
 
         <!-- Mobile Menu Dropdown -->
-        <div id="mobileMenu" class="hidden md:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-b border-gray-800">
+        <div id="mobileMenu"
+            class="hidden md:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-b border-gray-800">
             <div class="px-6 py-6 space-y-6 font-mono text-sm">
-                <a href="#home" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">01. HOME</a>
-                <a href="#projects" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">02. PROJECTS</a>
-                <a href="#blog" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">03. BLOGS</a>
-                <a href="#contact" class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">04. CONTACT</a>
+                <a href="#home"
+                    class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">01.
+                    HOME</a>
+                <a href="#projects"
+                    class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">02.
+                    PROJECTS</a>
+                <a href="#blog"
+                    class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">03.
+                    BLOGS</a>
+                <a href="#contact"
+                    class="block text-gray-300 hover:text-accent hover:drop-shadow-[0_0_5px_rgba(0,255,157,0.8)] transition-all">04.
+                    CONTACT</a>
             </div>
         </div>
     </header>
@@ -116,22 +140,29 @@
 
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full -mt-16">
                     <div class="lg:grid lg:grid-cols-12 lg:gap-16 items-center">
-                        
+
                         <!-- Left Column: Text -->
                         <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-7 lg:text-left animate-fade-in">
-                            <div class="inline-block px-3 py-1 mb-4 text-xs font-mono text-accent bg-accent/10 rounded border border-accent/20">
+                            <div
+                                class="inline-block px-3 py-1 mb-4 text-xs font-mono text-accent bg-accent/10 rounded border border-accent/20">
                                 &gt; RESEARCH FELLOW @ MedUniWien
                             </div>
-                            <h1 class="text-5xl tracking-tight font-extrabold text-white sm:text-6xl md:text-7xl mb-6 leading-none">
-                                <span class="bg-accent text-black px-2 -ml-2 selection:bg-white selection:text-black">HELLO,</span><br>
-                                I'M <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-white">TIANZE</span>
+                            <h1
+                                class="text-5xl tracking-tight font-extrabold text-white sm:text-6xl md:text-7xl mb-6 leading-none">
+                                <span
+                                    class="bg-accent text-black px-2 -ml-2 selection:bg-white selection:text-black">HELLO,</span><br>
+                                I'M <span
+                                    class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-white">TIANZE</span>
                             </h1>
-                            
+
                             <p class="mt-4 text-lg text-gray-400 leading-relaxed font-mono max-w-xl">
-                                Exploring the frontier of <strong class="text-white">Medical AI</strong>, <strong class="text-white">Diffusion Models</strong> and <strong class="text-white">Generative Models</strong>. Building models that bridge the gap between data and diagnosis.
+                                Exploring the frontier of <strong class="text-white">Medical AI</strong>, <strong
+                                    class="text-white">Diffusion Models</strong> and <strong
+                                    class="text-white">Generative Models</strong>. Building models that bridge the gap
+                                between data and diagnosis.
                             </p>
 
-                            <div class="mt-8 flex flex-col sm:flex-row gap-4 sm:justify-center lg:justify-start">   
+                            <div class="mt-8 flex flex-col sm:flex-row gap-4 sm:justify-center lg:justify-start">
                                 <a href="#projects" class="btn-primary text-center group">
                                     <span class="group-hover:mr-2 transition-all">View Projects</span> &rarr;
                                 </a>
@@ -143,7 +174,8 @@
 
                         <!-- Right Column: Terminal Window (Visual Content) -->
                         <div class="mt-12 lg:mt-0 lg:col-span-5 relative z-20">
-                            <div class="terminal-window glass-no-float transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                            <div
+                                class="terminal-window glass-no-float transform rotate-1 hover:rotate-0 transition-transform duration-500">
                                 <div class="terminal-header">
                                     <div class="terminal-buttons">
                                         <div class="terminal-btn red"></div>
@@ -201,249 +233,325 @@
 
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div class="flex flex-col lg:flex-row gap-12">
-                    
-                    <!-- Left Column: Content (Projects & Blog) -->
-                    <div class="w-full lg:w-3/4 space-y-24 relative z-30">
-                        
-                        <!-- Projects Section -->
-                        <div id="projects" class="relative scroll-mt-24">
-                            <div class="flex items-center mb-8 relative z-30">
-                                <h2 class="text-2xl font-extrabold text-white sm:text-3xl font-mono relative z-30 drop-shadow-md">
-                                    <span class="text-accent">&lt;</span> AI Projects <span class="text-accent">/&gt;</span>
-                                </h2>
-                                <div class="h-px bg-gray-800 flex-grow ml-6"></div>
-                            </div>
-                            <!-- Subtitle -->
-                            <p class="mb-8 text-sm text-gray-400 font-mono">
-                                // A showcase of my work in artificial intelligence and machine learning.
-                            </p>
-                            
-                            <!-- Projects Grid (Vertical/List View for sidebar layout) -->
-                            <div class="grid gap-6 grid-cols-1">
-                                <!-- Project 1 -->
-                                <div class="project-card glass rounded-lg overflow-hidden border border-gray-800 group">
-                                    <div class="p-6">
-                                        <div class="flex items-center mb-4">
-                                            <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                                </svg>
-                                            </div>
-                                            <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">NLP API</h3>
-                                        </div>
-                                        <p class="text-gray-400 mb-4 text-sm">
-                                            A robust API for text analysis, sentiment detection, and language translation using transformer models.
-                                        </p>
-                                        <div class="flex flex-wrap gap-2 mb-4">
-                                            <span class="project-tag">Python</span>
-                                            <span class="project-tag">Flask</span>
-                                            <span class="project-tag">HuggingFace</span>
-                                        </div>
-                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="project1">
-                                            View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                        </a>
-                                    </div>
+
+                        <!-- Left Column: Content (Projects & Blog) -->
+                        <div class="w-full lg:w-3/4 space-y-24 relative z-30">
+
+                            <!-- Projects Section -->
+                            <div id="projects" class="relative scroll-mt-24">
+                                <div class="flex items-center mb-8 relative z-30">
+                                    <h2
+                                        class="text-2xl font-extrabold text-white sm:text-3xl font-mono relative z-30 drop-shadow-md">
+                                        <span class="text-accent">&lt;</span> AI Projects <span
+                                            class="text-accent">/&gt;</span>
+                                    </h2>
+                                    <div class="h-px bg-gray-800 flex-grow ml-6"></div>
                                 </div>
-                                
-                                <!-- Project 2 (Placeholder) -->
-                                <div class="project-card glass rounded-lg overflow-hidden border border-gray-800 group">
-                                    <div class="p-6">
-                                        <div class="flex items-center mb-4">
-                                            <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                                                </svg>
+                                <!-- Subtitle -->
+                                <p class="mb-8 text-sm text-gray-400 font-mono">
+                                    // A showcase of my work in artificial intelligence and machine learning.
+                                </p>
+
+                                <!-- Projects Grid (Vertical/List View for sidebar layout) -->
+                                <div class="grid gap-6 grid-cols-1">
+                                    <!-- Project 1 -->
+                                    <div class="project-card glass group">
+                                        <div class="p-6">
+                                            <div class="flex items-center mb-4">
+                                                <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                                    </svg>
+                                                </div>
+                                                <h3
+                                                    class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">
+                                                    NLP API</h3>
                                             </div>
-                                            <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">Voice Recognition System</h3>
+                                            <p class="text-gray-400 mb-4 text-sm">
+                                                A robust API for text analysis, sentiment detection, and language
+                                                translation using transformer models.
+                                            </p>
+                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                <span class="project-tag">Python</span>
+                                                <span class="project-tag">Flask</span>
+                                                <span class="project-tag">HuggingFace</span>
+                                            </div>
+                                            <a href="#"
+                                                class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center"
+                                                data-id="project1">
+                                                View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
                                         </div>
-                                        <p class="text-gray-400 mb-4 text-sm">
-                                            A real-time speech recognition system that accurately transcribes audio input into text.
-                                        </p>
-                                        <div class="flex flex-wrap gap-2 mb-4">
-                                            <span class="project-tag">TensorFlow</span>
-                                            <span class="project-tag">PyTorch</span>
-                                            <span class="project-tag">WebRTC</span>
+                                    </div>
+
+                                    <!-- Project 2 (Placeholder) -->
+                                    <div class="project-card glass group">
+                                        <div class="p-6">
+                                            <div class="flex items-center mb-4">
+                                                <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                                    </svg>
+                                                </div>
+                                                <h3
+                                                    class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">
+                                                    Voice Recognition System</h3>
+                                            </div>
+                                            <p class="text-gray-400 mb-4 text-sm">
+                                                A real-time speech recognition system that accurately transcribes audio
+                                                input into text.
+                                            </p>
+                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                <span class="project-tag">TensorFlow</span>
+                                                <span class="project-tag">PyTorch</span>
+                                                <span class="project-tag">WebRTC</span>
+                                            </div>
+                                            <a href="#"
+                                                class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center"
+                                                data-id="project2">
+                                                View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
                                         </div>
-                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="project2">
-                                            View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                        </a>
+                                    </div>
+
+                                    <!-- Project 3 (Placeholder) -->
+                                    <div class="project-card glass group">
+                                        <div class="p-6">
+                                            <div class="flex items-center mb-4">
+                                                <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                    </svg>
+                                                </div>
+                                                <h3
+                                                    class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">
+                                                    Computer Vision for Healthcare</h3>
+                                            </div>
+                                            <p class="text-gray-400 mb-4 text-sm">
+                                                AI models that assist radiologists in detecting irregularities in
+                                                medical images.
+                                            </p>
+                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                <span class="project-tag">Python</span>
+                                                <span class="project-tag">OpenCV</span>
+                                                <span class="project-tag">Deep Learning</span>
+                                            </div>
+                                            <a href="#"
+                                                class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center"
+                                                data-id="project3">
+                                                View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Project 3 (Placeholder) -->
-                                <div class="project-card glass rounded-lg overflow-hidden border border-gray-800 group">
-                                    <div class="p-6">
-                                        <div class="flex items-center mb-4">
-                                            <div class="bg-accent/10 rounded-md p-3 border border-accent/30">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                </svg>
-                                            </div>
-                                            <h3 class="ml-3 text-lg font-semibold text-white group-hover:text-accent transition-colors">Computer Vision for Healthcare</h3>
-                                        </div>
-                                        <p class="text-gray-400 mb-4 text-sm">
-                                            AI models that assist radiologists in detecting irregularities in medical images.
-                                        </p>
-                                        <div class="flex flex-wrap gap-2 mb-4">
-                                            <span class="project-tag">Python</span>
-                                            <span class="project-tag">OpenCV</span>
-                                            <span class="project-tag">Deep Learning</span>
-                                        </div>
-                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-project inline-flex items-center" data-id="project3">
-                                            View Project <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                        </a>
-                                    </div>
+                                <div class="mt-8 text-center lg:text-left">
+                                    <button id="loadMoreProjects" class="btn-secondary text-sm">
+                                        Load More Projects
+                                    </button>
                                 </div>
                             </div>
-        
-                            <div class="mt-8 text-center lg:text-left">
-                                <button id="loadMoreProjects" class="btn-secondary text-sm">
-                                    Load More Projects
-                                </button>
+
+                            <!-- Blog Section -->
+                            <div id="blog" class="relative scroll-mt-24">
+                                <div class="flex items-center mb-8">
+                                    <h2 class="text-2xl font-extrabold text-white sm:text-3xl font-mono">
+                                        <span class="text-accent">#</span> Blogs
+                                    </h2>
+                                    <div class="h-px bg-gray-800 flex-grow ml-6"></div>
+                                </div>
+                                <p class="mb-8 text-sm text-gray-400 font-mono">
+                                    /* Thoughts, insights, and tutorials on AI and software development */
+                                </p>
+
+                                <div class="grid gap-6 grid-cols-1">
+                                    <!-- Blog Post 1 -->
+                                    <div class="blog-card glass">
+                                        <div class="p-6">
+                                            <div class="flex items-center text-xs text-accent mb-3 font-mono">
+                                                <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd"
+                                                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <span>2025-04-12</span>
+                                            </div>
+                                            <h3
+                                                class="text-lg font-semibold text-white mb-2 hover:text-accent transition-colors">
+                                                Use Agent AI and Cursor to build a personal website</h3>
+                                            <p class="text-gray-400 mb-4 text-sm">
+                                                This website is built using Flowith, Cursor, and Tencent Edgeone Pages.
+                                            </p>
+                                            <a href="#"
+                                                class="text-sm text-accent font-medium hover:underline view-blog inline-flex items-center"
+                                                data-id="blog1">
+                                                read_more() <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Blog Post 2 (Placeholder) -->
+                                    <div class="blog-card glass">
+                                        <div class="p-6">
+                                            <div class="flex items-center text-xs text-accent mb-3 font-mono">
+                                                <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd"
+                                                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                                <span>2025-03-28</span>
+                                            </div>
+                                            <h3
+                                                class="text-lg font-semibold text-white mb-2 hover:text-accent transition-colors">
+                                                Deep Learning in Medical Imaging</h3>
+                                            <p class="text-gray-400 mb-4 text-sm">
+                                                Exploring how CNNs are revolutionizing early diagnosis in radiology.
+                                            </p>
+                                            <a href="#"
+                                                class="text-sm text-accent font-medium hover:underline view-blog inline-flex items-center"
+                                                data-id="blog2">
+                                                read_more() <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-8 text-center lg:text-left">
+                                    <a href="#" class="btn-secondary text-sm">
+                                        View All Articles
+                                    </a>
+                                </div>
                             </div>
+
                         </div>
 
-                        <!-- Blog Section -->
-                        <div id="blog" class="relative scroll-mt-24">
-                            <div class="flex items-center mb-8">
-                                <h2 class="text-2xl font-extrabold text-white sm:text-3xl font-mono">
-                                    <span class="text-accent">#</span> Blogs
-                                </h2>
-                                <div class="h-px bg-gray-800 flex-grow ml-6"></div>
-                            </div>
-                             <p class="mb-8 text-sm text-gray-400 font-mono">
-                                /* Thoughts, insights, and tutorials on AI and software development */
-                            </p>
-                            
-                            <div class="grid gap-6 grid-cols-1">
-                                <!-- Blog Post 1 -->
-                                <div class="blog-card glass">
-                                    <div class="p-6">
-                                        <div class="flex items-center text-xs text-accent mb-3 font-mono">
-                                            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                            </svg>
-                                            <span>2025-04-12</span>
+                        <!-- Right Column: Sidebar -->
+                        <aside class="hidden lg:block w-1/4 relative">
+                            <div class="sticky top-28 space-y-8">
+
+                                <!-- Music Widget -->
+                                <div class="glass rounded-xl p-4 border border-gray-800">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h3 class="text-xs font-bold font-mono text-accent tracking-wider">NOW_PLAYING
+                                        </h3>
+                                        <div class="flex space-x-0.5">
+                                            <div class="w-0.5 h-3 bg-accent animate-pulse"></div>
+                                            <div class="w-0.5 h-2 bg-accent animate-pulse delay-75"></div>
+                                            <div class="w-0.5 h-3 bg-accent animate-pulse delay-150"></div>
                                         </div>
-                                        <h3 class="text-lg font-semibold text-white mb-2 hover:text-accent transition-colors">Use Agent AI and Cursor to build a personal website</h3>
-                                        <p class="text-gray-400 mb-4 text-sm">
-                                            This website is built using Flowith, Cursor, and Tencent Edgeone Pages.
-                                        </p>
-                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-blog inline-flex items-center" data-id="blog1">
-                                            read_more() <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                        </a>
+                                    </div>
+
+                                    <div
+                                        class="relative group w-full h-32 mb-3 bg-black/40 rounded-lg overflow-hidden border border-gray-800/50">
+                                        <!-- Play/Pause Overlay (Always visible now) -->
+                                        <div
+                                            class="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm transition-all">
+                                            <button id="musicToggleBtn"
+                                                class="w-10 h-10 rounded-full bg-accent text-black flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_15px_rgba(0,255,157,0.4)]">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-white font-bold truncate">Stardew_Valley_Overture</div>
+                                        <div class="text-xs text-gray-500 font-mono truncate">ConcernedApe</div>
                                     </div>
                                 </div>
 
-                                <!-- Blog Post 2 (Placeholder) -->
-                                <div class="blog-card glass">
-                                    <div class="p-6">
-                                        <div class="flex items-center text-xs text-accent mb-3 font-mono">
-                                            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                            </svg>
-                                            <span>2025-03-28</span>
+                                <!-- Game Widget -->
+                                <div class="glass rounded-xl p-5 border border-gray-800">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-xs font-bold font-mono text-accent tracking-wider">MINI_GAME
+                                        </h3>
+                                        <span
+                                            class="text-[10px] text-gray-500 bg-gray-900 px-1.5 py-0.5 rounded">SNAKE_V1.0</span>
+                                    </div>
+
+                                    <div
+                                        class="relative aspect-square bg-black/80 rounded-lg border border-gray-800 overflow-hidden">
+                                        <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+                                        <!-- Game Overlay -->
+                                        <div id="gameOverlay"
+                                            class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10">
+                                            <p class="text-accent font-mono text-xs mb-3">PRESS START</p>
+                                            <button id="gameStartBtn"
+                                                class="px-3 py-1.5 bg-accent/10 border border-accent/50 text-accent text-xs font-mono rounded hover:bg-accent hover:text-black transition-all">
+                                                START
+                                            </button>
                                         </div>
-                                        <h3 class="text-lg font-semibold text-white mb-2 hover:text-accent transition-colors">Deep Learning in Medical Imaging</h3>
-                                        <p class="text-gray-400 mb-4 text-sm">
-                                            Exploring how CNNs are revolutionizing early diagnosis in radiology.
-                                        </p>
-                                        <a href="#" class="text-sm text-accent font-medium hover:underline view-blog inline-flex items-center" data-id="blog2">
-                                            read_more() <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                        </a>
+                                    </div>
+
+                                    <div class="mt-3 flex justify-between items-center text-xs font-mono text-gray-500">
+                                        <span>SCORE: <span id="scoreVal" class="text-white">0</span></span>
+                                        <span class="text-[10px]">ARROWS TO MOVE</span>
                                     </div>
                                 </div>
-                            </div>
-        
-                            <div class="mt-8 text-center lg:text-left">
-                                <a href="#" class="btn-secondary text-sm">
-                                    View All Articles
-                                </a>
-                            </div>
-                        </div>
 
+                            </div>
+                        </aside>
                     </div>
-
-                    <!-- Right Column: Sidebar -->
-                    <aside class="hidden lg:block w-1/4 relative">
-                        <div class="sticky top-28 space-y-8">
-                            
-                            <!-- Music Widget -->
-                            <div class="glass rounded-xl p-4 border border-gray-800">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h3 class="text-xs font-bold font-mono text-accent tracking-wider">NOW_PLAYING</h3>
-                                    <div class="flex space-x-0.5">
-                                        <div class="w-0.5 h-3 bg-accent animate-pulse"></div>
-                                        <div class="w-0.5 h-2 bg-accent animate-pulse delay-75"></div>
-                                        <div class="w-0.5 h-3 bg-accent animate-pulse delay-150"></div>
-                                    </div>
-                                </div>
-                                
-                                <div class="relative group w-full h-32 mb-3 bg-black/40 rounded-lg overflow-hidden border border-gray-800/50">
-                                     <!-- Play/Pause Overlay (Always visible now) -->
-                                     <div class="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm transition-all">
-                                         <button id="musicToggleBtn" class="w-10 h-10 rounded-full bg-accent text-black flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_15px_rgba(0,255,157,0.4)]">
-                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
-                                         </button>
-                                     </div>
-                                </div>
-                                
-                                <div class="space-y-1">
-                                    <div class="text-sm text-white font-bold truncate">Stardew_Valley_Overture</div>
-                                    <div class="text-xs text-gray-500 font-mono truncate">ConcernedApe</div>
-                                </div>
-                            </div>
-
-                            <!-- Game Widget -->
-                            <div class="glass rounded-xl p-5 border border-gray-800">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-xs font-bold font-mono text-accent tracking-wider">MINI_GAME</h3>
-                                    <span class="text-[10px] text-gray-500 bg-gray-900 px-1.5 py-0.5 rounded">SNAKE_V1.0</span>
-                                </div>
-                                
-                                <div class="relative aspect-square bg-black/80 rounded-lg border border-gray-800 overflow-hidden">
-                                    <canvas id="gameCanvas" class="w-full h-full block"></canvas>
-                                    
-                                    <!-- Game Overlay -->
-                                    <div id="gameOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10">
-                                        <p class="text-accent font-mono text-xs mb-3">PRESS START</p>
-                                        <button id="gameStartBtn" class="px-3 py-1.5 bg-accent/10 border border-accent/50 text-accent text-xs font-mono rounded hover:bg-accent hover:text-black transition-all">
-                                            START
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="mt-3 flex justify-between items-center text-xs font-mono text-gray-500">
-                                    <span>SCORE: <span id="scoreVal" class="text-white">0</span></span>
-                                    <span class="text-[10px]">ARROWS TO MOVE</span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </aside>
                 </div>
-            </div>
             </section>
 
             <div class="section-divider"></div>
 
             <!-- Contact Section -->
             <section id="contact" class="py-24 bg-transparent relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
-                
+                <div
+                    class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent">
+                </div>
+
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                        
+
                         <!-- Left: Header & Prompt -->
                         <div>
                             <h2 class="text-3xl font-bold text-white font-mono mb-6">
-                                <span class="text-accent mr-2">[</span>GET IN TOUCH<span class="text-accent ml-2">]</span>
+                                <span class="text-accent mr-2">[</span>GET IN TOUCH<span
+                                    class="text-accent ml-2">]</span>
                             </h2>
                             <p class="text-gray-400 font-mono text-sm leading-relaxed mb-8 max-w-md">
                                 // Ready to initiate a collaboration or discuss AI research?<br>
                                 // My communication channels are open.
                             </p>
-                            
+
                             <!-- Simulated Input Field -->
                             <div class="flex items-center font-mono text-sm text-gray-500 mt-8">
                                 <span class="text-accent mr-2">$</span>
@@ -458,13 +566,14 @@
                                 <span>PARAMETER</span>
                                 <span>VALUE</span>
                             </div>
-                            
+
                             <div class="space-y-4 mt-4">
                                 <div class="flex flex-col sm:flex-row sm:justify-between group">
                                     <span class="text-accent opacity-70 mb-1 sm:mb-0">> EMAIL_ADDRESS</span>
-                                    <a href="mailto:tt2631@nyu.edu" class="text-gray-300 hover:text-accent transition-colors">tianze.tang@meduniwien.ac.at</a>
+                                    <a href="mailto:tt2631@nyu.edu"
+                                        class="text-gray-300 hover:text-accent transition-colors">tianze.tang@meduniwien.ac.at</a>
                                 </div>
-                                
+
                                 <div class="flex flex-col sm:flex-row sm:justify-between group">
                                     <span class="text-accent opacity-70 mb-1 sm:mb-0">> CURRENT_LOC</span>
                                     <span class="text-gray-300">Vienna, Austria</span>
@@ -472,12 +581,15 @@
 
                                 <div class="flex flex-col sm:flex-row sm:justify-between group">
                                     <span class="text-accent opacity-70 mb-1 sm:mb-0">> CONNECT_LINK</span>
-                                    <a href="https://www.linkedin.com/in/tianze-tang-27741621a/" target="_blank" class="text-gray-300 hover:text-accent transition-colors decoration-1 underline underline-offset-4 decoration-gray-700 hover:decoration-accent">LinkedIn Profile</a>
+                                    <a href="https://www.linkedin.com/in/tianze-tang-27741621a/" target="_blank"
+                                        class="text-gray-300 hover:text-accent transition-colors decoration-1 underline underline-offset-4 decoration-gray-700 hover:decoration-accent">LinkedIn
+                                        Profile</a>
                                 </div>
 
                                 <div class="flex flex-col sm:flex-row sm:justify-between group">
                                     <span class="text-accent opacity-70 mb-1 sm:mb-0">> REPO_SOURCE</span>
-                                    <a href="https://github.com/TianzeTang0504" target="_blank" class="text-gray-300 hover:text-accent transition-colors decoration-1 underline underline-offset-4 decoration-gray-700 hover:decoration-accent">GitHub/TianzeTang0504</a>
+                                    <a href="https://github.com/TianzeTang0504" target="_blank"
+                                        class="text-gray-300 hover:text-accent transition-colors decoration-1 underline underline-offset-4 decoration-gray-700 hover:decoration-accent">GitHub/TianzeTang0504</a>
                                 </div>
                             </div>
 
@@ -497,15 +609,19 @@
         </div>
 
         <!-- Back to Top Button -->
-        <button id="contentTopButton" class="hidden fixed bottom-8 right-8 bg-accent text-black font-bold p-3 rounded-full shadow-[0_0_15px_var(--accent-color)] hover:scale-110 transition-transform z-50 items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button id="contentTopButton"
+            class="hidden fixed bottom-8 right-8 bg-accent text-black font-bold p-3 rounded-full shadow-[0_0_15px_var(--accent-color)] hover:scale-110 transition-transform z-50 items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
             </svg>
         </button>
 
         <!-- Back Button -->
-        <button id="backButton" class="hidden fixed bottom-8 right-8 bg-accent text-black font-bold p-3 rounded-full shadow-[0_0_15px_var(--accent-color)] hover:scale-110 transition-transform z-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button id="backButton"
+            class="hidden fixed bottom-8 right-8 bg-accent text-black font-bold p-3 rounded-full shadow-[0_0_15px_var(--accent-color)] hover:scale-110 transition-transform z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
         </button>
@@ -516,12 +632,12 @@
     <!-- Temporarily move script to end of body to ensure load -->
     <!-- <script src="js/geek-background.js"></script> -->
     <script>
-      // Inline script to ensure immediate execution and style application
-      document.addEventListener('DOMContentLoaded', () => {
-         // Ensure body background is transparent so canvas shows through
-         document.body.style.backgroundColor = 'transparent';
-         document.documentElement.style.backgroundColor = '#050505'; // Fallback color for html
-      });
+        // Inline script to ensure immediate execution and style application
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure body background is transparent so canvas shows through
+            document.body.style.backgroundColor = 'transparent';
+            document.documentElement.style.backgroundColor = '#050505'; // Fallback color for html
+        });
     </script>
     <script src="js/geek-background.js"></script>
     <script src="js/audio-manager.js"></script>
@@ -533,9 +649,9 @@
     <script src="js/cursor.js"></script>
     <script src="js/main.js"></script>
     <script>
-        window.addEventListener("wheel", (e)=> {
-          const isPinching = e.ctrlKey
-          if(isPinching) e.preventDefault()
+        window.addEventListener("wheel", (e) => {
+            const isPinching = e.ctrlKey
+            if (isPinching) e.preventDefault()
         }, { passive: false })
     </script>
     <script>
@@ -545,12 +661,11 @@
     </script>
     <!-- 自动高亮所有代码块 -->
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        hljs.highlightAll();
-      });
+        document.addEventListener("DOMContentLoaded", () => {
+            hljs.highlightAll();
+        });
     </script>
 
 </body>
+
 </html>
-
-
