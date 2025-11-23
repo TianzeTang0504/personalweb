@@ -3,6 +3,8 @@
     max-width: 1200px;
     margin: 6rem auto 2rem;
     padding: 4rem 1rem;
+    background-color: rgba(10, 10, 10, 0.95);
+    /* More opaque for better contrast in Edge */
 }
 
 #contentContainer {
@@ -41,7 +43,8 @@
 .content-body {
     font-size: 1.125rem;
     line-height: 1.8;
-    color: var(--text-color);
+    color: #e0e0e0;
+    /* Explicit color fallback */
 }
 
 .content-body h2 {
@@ -76,7 +79,8 @@
     text-shadow: 0 0 5px var(--accent-color);
 }
 
-.content-body ul, .content-body ol {
+.content-body ul,
+.content-body ol {
     margin-bottom: 1.5rem;
     padding-left: 1.5rem;
 }
@@ -214,9 +218,12 @@
 }
 
 @keyframes bounce {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-0.25rem);
     }

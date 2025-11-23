@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Portfolio & Blog | Geek Edition</title>
+    <meta name="description"
+        content="Portfolio and blog of Tianze Tang, an AI Researcher specializing in Medical Imaging, Diffusion Models, and Generative Models.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -34,7 +36,8 @@
     <link href="css/content.css" rel="stylesheet">
     <link href="css/contact.css" rel="stylesheet">
     <link href="css/cursor.css" rel="stylesheet">
-    <script src="js/content-loader.js"></script>
+    <link href="css/cursor.css" rel="stylesheet">
+    <!-- <script src="js/content-loader.js"></script> -->
     <!-- 添加 highlight.js 样式 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/dracula.min.css">
     <!-- 添加 highlight.js 主库 -->
@@ -100,7 +103,8 @@
             </nav>
 
             <!-- Mobile Menu Button -->
-            <button id="mobileMenuButton" class="md:hidden text-white hover:text-accent transition-colors">
+            <button id="mobileMenuButton" class="md:hidden text-white hover:text-accent transition-colors"
+                aria-label="Toggle Mobile Menu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
                     </path>
@@ -629,8 +633,6 @@
 
     <!-- Test Script -->
     <!-- <script src="js/geek-background.js"></script> -->
-    <!-- Temporarily move script to end of body to ensure load -->
-    <!-- <script src="js/geek-background.js"></script> -->
     <script>
         // Inline script to ensure immediate execution and style application
         document.addEventListener('DOMContentLoaded', () => {
@@ -645,7 +647,8 @@
     <script src="js/projects.js"></script>
     <script src="js/blog.js"></script>
     <script src="js/sidebar.js"></script>
-    <script src="js/floating-player.js"></script>
+    <script src="js/sidebar.js"></script>
+    <!-- <script src="js/floating-player.js"></script> -->
     <script src="js/cursor.js"></script>
     <script src="js/main.js"></script>
     <script>
