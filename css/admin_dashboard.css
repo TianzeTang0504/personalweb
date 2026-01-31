@@ -273,13 +273,16 @@ html {
 .panel-body::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color);
 }
+
 /* --- MOBILE / TABLET RESPONSIVE OVERRIDES --- */
 @media (max-width: 1050px) {
+
     /* 1. Unlock Body Scrolling */
     body {
         overflow-y: auto !important;
         height: auto !important;
-        align-items: flex-start !important; /* Top align to avoid cutting off header */
+        align-items: flex-start !important;
+        /* Top align to avoid cutting off header */
         padding-top: 20px;
         padding-bottom: 60px;
     }
@@ -290,8 +293,11 @@ html {
         height: auto !important;
         padding: 10px !important;
         overflow: visible !important;
-        display: flex !important;
-        flex-direction: column;
+    }
+
+    /* Ensure hidden stays hidden even on mobile */
+    #dashboard-container.hidden {
+        display: none !important;
     }
 
     /* 3. Break Grid into Vertical Stack */
@@ -306,7 +312,10 @@ html {
     }
 
     /* 4. Reset Panel Positioning & Sizing */
-    #project-panel, #event-panel, #task-panel, #memo-panel {
+    #project-panel,
+    #event-panel,
+    #task-panel,
+    #memo-panel {
         grid-row: auto !important;
         grid-column: auto !important;
         width: 100%;
@@ -314,18 +323,45 @@ html {
     }
 
     /* 5. Adjust Heights for Mobile Comfort */
-    #project-panel { height: 500px; order: 1; } /* Main focus */
-    #task-panel    { height: 400px; order: 2; } /* Tasks second */
-    #event-panel   { height: 180px; order: 3; }
-    #memo-panel    { height: 250px; order: 4; } /* Taller memo for mobile typing */
+    #project-panel {
+        height: 500px;
+        order: 1;
+    }
+
+    /* Main focus */
+    #task-panel {
+        height: 400px;
+        order: 2;
+    }
+
+    /* Tasks second */
+    #event-panel {
+        height: 180px;
+        order: 3;
+    }
+
+    #memo-panel {
+        height: 250px;
+        order: 4;
+    }
+
+    /* Taller memo for mobile typing */
 
     /* 6. Fix Mobile Text Sizing */
-    .panel-title { font-size: 0.9rem; }
-    .project-tab { padding: 10px 15px; font-size: 0.85rem; max-width: 120px; }
-    
+    .panel-title {
+        font-size: 0.9rem;
+    }
+
+    .project-tab {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+        max-width: 120px;
+    }
+
     /* 7. Hide Login Container properly if needed */
     #login-container {
         width: 90%;
-        margin: 50px auto;
+        margin: auto;
+        /* Allow flex centering to work */
     }
 }
