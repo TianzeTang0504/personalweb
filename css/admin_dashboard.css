@@ -207,6 +207,12 @@ html {
     transition: all 0.2s;
 }
 
+.form-input option {
+    background-color: #1a1a1a;
+    /* Dark background for options */
+    color: var(--primary-color);
+}
+
 /* Accentuated Date Picker Icon */
 .form-input::-webkit-calendar-picker-indicator {
     filter: invert(50%) sepia(100%) saturate(500%) hue-rotate(110deg);
