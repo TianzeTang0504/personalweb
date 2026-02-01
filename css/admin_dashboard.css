@@ -123,15 +123,18 @@ html {
 }
 
 .project-tab {
-    padding: 8px 12px;
+    padding: 8px 10px;
+    /* Slightly tighter padding for auto-width */
     font-size: 0.75rem;
     cursor: pointer;
     border: 1px solid transparent;
     border-bottom: none;
     background: rgba(0, 0, 0, 0.2);
-    /* Exact width as requested */
-    width: 115px;
-    min-width: 115px;
+    /* Dynamic width logic */
+    width: auto;
+    max-width: 115px;
+    min-width: 60px;
+    /* Ensure they aren't too tiny */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
