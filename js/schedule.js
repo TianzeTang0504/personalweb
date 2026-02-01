@@ -176,9 +176,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 1. PROJECTS ---
+    // Dynamic resizing logic
+    let dynamicFitAll = 4;
+    let dynamicFitWithOverflow = 3;
+
+    // Observer to adjust visible tabs based on width
+    const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+            const width = entry.contentRect.width;
+
+            // Tab width 115px + 2px gap = 117px
+            // Overflow button ~34px.
+
+            // How many fit if NO overflow button needed?
+            const rawFitAll = Math.floor(width / 117);
+
+            // How many fit IF overflow button is needed?
+            const rawFitWithOverflow = Math.floor((width - 34) / 117);
+
+            // Logic: 
+            // Mobile Optimization: Ensure at least 2 visible if screen isn't tiny
+            // But if total space allows only 1, we must respect that.
+
+            let newFitAll = Math.max(1, rawFitAll);
+            let newFitWithOverflow = Math.max(2, rawFitWithOverflow);
+
+            // If screen is REALLY small (<280px), fallback to 1
+            if (width < 280) newFitWithOverflow = 1;
+
+            if (newFitAll !== dynamicFitAll || newFitWithOverflow !== dynamicFitWithOverflow) {
+                dynamicFitAll = newFitAll;
+                dynamicFitWithOverflow = newFitWithOverflow;
+                renderProjects();
+            }
+        }
+    });
+
+    // Start observing once DOM is ready (in init or here if element exists)
+    // We'll queue it next tick to ensure element exists
+    setTimeout(() => {
+        const pPanel = document.getElementById('project-panel');
+        if (pPanel) resizeObserver.observe(pPanel);
+    }, 100);
+
     function renderProjects() {
         if (!projectTabsList) return;
         projectTabsList.innerHTML = '';
+        // Restore strictly to CSS class for alignment control
+        projectTabsList.className = 'project-tabs';
+
+        // Remove existing dropdown if any (from previous renders to avoid dupe)
+        const oldDrop = document.querySelector('.projects-dropdown-menu');
+        if (oldDrop) oldDrop.remove();
 
         if (allData.projects.length === 0) {
             projectTabsList.innerHTML = '<div class="p-2 text-xs text-gray-500 italic">No active projects</div>';
@@ -192,21 +241,124 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sorted.length > 0) activeProjectId = sorted[0].id;
         }
 
-        // Display tabs sorted by startDate DESCENDING
-        allData.projects
-            .sort((a, b) => (b.startDate || '0000').localeCompare(a.startDate || '0000'))
-            .forEach(p => {
-                const tab = document.createElement('div');
-                tab.className = `project-tab ${activeProjectId === p.id ? 'active' : ''}`;
-                tab.textContent = p.name;
-                tab.onclick = () => {
+        const sortedProjects = [...allData.projects].sort((a, b) => (b.startDate || '0000').localeCompare(a.startDate || '0000'));
+
+        // Determine how many tabs to show
+        let MAX_VISIBLE = dynamicFitWithOverflow; // Default to overflow layout
+
+        // If ALL projects fit in the container without an overflow button, use that count.
+        if (sortedProjects.length <= dynamicFitAll) {
+            MAX_VISIBLE = sortedProjects.length;
+        } else {
+            // Must use overflow button, so limited to fitWithOverflow
+            MAX_VISIBLE = dynamicFitWithOverflow;
+        }
+        const visibleProjects = sortedProjects.slice(0, MAX_VISIBLE);
+        const overflowProjects = sortedProjects.slice(MAX_VISIBLE);
+
+        // Helper to check project urgency (any subtask urgent)
+        const hasUrgentTasks = (p) => {
+            return (p.subtasks || []).some(s =>
+                s.status !== 'done' && s.status !== 'pending' && checkUrgency(s.deadline)
+            );
+        };
+
+        // Render Visible Tabs
+        visibleProjects.forEach(p => {
+            const tab = document.createElement('div');
+            tab.className = `project-tab ${activeProjectId === p.id ? 'active' : ''}`;
+
+            // Urgency Dot
+            if (hasUrgentTasks(p)) {
+                tab.innerHTML += `<div class="urgent-dot"></div>`;
+            }
+
+            const span = document.createElement('span');
+            span.textContent = p.name;
+            tab.appendChild(span);
+
+            tab.onclick = () => {
+                if (isEditingProject && !confirm('Discard unsaved project changes?')) return;
+                isEditingProject = false;
+                activeProjectId = p.id;
+                renderProjects();
+            };
+            projectTabsList.appendChild(tab);
+        });
+
+        // Render Overflow Button if needed
+        if (overflowProjects.length > 0) {
+            const container = document.createElement('div');
+            container.className = 'project-overflow-container';
+
+            const moreBtn = document.createElement('div');
+            moreBtn.className = `project-more-btn ${overflowProjects.some(p => p.id === activeProjectId) ? 'overflow-active' : ''} text-[10px]`;
+            moreBtn.innerHTML = '◀';
+
+            container.appendChild(moreBtn);
+
+            // Check if any overflow project has urgency
+            if (overflowProjects.some(p => hasUrgentTasks(p))) {
+                const dot = document.createElement('div');
+                dot.className = 'urgent-dot';
+                dot.style.position = 'absolute';
+                dot.style.top = '6px';
+                dot.style.right = '4px';
+                container.appendChild(dot);
+            }
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'projects-dropdown-menu';
+
+            overflowProjects.forEach(p => {
+                const item = document.createElement('div');
+                item.className = `dropdown-item ${activeProjectId === p.id ? 'active' : ''}`;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = p.name;
+
+                // Dot in dropdown
+                if (hasUrgentTasks(p)) {
+                    nameSpan.innerHTML += `<span class="inline-block w-1.5 h-1.5 bg-red-500 rounded-full ml-2 animate-pulse"></span>`;
+                }
+
+                item.appendChild(nameSpan);
+                item.onclick = (e) => {
+                    e.stopPropagation(); // prevent closing immediately if logic changes
                     if (isEditingProject && !confirm('Discard unsaved project changes?')) return;
                     isEditingProject = false;
                     activeProjectId = p.id;
                     renderProjects();
                 };
-                projectTabsList.appendChild(tab);
+                dropdown.appendChild(item);
             });
+
+            // Toggle Dropdown
+            moreBtn.onclick = (e) => {
+                e.stopPropagation();
+                // Close others
+                document.querySelectorAll('.projects-dropdown-menu').forEach(el => {
+                    if (el !== dropdown) el.classList.remove('show');
+                });
+                const isShowing = dropdown.classList.toggle('show');
+                if (isShowing) moreBtn.classList.add('active');
+                else moreBtn.classList.remove('active');
+
+                // Reset others if needed (optional)
+            };
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                    moreBtn.classList.remove('active');
+                }
+            });
+
+            container.appendChild(moreBtn);
+            container.appendChild(dropdown);
+            projectTabsList.appendChild(container);
+        }
 
         const activeProject = allData.projects.find(p => p.id === activeProjectId);
         if (activeProject) {
