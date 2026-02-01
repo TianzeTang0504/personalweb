@@ -14,10 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const memoList = document.querySelector('#memo-panel .panel-body .space-y-2');
     const memoSearch = document.querySelector('.memo-search');
 
-    // --- SETTINGS BUTTON LOGIC (Global Scope) ---
-    // Bind immediately, don't wait for Auth
-    // Settings listener removed as per user request
+    const settingsBtn = document.getElementById('settingsBtn');
+    const genericModal = document.getElementById('genericModal');
 
+    // --- SETTINGS BUTTON LOGIC ---
+    settingsBtn.addEventListener('click', () => {
+        if (!currentUser) return;
+        showSettingsModal();
+    });
     // State
     let db = null;
     let auth = null;
@@ -47,22 +51,120 @@ document.addEventListener('DOMContentLoaded', () => {
                 dashboardContainer.classList.remove('hidden');
                 userEmailDisplay.textContent = user.email;
 
-                // 1. Initialize DB Listeners (CRITICAL: Was missing)
+                // Sync current user email and initial state to top-level doc
+                await db.collection('users').doc(user.uid).set({
+                    email: user.email
+                }, { merge: true });
+
                 setupListeners();
-
-                // 2. Settings Event is handled globally now
-
-                // 3. Check for onboarding (Async)
                 await checkAndMigrateOrInit(user);
 
             } else {
-                cleanupListeners(); // Cleanup on logout
+                cleanupListeners();
                 loginContainer.style.display = 'flex';
                 dashboardContainer.style.display = 'none';
                 dashboardContainer.classList.add('hidden');
                 currentUser = null;
             }
         });
+    }
+
+    /**
+     * Settings Modal Logic
+     */
+    async function showSettingsModal() {
+        // 1. Get user configuration
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const userData = userDoc.exists ? userDoc.data() : {};
+        const isAdmin = userData.role === 'admin';
+
+        let modalHtml = `
+            <div class="modal-content glass p-6 max-w-lg w-full relative animate-scale-in">
+                <button class="absolute top-4 right-4 text-gray-500 hover:text-white modal-close-btn">&times;</button>
+                <h2 class="text-xl font-bold text-white mb-6 tracking-widest border-l-4 border-accent pl-3">SYSTEM_SETTINGS</h2>
+                
+                <div class="space-y-6">
+                    <!-- User Section -->
+                    <div class="p-4 border border-white/5 bg-white/5 rounded">
+                        <p class="text-[10px] text-accent mb-2 uppercase opacity-50 font-bold tracking-tighter">Your Intelligence Preferences</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-300">Daily Intelligence Report (Email)</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="userReportToggle" class="sr-only peer" ${userData.receiveReport !== false ? 'checked' : ''}>
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    ${isAdmin ? `
+                        <!-- Admin Section -->
+                        <div class="p-4 border border-accent/20 bg-accent/5 rounded">
+                            <p class="text-[10px] text-accent mb-4 uppercase font-bold tracking-tighter">> SUPER_ADMIN_PANEL :: USER_MANAGEMENT</p>
+                            <div id="admin-user-list" class="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                <div class="text-center py-4 text-xs opacity-50 italic">Scanning encrypted directories...</div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="mt-8 pt-4 border-t border-white/5 text-[9px] text-gray-600 font-mono flex justify-between">
+                    <span>UID: ${currentUser.uid}</span>
+                    <span>ACCESS_LEVEL: ${isAdmin ? 'SUPER_USER' : 'CLIENT'}</span>
+                </div>
+            </div>
+        `;
+
+        genericModal.innerHTML = modalHtml;
+        genericModal.classList.add('active');
+
+        // Toggle logic for self
+        const userToggle = document.getElementById('userReportToggle');
+        userToggle.addEventListener('change', async (e) => {
+            await db.collection('users').doc(currentUser.uid).update({
+                receiveReport: e.target.checked
+            });
+            console.log("Preference updated locally.");
+        });
+
+        // Close logic
+        const closeBtn = genericModal.querySelector('.modal-close-btn');
+        closeBtn.onclick = () => genericModal.classList.remove('active');
+
+        // If admin, load all users
+        if (isAdmin) {
+            const adminUserList = document.getElementById('admin-user-list');
+            const usersSnap = await db.collection('users').get();
+            adminUserList.innerHTML = '';
+
+            usersSnap.forEach(doc => {
+                const u = doc.data();
+                const uId = doc.id;
+                // Don't show self in manager or show with protect?
+                const userRow = document.createElement('div');
+                userRow.className = "flex items-center justify-between py-2 border-b border-white/5 last:border-0";
+                userRow.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xs text-white truncate max-w-[150px]">${u.email || 'UNNAMED_SEC'}</span>
+                        <span class="text-[8px] text-gray-500 font-mono">${uId.substring(0, 8)}...</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer admin-toggle" data-uid="${uId}" ${u.receiveReport !== false ? 'checked' : ''}>
+                        <div class="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent/80"></div>
+                    </label>
+                `;
+                adminUserList.appendChild(userRow);
+            });
+
+            // Admin Toggle Listeners
+            adminUserList.querySelectorAll('.admin-toggle').forEach(tgl => {
+                tgl.addEventListener('change', async (e) => {
+                    const targetUid = e.target.getAttribute('data-uid');
+                    await db.collection('users').doc(targetUid).update({
+                        receiveReport: e.target.checked
+                    });
+                });
+            });
+        }
     }
 
     // Helper to get user-scoped collection

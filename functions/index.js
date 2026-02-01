@@ -121,7 +121,11 @@ exports.scheduledDailyReport = onSchedule({
 
     const tasks = [];
     for (const doc of usersSnapshot.docs) {
-        if (doc.data().email) tasks.push(processUserReport(doc.id, doc.data().email, transporter));
+        const userData = doc.data();
+        // 只有设置了 receiveReport 为 true 且有 email 的用户才接收
+        if (userData.email && userData.receiveReport !== false) {
+            tasks.push(processUserReport(doc.id, userData.email, transporter));
+        }
     }
     await Promise.all(tasks);
 });
@@ -139,9 +143,12 @@ exports.testMultiUserReport = onRequest(async (req, res) => {
         });
 
         for (const doc of usersSnapshot.docs) {
-            if (doc.data().email) await processUserReport(doc.id, doc.data().email, transporter);
+            const userData = doc.data();
+            if (userData.email && userData.receiveReport !== false) {
+                await processUserReport(doc.id, userData.email, transporter);
+            }
         }
-        res.status(200).send("New styled report dispatched.");
+        res.status(200).send("New styled report dispatched to active subscribers.");
     } catch (error) {
         res.status(500).send(error.message);
     }
