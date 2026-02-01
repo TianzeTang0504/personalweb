@@ -11,6 +11,7 @@ class SharedAudioManager {
         SharedAudioManager.instance = this;
 
         this.audio = new Audio('assets/Stardew_Valley_Overture.mp3');
+        this.audio.preload = 'none'; // Optimize: Do not download until user clicks play
         this.audio.loop = true;
         this.audio.volume = 0.5;
         this.isPlaying = false;
@@ -21,7 +22,7 @@ class SharedAudioManager {
 
     play() {
         if (this.isPlaying) return Promise.resolve();
-        
+
         return this.audio.play().then(() => {
             this.isPlaying = true;
             this.notifyListeners();
@@ -33,7 +34,7 @@ class SharedAudioManager {
 
     pause() {
         if (!this.isPlaying) return;
-        
+
         this.audio.pause();
         this.isPlaying = false;
         this.notifyListeners();

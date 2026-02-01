@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeProjectId = null;
     let allData = { projects: [], tasks: [], events: [], memos: [] };
     let isEditingProject = false;
+    // Listener cleanup
+    let dbUnsubscribes = [];
 
     // Initialize Firebase
     async function init() {
@@ -54,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await checkAndMigrateOrInit(user);
 
             } else {
+                cleanupListeners(); // Cleanup on logout
                 loginContainer.style.display = 'flex';
                 dashboardContainer.style.display = 'none';
                 dashboardContainer.classList.add('hidden');
@@ -154,18 +157,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set up Real-time Listeners
     function setupListeners() {
+        cleanupListeners(); // Ensure no duplicates
         const collections = ['projects', 'tasks', 'events', 'memos'];
         let loadedCount = 0;
         collections.forEach(col => {
-            // Updated to listen to USER SCOPED collection
-            getUserRef(col).onSnapshot(snapshot => {
+            const unsub = getUserRef(col).onSnapshot(snapshot => {
                 allData[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 loadedCount++;
+                // Initial load check
                 if (loadedCount >= collections.length) {
+                    renderAll();
+                } else if (loadedCount > collections.length) {
+                    // Subsequent updates
                     renderAll();
                 }
             });
+            dbUnsubscribes.push(unsub);
         });
+    }
+
+    function cleanupListeners() {
+        dbUnsubscribes.forEach(unsub => unsub());
+        dbUnsubscribes = [];
     }
 
     function renderAll() {
@@ -431,15 +444,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="space-y-1" id="subtasks-container">
                     ${(p.subtasks || [])
                 .sort((a, b) => {
-                    // Status Weight: Active=1, Pending=2, Done=3
+                    // 1. Status Weight: Active=1, Pending=2, Done=3
                     const statusWeight = { 'active': 1, 'pending': 2, 'done': 3 };
-                    const wa = statusWeight[a.status] || 99;
-                    const wb = statusWeight[b.status] || 99;
+                    const wa = statusWeight[a.status] || 1;
+                    const wb = statusWeight[b.status] || 1;
                     if (wa !== wb) return wa - wb;
 
-                    // Secondary Sort: Date Ascending
+                    // 2. Date Presence (No deadline -> Bottom of group)
+                    if (!a.deadline && !b.deadline) return 0;
                     if (!a.deadline) return 1;
                     if (!b.deadline) return -1;
+
+                    // 3. Date Ascending (Urgent first)
                     return new Date(a.deadline) - new Date(b.deadline);
                 })
                 .map((s, idx) => {
@@ -472,13 +488,20 @@ document.addEventListener('DOMContentLoaded', () => {
             eventCards.innerHTML = '<div class="text-xs text-gray-600 italic px-2">No event horizon detected...</div>';
             return;
         }
-        allData.events.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(e => {
+        allData.events.sort((a, b) => {
+            const statusA = a.status === 'done' ? 1 : 0;
+            const statusB = b.status === 'done' ? 1 : 0;
+            if (statusA !== statusB) return statusA - statusB;
+            return new Date(b.date) - new Date(a.date);
+        }).forEach(e => {
             const card = document.createElement('div');
-            card.className = 'event-card';
+            const isDone = e.status === 'done';
+            const isUrgent = !isDone && checkUrgency(e.date);
+            card.className = `event-card ${isDone ? 'opacity-50' : ''} ${isUrgent ? 'border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : ''}`;
             card.onclick = () => openGenericModal('events', e);
             card.innerHTML = `
-                <div class="text-[10px] text-accent font-bold mb-1 font-mono">${e.date}</div>
-                <div class="text-xs text-white font-bold mb-1">${e.name}</div>
+                <div class="text-[10px] ${isDone ? 'text-gray-500' : (isUrgent ? 'text-red-500 animate-pulse font-bold' : 'text-accent')} font-bold mb-1 font-mono">${e.date} ${isDone ? '[DONE]' : ''}</div>
+                <div class="text-xs ${isDone ? 'text-gray-500 line-through' : 'text-white'} font-bold mb-1">${e.name}</div>
                 <div class="text-[10px] text-gray-500 truncate">${e.description || ''}</div>
             `;
             eventCards.appendChild(card);
@@ -493,14 +516,21 @@ document.addEventListener('DOMContentLoaded', () => {
             taskList.innerHTML = '<div class="text-xs text-gray-600 italic">Queue empty...</div>';
             return;
         }
-        allData.tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).forEach(t => {
+        allData.tasks.sort((a, b) => {
+            const statusA = a.status === 'done' ? 1 : 0;
+            const statusB = b.status === 'done' ? 1 : 0;
+            if (statusA !== statusB) return statusA - statusB;
+            // 按照DDL排序：时间晚（大）的放上面，时间早（小）的放下面
+            return new Date(b.deadline) - new Date(a.deadline);
+        }).forEach(t => {
             const item = document.createElement('div');
             item.className = 'flex justify-between items-center group cursor-pointer hover:bg-white/5 p-2 rounded transition-all';
             item.onclick = () => openGenericModal('tasks', t);
-            const isUrgent = checkUrgency(t.deadline);
+            const isDone = t.status === 'done';
+            const isUrgent = !isDone && checkUrgency(t.deadline);
             item.innerHTML = `
-                <span class="text-xs text-gray-300">${t.name}</span>
-                <span class="text-[10px] font-mono border px-1 rounded ${isUrgent ? 'text-red-500 animate-pulse font-bold border-red-500/50 bg-red-500/10' : 'text-accent border-accent/20 bg-accent/5'}">${t.deadline || ''}</span>
+                <span class="text-xs ${isDone ? 'text-gray-600 line-through' : 'text-gray-300'}">${t.name}</span>
+                <span class="text-[10px] font-mono border px-1 rounded ${isDone ? 'text-gray-600 border-gray-600/30' : (isUrgent ? 'text-red-500 animate-pulse font-bold border-red-500/50 bg-red-500/10' : 'text-accent border-accent/20 bg-accent/5')}">${t.deadline || ''}</span>
             `;
             taskList.appendChild(item);
         });
@@ -589,6 +619,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="text" id="m-name" placeholder="Event Name" class="form-input" value="${data?.name || ''}" autocomplete="off">
                     <input type="date" id="m-date" class="form-input" value="${data?.date || ''}">
                     <textarea id="m-desc" placeholder="Details/Description..." class="form-input h-24 pt-2 resize-none">${data?.description || ''}</textarea>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] text-gray-500 uppercase">Status:</label>
+                        <select id="m-status" class="form-input text-[10px] w-24 appearance-none bg-accent/10 border-accent/20 text-accent font-bold h-8">
+                            <option value="active" ${data?.status !== 'done' ? 'selected' : ''}>ACTIVE</option>
+                            <option value="done" ${data?.status === 'done' ? 'selected' : ''}>DONE</option>
+                        </select>
+                    </div>
                 </div>
             `;
         } else if (type === 'tasks') {
@@ -596,6 +633,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="space-y-4">
                     <input type="text" id="m-name" placeholder="Task Description" class="form-input" value="${data?.name || ''}" autocomplete="off">
                     <input type="date" id="m-deadline" class="form-input" value="${data?.deadline || ''}">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] text-gray-500 uppercase">Status:</label>
+                        <select id="m-status" class="form-input text-[10px] w-24 appearance-none bg-accent/10 border-accent/20 text-accent font-bold h-8">
+                            <option value="active" ${data?.status !== 'done' ? 'selected' : ''}>ACTIVE</option>
+                            <option value="done" ${data?.status === 'done' ? 'selected' : ''}>DONE</option>
+                        </select>
+                    </div>
                 </div>
             `;
         } else if (type === 'memos') {
@@ -636,10 +680,12 @@ document.addEventListener('DOMContentLoaded', () => {
             data.name = document.getElementById('m-name').value;
             data.date = normalizeDate(document.getElementById('m-date').value);
             data.description = document.getElementById('m-desc').value;
+            data.status = document.getElementById('m-status').value;
             if (!data.name || !data.date) return alert("Title and date required.");
         } else if (type === 'tasks') {
             data.name = document.getElementById('m-name').value;
             data.deadline = normalizeDate(document.getElementById('m-deadline').value);
+            data.status = document.getElementById('m-status').value;
             if (!data.name || !data.deadline) return alert("Title and deadline required.");
         } else if (type === 'memos') {
             data.name = document.getElementById('m-name').value;
