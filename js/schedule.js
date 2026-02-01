@@ -83,23 +83,33 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!activeProjectId) activeProjectId = allData.projects[0].id;
+        if (!activeProjectId) {
+            // Sort by startDate DESCENDING (latest/closest to now first)
+            const sorted = [...allData.projects].sort((a, b) => (b.startDate || '0000').localeCompare(a.startDate || '0000'));
+            if (sorted.length > 0) activeProjectId = sorted[0].id;
+        }
 
-        allData.projects.forEach(p => {
-            const tab = document.createElement('div');
-            tab.className = `project-tab ${activeProjectId === p.id ? 'active' : ''}`;
-            tab.textContent = p.name;
-            tab.onclick = () => {
-                if (isEditingProject && !confirm('Discard unsaved project changes?')) return;
-                isEditingProject = false;
-                activeProjectId = p.id;
-                renderProjects();
-            };
-            projectTabsList.appendChild(tab);
-        });
+        // Display tabs sorted by startDate DESCENDING
+        allData.projects
+            .sort((a, b) => (b.startDate || '0000').localeCompare(a.startDate || '0000'))
+            .forEach(p => {
+                const tab = document.createElement('div');
+                tab.className = `project-tab ${activeProjectId === p.id ? 'active' : ''}`;
+                tab.textContent = p.name;
+                tab.onclick = () => {
+                    if (isEditingProject && !confirm('Discard unsaved project changes?')) return;
+                    isEditingProject = false;
+                    activeProjectId = p.id;
+                    renderProjects();
+                };
+                projectTabsList.appendChild(tab);
+            });
 
         const activeProject = allData.projects.find(p => p.id === activeProjectId);
-        if (activeProject && !isEditingProject) renderProjectDetails(activeProject);
+        if (activeProject) {
+            if (isEditingProject) renderProjectEditMode(activeProject);
+            else renderProjectDetails(activeProject);
+        }
     }
 
     function renderProjectDetails(p) {
@@ -129,6 +139,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-sm text-white font-mono">${p.deadline === 'PRESENT' ? '<span class="text-accent font-bold">ONGOING</span>' : (p.deadline || 'YYYY-MM-DD')}</div>
                     </div>
                 </div>
+
+                <!-- Timeline Progress Bar -->
+                <div class="mb-6 relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    ${(() => {
+                let percent = 50;
+                let isIndefinite = false;
+                if (p.deadline === 'PRESENT') {
+                    isIndefinite = true;
+                } else if (p.startDate && p.deadline) {
+                    const start = new Date(p.startDate).getTime();
+                    const end = new Date(p.deadline).getTime();
+                    const now = new Date().getTime();
+                    if (end > start) {
+                        percent = ((now - start) / (end - start)) * 100;
+                        percent = Math.min(Math.max(percent, 0), 100);
+                    }
+                }
+
+                // For Indefinite: 50% width, starts from left (default)
+                const finalWidth = isIndefinite ? 50 : percent;
+
+                return `
+                            <div class="absolute top-0 left-0 h-full bg-accent text-accent progress-active rounded-full" 
+                                 style="width: ${finalWidth}%">
+                            </div>
+                        `;
+            })()}
+                </div>
                 <div class="mb-4">
                     <span class="text-accent/80 text-[10px] uppercase font-bold tracking-tighter">Current_Priority:</span> 
                     <span class="text-white ml-2 text-xs">${nearestInfo}</span>
@@ -136,12 +174,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-gray-400 text-xs leading-relaxed mb-6 font-sans">// ${p.description || 'System description: Not provided.'}</p>
 
                 <div class="space-y-1" id="subtasks-container">
-                    ${(p.subtasks || []).map((s, idx) => `
+                    ${(p.subtasks || [])
+                .sort((a, b) => {
+                    // Status Weight: Active=1, Pending=2, Done=3
+                    const statusWeight = { 'active': 1, 'pending': 2, 'done': 3 };
+                    const wa = statusWeight[a.status] || 99;
+                    const wb = statusWeight[b.status] || 99;
+                    if (wa !== wb) return wa - wb;
+
+                    // Secondary Sort: Date Ascending
+                    if (!a.deadline) return 1;
+                    if (!b.deadline) return -1;
+                    return new Date(a.deadline) - new Date(b.deadline);
+                })
+                .map((s, idx) => {
+                    // Only ACTIVE tasks flash when urgent. Pending/Done do not.
+                    const isUrgent = s.status !== 'done' && s.status !== 'pending' && checkUrgency(s.deadline);
+                    const statusColors = { 'active': 'text-yellow-400', 'pending': 'text-red-400', 'done': 'text-green-400' };
+                    const displayStatus = (s.status || 'active').toUpperCase();
+                    const statusClass = statusColors[s.status || 'active'] || 'text-gray-400';
+
+                    return `
                         <div class="subtask-item subtask-${s.status || 'active'} flex justify-between items-center group rounded-sm px-3 py-2 border-l-2">
-                            <span class="text-xs">${s.name}</span>
-                            <span class="text-[10px] opacity-60 font-mono">${s.deadline || ''}</span>
+                            <span class="text-xs truncate mr-2">${s.name}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[8px] font-bold tracking-wider ${isUrgent ? 'text-yellow-400 animate-pulse' : statusClass}">${displayStatus}</span>
+                                <span class="text-[10px] ${isUrgent ? 'text-yellow-400 animate-pulse font-bold' : 'opacity-60'} font-mono">${s.deadline || ''}</span>
+                            </div>
                         </div>
-                    `).join('')}
+                    `;
+                }).join('')}
                 </div>
             </div>
         `;
@@ -180,15 +242,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = document.createElement('div');
             item.className = 'flex justify-between items-center group cursor-pointer hover:bg-white/5 p-2 rounded transition-all';
             item.onclick = () => openGenericModal('tasks', t);
+            const isUrgent = checkUrgency(t.deadline);
             item.innerHTML = `
                 <span class="text-xs text-gray-300">${t.name}</span>
-                <span class="text-[10px] text-accent font-mono border border-accent/20 px-1 rounded bg-accent/5">${t.deadline || ''}</span>
+                <span class="text-[10px] font-mono border px-1 rounded ${isUrgent ? 'text-red-500 animate-pulse font-bold border-red-500/50 bg-red-500/10' : 'text-accent border-accent/20 bg-accent/5'}">${t.deadline || ''}</span>
             `;
             taskList.appendChild(item);
         });
     }
 
     // --- UTILS ---
+    function checkUrgency(dateStr) {
+        if (!dateStr || dateStr === 'PRESENT') return false;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        // Compare string YYYY-MM-DD
+        return dateStr <= todayStr;
+    }
+
     function normalizeDate(inputStr) {
         if (!inputStr) return "";
         if (inputStr === 'PRESENT') return 'PRESENT';
@@ -385,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div>
                         <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">MISSION_OBJECTIVES</div>
-                        <textarea id="edit-p-desc" class="form-input text-xs h-20 resize-none pt-2">${p.description || ''}</textarea>
+                        <textarea id="edit-p-desc" class="form-input text-xs h-10 resize-none pt-2">${p.description || ''}</textarea>
                     </div>
                 </div>
 
@@ -461,6 +532,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return alert("Error: Termination date cannot precede Inception date.");
         }
 
+        // Logic Check: Subtask Deadline <= Project Deadline
+        if (end !== 'PRESENT') {
+            for (const s of subtasks) {
+                if (s.deadline && new Date(s.deadline) > new Date(end)) {
+                    return alert(`Logic Error: Sub-sequence "${s.name}" termination (${s.deadline}) exceeds Unit limit (${end}).`);
+                }
+            }
+        }
+
         const projectUpdate = {
             name: name,
             startDate: normalizeDate(start),
@@ -488,9 +568,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = btn.parentElement.querySelector('.panel-title').textContent.toLowerCase();
         btn.onclick = async () => {
             if (title.includes('project')) {
-                const doc = await db.collection('projects').add({ name: 'UNIDENTIFIED_UNIT', subtasks: [] });
-                activeProjectId = doc.id;
-                toggleProjectEdit(doc.id);
+                // 1. Generate ID locally first (Instant)
+                const newDocRef = db.collection('projects').doc();
+
+                // 2. Set state immediately
+                activeProjectId = newDocRef.id;
+                isEditingProject = true; // Flag for edit mode BEFORE render
+
+                // 3. Write data (This triggers the snapshot listener, which calls renderProjects -> renderProjectEditMode)
+                await newDocRef.set({ name: 'UNIDENTIFIED_UNIT', subtasks: [] });
+
+                // toggleProjectEdit(newDocRef.id); // Redundant now, render loop handles it
             } else if (title.includes('event')) {
                 openGenericModal('events');
             } else if (title.includes('task')) {

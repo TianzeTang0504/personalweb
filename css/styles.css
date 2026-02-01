@@ -1,10 +1,11 @@
 /* General styles and utilities */
 :root {
-    --bg-color: transparent; /* Changed from #050505 to transparent */
+    --bg-color: transparent;
+    /* Changed from #050505 to transparent */
     --text-color: #e0e0e0;
     --text-muted: #a0a0a0;
-    --accent-color: #00ff9d;
-    --accent-dim: rgba(0, 255, 157, 0.1);
+    --accent-color: #52e0a8;
+    --accent-dim: rgba(82, 224, 168, 0.1);
     --card-bg: rgba(20, 20, 20, 0.6);
     --border-color: #333;
     --border-hover: #00ff9d;
@@ -27,7 +28,8 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     overflow-x: hidden;
-    position: relative; /* Ensure body is positioned */
+    position: relative;
+    /* Ensure body is positioned */
     min-height: 100vh;
 }
 
@@ -64,7 +66,7 @@ body {
 .glass:hover {
     background: rgba(30, 30, 30, 0.7);
     border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 
+    box-shadow:
         0 20px 40px -5px rgba(0, 0, 0, 0.4),
         0 0 15px rgba(255, 255, 255, 0.05);
     transform: translateY(-6px);
@@ -86,9 +88,10 @@ body {
 /* Distinct Section Backgrounds */
 .bg-grid-pattern {
     background-image: linear-gradient(var(--border-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
     background-size: 40px 40px;
-    background-color: rgba(5, 5, 5, 0.95); /* Opaque dark background to hide particles */
+    background-color: rgba(5, 5, 5, 0.95);
+    /* Opaque dark background to hide particles */
     mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
 }
@@ -96,7 +99,8 @@ body {
 .bg-dots-pattern {
     background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
     background-size: 20px 20px;
-    background-color: rgba(5, 5, 5, 0.95); /* Opaque dark background to hide particles */
+    background-color: rgba(5, 5, 5, 0.95);
+    /* Opaque dark background to hide particles */
     mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
 }
@@ -121,7 +125,7 @@ body {
 }
 
 .btn-primary:hover {
-    @apply bg-accent text-black shadow-[0_0_15px_rgba(0,255,157,0.5)];
+    @apply bg-accent text-black shadow-[0_0_15px_rgba(0, 255, 157, 0.5)];
 }
 
 .btn-secondary {
@@ -130,8 +134,15 @@ body {
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in {
@@ -139,8 +150,13 @@ body {
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .rotating {
@@ -166,7 +182,11 @@ body {
 }
 
 /* Focus styles */
-a:focus, button:focus, input:focus, select:focus, textarea:focus {
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
     outline: none;
     box-shadow: 0 0 0 2px var(--accent-color);
 }
@@ -232,9 +252,17 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
     border-radius: 50%;
 }
 
-.terminal-btn.red { background: #ff5f56; }
-.terminal-btn.yellow { background: #ffbd2e; }
-.terminal-btn.green { background: #27c93f; }
+.terminal-btn.red {
+    background: #ff5f56;
+}
+
+.terminal-btn.yellow {
+    background: #ffbd2e;
+}
+
+.terminal-btn.green {
+    background: #27c93f;
+}
 
 .terminal-title {
     margin-left: 12px;
@@ -249,10 +277,23 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
     line-height: 1.5;
 }
 
-.code-keyword { color: #ff79c6; }
-.code-function { color: #8be9fd; }
-.code-string { color: #f1fa8c; }
-.code-comment { color: #6272a4; font-style: italic; }
+.code-keyword {
+    color: #ff79c6;
+}
+
+.code-function {
+    color: #8be9fd;
+}
+
+.code-string {
+    color: #f1fa8c;
+}
+
+.code-comment {
+    color: #6272a4;
+    font-style: italic;
+}
+
 .code-cursor {
     display: inline-block;
     width: 8px;
@@ -263,8 +304,15 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }
 
 /* Infinite Scroll Ticker */
@@ -280,7 +328,8 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
     left: 0;
     z-index: 20;
     backdrop-filter: blur(5px);
-    pointer-events: none; /* Ensure clicks pass through if overlapping */
+    pointer-events: none;
+    /* Ensure clicks pass through if overlapping */
 }
 
 .ticker {
@@ -305,8 +354,13 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
 }
 
 @keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 /* System Status Badge */
@@ -325,11 +379,14 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
     align-items: center;
     gap: 6px;
     z-index: 30;
-    display: none; /* Hidden on mobile by default, show on lg */
+    display: none;
+    /* Hidden on mobile by default, show on lg */
 }
 
 @media (min-width: 1024px) {
-    .sys-status { display: flex; }
+    .sys-status {
+        display: flex;
+    }
 }
 
 .sys-dot {
