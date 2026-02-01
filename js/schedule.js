@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const memoList = document.querySelector('#memo-panel .panel-body .space-y-2');
     const memoSearch = document.querySelector('.memo-search');
 
+    // --- SETTINGS BUTTON LOGIC (Global Scope) ---
+    // Bind immediately, don't wait for Auth
+    // Settings listener removed as per user request
+
     // State
     let db = null;
     let auth = null;
@@ -33,14 +37,22 @@ document.addEventListener('DOMContentLoaded', () => {
         auth = firebase.auth();
         db = firebase.firestore();
 
-        auth.onAuthStateChanged(user => {
+        auth.onAuthStateChanged(async user => {
             currentUser = user;
             if (user) {
                 loginContainer.style.display = 'none';
                 dashboardContainer.style.display = 'flex';
                 dashboardContainer.classList.remove('hidden');
                 userEmailDisplay.textContent = user.email;
+
+                // 1. Initialize DB Listeners (CRITICAL: Was missing)
                 setupListeners();
+
+                // 2. Settings Event is handled globally now
+
+                // 3. Check for onboarding (Async)
+                await checkAndMigrateOrInit(user);
+
             } else {
                 loginContainer.style.display = 'flex';
                 dashboardContainer.style.display = 'none';
@@ -50,12 +62,103 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Helper to get user-scoped collection
+    const getUserRef = (col) => db.collection('users').doc(currentUser.uid).collection(col);
+
+    // --- ONBOARDING ---
+    async function checkAndMigrateOrInit(user) {
+        // Check if user has executed initialization
+        const userDocRef = db.collection('users').doc(user.uid);
+        const userDoc = await userDocRef.get();
+
+        if (userDoc.exists && userDoc.data().initialized) {
+            return; // Already setup
+        }
+
+        // New User logic -> Create Demo Data
+        console.log("New user detected via system scan. Initializing workspace...");
+        await createDemoData();
+        await userDocRef.set({ initialized: true, email: user.email }, { merge: true });
+    }
+
+    async function createDemoData() {
+        const batch = db.batch();
+
+        // Sample Project
+        const pRef = getUserRef('projects').doc();
+        batch.set(pRef, {
+            name: "DEMO_PROTOCOL_INIT",
+            startDate: new Date().toISOString().split('T')[0],
+            deadline: 'PRESENT',
+            description: "Welcome to your personal command center. This system tracks your objectives with precision. Explore the interface.",
+            subtasks: [
+                { name: "Review System Interface", deadline: new Date().toISOString().split('T')[0], status: "active" },
+                { name: "Establish First Objective", deadline: "", status: "pending" },
+                { name: "System Initialization", deadline: "", status: "done" }
+            ]
+        });
+
+        // Sample Tasks (3 items, one overdue/flash)
+        const tRef1 = getUserRef('tasks').doc();
+        batch.set(tRef1, {
+            name: "Complete User Registration",
+            deadline: new Date().toISOString().split('T')[0] // Today (Urgent/Flash)
+        });
+        const tRef2 = getUserRef('tasks').doc();
+        batch.set(tRef2, {
+            name: "Review Documentation",
+            deadline: '2026-12-31'
+        });
+        const tRef3 = getUserRef('tasks').doc();
+        batch.set(tRef3, {
+            name: "Configure Settings",
+            deadline: '2026-05-20'
+        });
+
+        // Sample Events (2 items)
+        const eRef1 = getUserRef('events').doc();
+        batch.set(eRef1, {
+            name: "System Launch",
+            date: new Date().toISOString().split('T')[0],
+            description: "Initial deployment of the command center."
+        });
+        const eRef2 = getUserRef('events').doc();
+        batch.set(eRef2, {
+            name: "Quarterly Review",
+            date: "2026-06-30",
+            description: "Assess system performance and objective completion."
+        });
+
+        // Sample Memos (3 items)
+        const mRef1 = getUserRef('memos').doc();
+        batch.set(mRef1, {
+            name: "SYSTEM_LOG_001",
+            date: new Date().toISOString().split('T')[0],
+            content: "Access granted. Personal workspace initialized. Ready for input."
+        });
+        const mRef2 = getUserRef('memos').doc();
+        batch.set(mRef2, {
+            name: "DESIGN_NOTES",
+            date: new Date().toISOString().split('T')[0],
+            content: "Interface uses a dark theme with high-contrast accent colors for optimal readability in low-light environments."
+        });
+        const mRef3 = getUserRef('memos').doc();
+        batch.set(mRef3, {
+            name: "REMINDER",
+            date: new Date().toISOString().split('T')[0],
+            content: "Check all active projects for critical path dependencies."
+        });
+
+        await batch.commit();
+    }
+
     // Set up Real-time Listeners
     function setupListeners() {
         const collections = ['projects', 'tasks', 'events', 'memos'];
         let loadedCount = 0;
         collections.forEach(col => {
-            db.collection(col).onSnapshot(snapshot => {
+            // Updated to listen to USER SCOPED collection
+            getUserRef(col).onSnapshot(snapshot => {
                 allData[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 loadedCount++;
                 if (loadedCount >= collections.length) {
@@ -198,8 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="subtask-item subtask-${s.status || 'active'} flex justify-between items-center group rounded-sm px-3 py-2 border-l-2">
                             <span class="text-xs truncate mr-2">${s.name}</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-[8px] font-bold tracking-wider ${isUrgent ? 'text-yellow-400 animate-pulse' : statusClass}">${displayStatus}</span>
-                                <span class="text-[10px] ${isUrgent ? 'text-yellow-400 animate-pulse font-bold' : 'opacity-60'} font-mono">${s.deadline || ''}</span>
+                                <span class="text-[10px] font-bold tracking-wider ${isUrgent ? 'text-yellow-400 animate-pulse' : statusClass}">${displayStatus}</span>
+                                <span class="text-xs ${isUrgent ? 'text-yellow-400 animate-pulse font-bold' : 'opacity-60'} font-mono">${s.deadline || ''}</span>
                             </div>
                         </div>
                     `;
@@ -374,6 +477,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closeModal = () => document.getElementById('genericModal').classList.remove('active');
 
     window.saveEntry = async (type, id) => {
+        if (type === 'projects') return; // Projects handle own saves
+
         const data = {};
         if (type === 'events') {
             data.name = document.getElementById('m-name').value;
@@ -391,14 +496,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.name) return alert("Title required.");
         }
 
-        if (id) await db.collection(type).doc(id).update(data);
-        else await db.collection(type).add(data);
+        if (id) await getUserRef(type).doc(id).update(data);
+        else await getUserRef(type).add(data);
         closeModal();
     };
 
     window.deleteEntry = async (type, id) => {
         if (confirm('Permanently purge this entry?')) {
-            await db.collection(type).doc(id).delete();
+            await getUserRef(type).doc(id).delete();
             closeModal();
         }
     };
@@ -490,6 +595,11 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // --- SETTINGS & THEME ---
+
+
+
+
     window.addNewSubtaskRow = () => {
         const container = document.getElementById('edit-subtasks-list');
         const row = document.createElement('div');
@@ -549,14 +659,23 @@ document.addEventListener('DOMContentLoaded', () => {
             subtasks: subtasks.map(s => ({ ...s, deadline: normalizeDate(s.deadline) }))
         };
 
-        await db.collection('projects').doc(id).update(projectUpdate);
+        if (id && !isOngoing) {
+            // Updating existing via set (merge) or update
+            await getUserRef('projects').doc(id).update(projectUpdate);
+        } else if (id && isOngoing) {
+            // Logic for ongoing might be same, just update
+            await getUserRef('projects').doc(id).update(projectUpdate);
+        } else {
+            // Should not happen as we pre-generate ID on new
+        }
+
         isEditingProject = false;
         renderAll();
     };
 
     window.deleteProject = async (id) => {
         if (confirm('Command: Purge whole Project unit from cloud storage?')) {
-            await db.collection('projects').doc(id).delete();
+            await getUserRef('projects').doc(id).delete();
             activeProjectId = null;
             isEditingProject = false;
             renderAll();
@@ -569,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.onclick = async () => {
             if (title.includes('project')) {
                 // 1. Generate ID locally first (Instant)
-                const newDocRef = db.collection('projects').doc();
+                const newDocRef = getUserRef('projects').doc();
 
                 // 2. Set state immediately
                 activeProjectId = newDocRef.id;

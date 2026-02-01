@@ -20,6 +20,8 @@ html {
     gap: 20px;
     margin-top: 20px;
     max-width: 1040px;
+    margin-inline: auto;
+    /* Force horizontal centering */
 }
 
 /* Panel Containers */
@@ -390,3 +392,19 @@ html {
     animation: stripe-flow 4s linear infinite;
     box-shadow: 0 0 10px var(--accent-color);
 }
+
+/* Remove focus outline from header buttons */
+#dashboard-container .glass button:focus,
+#dashboard-container .glass button:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+/* Force Body Centering for Login/Dashboard */
+body {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh;
+    width: 100%;
+}
+

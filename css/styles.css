@@ -397,3 +397,56 @@ textarea:focus {
     box-shadow: 0 0 8px var(--accent-color);
     animation: pulse 2s infinite;
 }
+/* --- THEME ENGINE --- */
+
+/* 1. MINT (Default Dark) */
+body.theme-mint {
+    --bg-color: #050505;
+    --text-color: #e0e0e0;
+    --panel-bg: rgba(20, 20, 20, 0.6);
+    --border-dim: rgba(255, 255, 255, 0.08);
+    --accent-color: #52e0a8;
+    --accent-dim: rgba(82, 224, 168, 0.1);
+    --card-bg: rgba(20, 20, 20, 0.6);
+}
+
+/* 2. CYBER PINK (Dark) */
+body.theme-pink {
+    --bg-color: #0d0006;
+    --text-color: #ffccdd;
+    --panel-bg: rgba(40, 0, 20, 0.6);
+    --border-dim: rgba(255, 0, 100, 0.2);
+    --accent-color: #ff0055;
+    --accent-dim: rgba(255, 0, 85, 0.15);
+    --card-bg: rgba(30, 0, 15, 0.6);
+}
+
+/* 3. DEEP BLUE (Dark) */
+body.theme-blue {
+    --bg-color: #000814;
+    --text-color: #cceeff;
+    --panel-bg: rgba(0, 20, 40, 0.6);
+    --border-dim: rgba(0, 150, 255, 0.15);
+    --accent-color: #00ccff;
+    --accent-dim: rgba(0, 204, 255, 0.1);
+    --card-bg: rgba(0, 15, 30, 0.6);
+}
+
+/* 4. PLATINUM (Light Mode) */
+body.theme-light {
+    --bg-color: #f0f2f5;
+    --text-color: #1a1a1a;
+    --panel-bg: rgba(255, 255, 255, 0.85); /* Frosty white */
+    --border-dim: rgba(0, 0, 0, 0.1);
+    --accent-color: #ff6600; /* International Orange */
+    --accent-dim: rgba(255, 102, 0, 0.1);
+    --card-bg: rgba(255, 255, 255, 0.9);
+}
+
+/* GLOBAL FOCUS RESET */
+* :focus, * :focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.1) !important; /* Revert to subtle border if any */
+}
+
