@@ -9,6 +9,11 @@ const { marked } = require("marked"); // 引入 Markdown 解析器
 
 admin.initializeApp();
 
+// cd functions
+// npm install (如果有新依赖)
+// cd ..
+// firebase deploy --only functions
+
 // 设置全局配置
 setGlobalOptions({ timeoutSeconds: 300, memory: "256MiB" });
 
