@@ -622,8 +622,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusA = a.status === 'done' ? 1 : 0;
             const statusB = b.status === 'done' ? 1 : 0;
             if (statusA !== statusB) return statusA - statusB;
-            // 按照DDL排序：时间晚（大）的放上面，时间早（小）的放下面
-            return new Date(b.deadline) - new Date(a.deadline);
+
+            // 按照DDL排序：紧急（日期早/小）的放上面，不紧急（日期晚/大）的放下面
+            if (!a.deadline && !b.deadline) return 0;
+            if (!a.deadline) return 1;
+            if (!b.deadline) return -1;
+            return new Date(a.deadline) - new Date(b.deadline);
         }).forEach(t => {
             const item = document.createElement('div');
             item.className = 'flex justify-between items-center group cursor-pointer hover:bg-white/5 p-2 rounded transition-all';
@@ -631,8 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const isDone = t.status === 'done';
             const isUrgent = !isDone && checkUrgency(t.deadline);
             item.innerHTML = `
-                <span class="text-xs ${isDone ? 'text-gray-600 line-through' : 'text-gray-300'}">${t.name}</span>
-                <span class="text-[10px] font-mono border px-1 rounded ${isDone ? 'text-gray-600 border-gray-600/30' : (isUrgent ? 'text-red-500 animate-pulse font-bold border-red-500/50 bg-red-500/10' : 'text-accent border-accent/20 bg-accent/5')}">${t.deadline || ''}</span>
+                <span class="text-xs ${isDone ? 'text-gray-600 line-through' : 'text-gray-300'} flex-grow truncate mr-4">${t.name}</span>
+                <span class="text-[10px] font-mono border px-1 rounded flex-shrink-0 ${isDone ? 'text-gray-600 border-gray-600/30' : (isUrgent ? 'text-red-500 animate-pulse font-bold border-red-500/50 bg-red-500/10' : 'text-accent border-accent/20 bg-accent/5')}">${t.deadline || ''}</span>
             `;
             taskList.appendChild(item);
         });
@@ -914,7 +918,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
             <button onclick="this.parentElement.remove()" class="text-red-500/80 hover:text-red-500 px-1">×</button>
         `;
-        container.appendChild(row);
+        container.prepend(row);
+        container.scrollTop = 0;
+        row.querySelector('input').focus();
     };
 
     window.saveProjectChanges = async (id) => {

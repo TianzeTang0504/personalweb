@@ -47,11 +47,19 @@ async function processUserReport(uid, userEmail, transporter) {
     projectsSnap.forEach(doc => {
         const p = doc.data();
         dataContext += `- 项目: ${p.name} (DDL: ${p.deadline})\n`;
-        if (p.subtasks) p.subtasks.forEach(s => dataContext += `    * [${s.status}] ${s.name}\n`);
+        if (p.subtasks) p.subtasks.forEach(s => {
+            if (s.status !== 'done') dataContext += `    * [${s.status}] ${s.name} (DDL: ${s.deadline || '无'})\n`;
+        });
     });
-    tasksSnap.forEach(doc => { if (doc.data().status !== 'done') dataContext += `- 任务: ${doc.data().name}\n`; });
-    memosSnap.forEach(doc => { dataContext += `- 备忘: ${doc.data().name} (${doc.data().content}) [${doc.data().date}]\n`; });
-    eventsSnap.forEach(doc => { if (doc.data().status !== 'done') dataContext += `- 事件: ${doc.data().name} (${doc.data().date})\n`; });
+    tasksSnap.forEach(doc => {
+        const t = doc.data();
+        if (t.status !== 'done') dataContext += `- 任务: ${t.name} (DDL: ${t.deadline || '无'})\n`;
+    });
+    memosSnap.forEach(doc => { dataContext += `- 备忘: ${doc.data().name} (${doc.data().content}) [日期: ${doc.data().date || '无'}]\n`; });
+    eventsSnap.forEach(doc => {
+        const e = doc.data();
+        if (e.status !== 'done') dataContext += `- 事件: ${e.name} (日期: ${e.date || '无'})\n`;
+    });
 
     try {
         const aiInstance = getAIInstance();
@@ -62,13 +70,20 @@ async function processUserReport(uid, userEmail, transporter) {
             contents: [{
                 role: "user",
                 parts: [{
-                    text: `你是一位全能且温和的智能助手。今天是${todayStr}。
-                    请生成一份简洁、排版优雅的今日简报并不要使用emoji，包括：
-                    1. [今日日程]：今日重点。
-                    2. [临期提示]：即将到期的风险。
-                    3. [备忘录提示]：如果备忘录里有临近今天的内容，请给出温馨提示。
-                    4. [激励指令]：一句温柔而有力量的话。
-                    Markdown格式，中文。数据：\n${dataContext}`
+                    text: `你是一位专业且高效的私人助手。今天是${todayStr}。
+                    请根据提供的数据生成一份结构严谨、排版优雅的邮件日报。
+                    
+                    要求：
+                    1. 严禁使用 Emoji。
+                    2. 严格按照以下四个板块生成，每个板块独立清晰，不要互相渗透：
+                       - [PROJECTS]：列出重点项目的状态和子任务进度。
+                       - [TASKS]：列出待办列表中的关键任务。
+                       - [EVENTS]：列出日程表中的重要事件。
+                       - [MEMO]：列出相关的备忘或提醒。
+                    3. **重要判断逻辑**：不要机械地列出所有内容。仅当任务/事件“即将到期”（如1-3天内）或“看起来非常复杂需要提前准备”时才重点提及。如果一个任务还有一周以上且看起来很简单，请忽略或仅极简提及。
+                    4. 语气专业、冷静、精炼。
+                    
+                    Markdown格式，中文。数据如下：\n${dataContext}`
                 }]
             }],
             config: { thinkingConfig: { thinkingLevel: "low" } }
@@ -95,7 +110,7 @@ async function processUserReport(uid, userEmail, transporter) {
                         </div>
                     </div>
                     <div style="text-align: center; margin-top: 20px; color: #b0a495; font-size: 10px;">
-                        Intelligence Core v3.0 // Multi-User Secured
+                        Intelligence Core v1.4.2 // Multi-User Secured
                     </div>
                 </div>
             `
