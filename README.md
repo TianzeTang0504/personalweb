@@ -1,4 +1,4 @@
-# Personal Command Center & AI Portfolio
+# Personal Project Center & AI Portfolio
 
 A "Geek-style" personal website featuring a high-precision Task/Schedule Manager (Command Center) and an AI-powered portfolio/blog system. Built with **HTML/JS (Vanilla)** and **Firebase**.
 
