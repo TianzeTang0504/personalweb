@@ -78,6 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const userData = userDoc.exists ? userDoc.data() : {};
         const isAdmin = userData.role === 'admin';
 
+        // Defaults
+        const currentReportTime = userData.reportTime !== undefined ? userData.reportTime : 8;
+        const currentTimezone = userData.timezone || 'Asia/Shanghai';
+
         let modalHtml = `
             <div class="modal-content glass p-6 max-w-lg w-full relative animate-scale-in">
                 <button class="absolute top-4 right-4 text-gray-500 hover:text-white modal-close-btn">&times;</button>
@@ -86,13 +90,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="space-y-6">
                     <!-- User Section -->
                     <div class="p-4 border border-white/5 bg-white/5 rounded">
-                        <p class="text-[10px] text-accent mb-2 uppercase opacity-50 font-bold tracking-tighter">Your Intelligence Preferences</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-300">Daily Intelligence Report (Email)</span>
+                        <p class="text-[10px] text-accent mb-4 uppercase opacity-50 font-bold tracking-tighter">情报首选项 / INTELLIGENCE PREFERENCES</p>
+                        
+                         <!-- Toggle -->
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs text-gray-300 font-mono">接收每日简报 (Email)</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="userReportToggle" class="sr-only peer" ${userData.receiveReport !== false ? 'checked' : ''}>
-                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+                                <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
                             </label>
+                        </div>
+
+                        <!-- Time Settings -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-1 font-mono uppercase">推送时间 (小时/24H)</label>
+                                <select id="userReportTime" class="w-full bg-[#121212] border border-white/10 text-white text-xs rounded px-2 py-2 focus:border-accent outline-none font-mono hover:border-accent/50 transition-colors cursor-pointer appearance-none">
+                                    ${[...Array(24).keys()].map(h => `<option value="${h}" class="bg-[#121212] text-white" ${h === currentReportTime ? 'selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-1 font-mono uppercase">所在时区</label>
+                                <select id="userTimezone" class="w-full bg-[#121212] border border-white/10 text-white text-xs rounded px-2 py-2 focus:border-accent outline-none font-mono hover:border-accent/50 transition-colors cursor-pointer appearance-none">
+                                     <option value="Asia/Shanghai" class="bg-[#121212] text-white" ${currentTimezone === 'Asia/Shanghai' ? 'selected' : ''}>Asia/Shanghai (UTC+8)</option>
+                                     <option value="America/Los_Angeles" class="bg-[#121212] text-white" ${currentTimezone === 'America/Los_Angeles' ? 'selected' : ''}>Pacific Time (UTC-7)</option>
+                                     <option value="America/New_York" class="bg-[#121212] text-white" ${currentTimezone === 'America/New_York' ? 'selected' : ''}>Eastern Time (UTC-4)</option>
+                                     <option value="Europe/London" class="bg-[#121212] text-white" ${currentTimezone === 'Europe/London' ? 'selected' : ''}>London (UTC+0)</option>
+                                     <option value="Europe/Paris" class="bg-[#121212] text-white" ${currentTimezone === 'Europe/Paris' ? 'selected' : ''}>Paris (UTC+1)</option>
+                                     <option value="Asia/Tokyo" class="bg-[#121212] text-white" ${currentTimezone === 'Asia/Tokyo' ? 'selected' : ''}>Tokyo (UTC+9)</option>
+                                     <option value="Australia/Sydney" class="bg-[#121212] text-white" ${currentTimezone === 'Australia/Sydney' ? 'selected' : ''}>Sydney (UTC+10)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -123,7 +151,22 @@ document.addEventListener('DOMContentLoaded', () => {
             await db.collection('users').doc(currentUser.uid).update({
                 receiveReport: e.target.checked
             });
-            console.log("Preference updated locally.");
+        });
+
+        // Time logic
+        const timeSelect = document.getElementById('userReportTime');
+        timeSelect.addEventListener('change', async (e) => {
+            await db.collection('users').doc(currentUser.uid).update({
+                reportTime: parseInt(e.target.value)
+            });
+        });
+
+        // Timezone logic
+        const tzSelect = document.getElementById('userTimezone');
+        tzSelect.addEventListener('change', async (e) => {
+            await db.collection('users').doc(currentUser.uid).update({
+                timezone: e.target.value
+            });
         });
 
         // Close logic
@@ -188,70 +231,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function createDemoData() {
         const batch = db.batch();
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
 
-        // Sample Project
+        // Sample Project (Chinese)
         const pRef = getUserRef('projects').doc();
         batch.set(pRef, {
-            name: "DEMO_PROTOCOL_INIT",
-            startDate: new Date().toISOString().split('T')[0],
+            name: "指挥中心初始化",
+            startDate: todayStr,
             deadline: 'PRESENT',
-            description: "Welcome to your personal command center. This system tracks your objectives with precision. Explore the interface.",
+            description: "欢迎使用您的个人指挥中心。本系统将协助您以极高的精度追踪目标与任务。请探索各个模块。",
             subtasks: [
-                { name: "Review System Interface", deadline: new Date().toISOString().split('T')[0], status: "active" },
-                { name: "Establish First Objective", deadline: "", status: "pending" },
-                { name: "System Initialization", deadline: "", status: "done" }
+                { name: "熟悉系统界面布局", deadline: todayStr, status: "active" }, // Urgent
+                { name: "建立第一个长期目标", deadline: "", status: "pending" },
+                { name: "用户身份验证", deadline: "", status: "done" }
             ]
         });
 
-        // Sample Tasks (3 items, one overdue/flash)
+        // Sample Tasks (2 items: 1 Urgent, 1 Normal)
         const tRef1 = getUserRef('tasks').doc();
         batch.set(tRef1, {
-            name: "Complete User Registration",
-            deadline: new Date().toISOString().split('T')[0] // Today (Urgent/Flash)
+            name: "完成邮箱验证 (紧急)",
+            deadline: todayStr // Today
         });
         const tRef2 = getUserRef('tasks').doc();
         batch.set(tRef2, {
-            name: "Review Documentation",
-            deadline: '2026-12-31'
-        });
-        const tRef3 = getUserRef('tasks').doc();
-        batch.set(tRef3, {
-            name: "Configure Settings",
-            deadline: '2026-05-20'
+            name: "阅读系统操作手册",
+            deadline: '2026-12-31' // Far future
         });
 
-        // Sample Events (2 items)
+        // Sample Events (2 items: 1 Urgent, 1 Normal)
         const eRef1 = getUserRef('events').doc();
         batch.set(eRef1, {
-            name: "System Launch",
-            date: new Date().toISOString().split('T')[0],
-            description: "Initial deployment of the command center."
+            name: "系统启动仪式",
+            date: todayStr,
+            description: "指挥中心正式上线运行。"
         });
         const eRef2 = getUserRef('events').doc();
         batch.set(eRef2, {
-            name: "Quarterly Review",
-            date: "2026-06-30",
-            description: "Assess system performance and objective completion."
+            name: "年度效能评估",
+            date: "2026-12-31",
+            description: "评估系统运行效率与目标完成度。"
         });
 
-        // Sample Memos (3 items)
+        // Sample Memo (1 item)
         const mRef1 = getUserRef('memos').doc();
         batch.set(mRef1, {
-            name: "SYSTEM_LOG_001",
-            date: new Date().toISOString().split('T')[0],
-            content: "Access granted. Personal workspace initialized. Ready for input."
-        });
-        const mRef2 = getUserRef('memos').doc();
-        batch.set(mRef2, {
-            name: "DESIGN_NOTES",
-            date: new Date().toISOString().split('T')[0],
-            content: "Interface uses a dark theme with high-contrast accent colors for optimal readability in low-light environments."
-        });
-        const mRef3 = getUserRef('memos').doc();
-        batch.set(mRef3, {
-            name: "REMINDER",
-            date: new Date().toISOString().split('T')[0],
-            content: "Check all active projects for critical path dependencies."
+            name: "系统日志_001",
+            date: todayStr,
+            content: "访问权限已确认。个人工作区初始化完成。等待指令输入..."
         });
 
         await batch.commit();
@@ -483,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderProjectDetails(p) {
-        let nearestInfo = "None";
+        let nearestInfo = "无";
         if (p.subtasks && p.subtasks.length > 0) {
             const upcoming = p.subtasks
                 .filter(s => s.status !== 'done' && s.deadline)
@@ -495,18 +526,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projectDetails.innerHTML = `
             <div class="p-4 bg-white/[0.02] rounded border border-white/5 relative animate-fade-in shadow-inner">
-                <button onclick="toggleProjectEdit('${p.id}')" class="absolute top-4 right-4 text-gray-500 hover:text-accent font-bold text-[10px] tracking-widest">[ EDIT_UNIT ]</button>
+                <button onclick="toggleProjectEdit('${p.id}')" class="absolute top-4 right-4 text-gray-500 hover:text-accent font-bold text-[10px] tracking-widest">[ 编辑项目 ]</button>
                 
                 <h2 class="text-xl font-bold text-white mb-6 pr-24 uppercase tracking-wide leading-tight">${p.name}</h2>
 
                 <div class="grid grid-cols-2 gap-4 mb-4 border-b border-white/5 pb-4">
                     <div>
-                        <div class="text-[10px] text-gray-500 uppercase mb-1">Inception</div>
+                        <div class="text-[10px] text-gray-500 uppercase mb-1">启动日期</div>
                         <div class="text-sm text-white font-mono">${p.startDate || 'YYYY-MM-DD'}</div>
                     </div>
                     <div>
-                        <div class="text-[10px] text-gray-500 uppercase mb-1">Termination</div>
-                        <div class="text-sm text-white font-mono">${p.deadline === 'PRESENT' ? '<span class="text-accent font-bold">ONGOING</span>' : (p.deadline || 'YYYY-MM-DD')}</div>
+                        <div class="text-[10px] text-gray-500 uppercase mb-1">截止日期</div>
+                        <div class="text-sm text-white font-mono">${p.deadline === 'PRESENT' ? '<span class="text-accent font-bold">进行中</span>' : (p.deadline || 'YYYY-MM-DD')}</div>
                     </div>
                 </div>
 
@@ -538,10 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })()}
                 </div>
                 <div class="mb-4">
-                    <span class="text-accent/80 text-[10px] uppercase font-bold tracking-tighter">Current_Priority:</span> 
+                    <span class="text-accent/80 text-[10px] uppercase font-bold tracking-tighter">当前优先级:</span> 
                     <span class="text-white ml-2 text-xs">${nearestInfo}</span>
                 </div>
-                <p class="text-gray-400 text-xs leading-relaxed mb-6 font-sans">// ${p.description || 'System description: Not provided.'}</p>
+                <p class="text-gray-400 text-xs leading-relaxed mb-6 font-sans">// ${p.description || '暂无描述'}</p>
 
                 <div class="space-y-1" id="subtasks-container">
                     ${(p.subtasks || [])
@@ -564,7 +595,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Only ACTIVE tasks flash when urgent. Pending/Done do not.
                     const isUrgent = s.status !== 'done' && s.status !== 'pending' && checkUrgency(s.deadline);
                     const statusColors = { 'active': 'text-yellow-400', 'pending': 'text-red-400', 'done': 'text-green-400' };
-                    const displayStatus = (s.status || 'active').toUpperCase();
+
+                    const statusMap = { 'active': '进行中', 'pending': '已挂起', 'done': '已完成' };
+                    const displayStatus = statusMap[s.status || 'active'] || '进行中';
+
                     const statusClass = statusColors[s.status || 'active'] || 'text-gray-400';
 
                     return `
@@ -587,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!eventCards) return;
         eventCards.innerHTML = '';
         if (allData.events.length === 0) {
-            eventCards.innerHTML = '<div class="text-xs text-gray-600 italic px-2">No event horizon detected...</div>';
+            eventCards.innerHTML = '<div class="text-xs text-gray-600 italic px-2">暂无日程安排...</div>';
             return;
         }
         allData.events.sort((a, b) => {
@@ -602,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = `event-card ${isDone ? 'opacity-50' : ''} ${isUrgent ? 'border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : ''}`;
             card.onclick = () => openGenericModal('events', e);
             card.innerHTML = `
-                <div class="text-[10px] ${isDone ? 'text-gray-500' : (isUrgent ? 'text-red-500 animate-pulse font-bold' : 'text-accent')} font-bold mb-1 font-mono">${e.date} ${isDone ? '[DONE]' : ''}</div>
+                <div class="text-[10px] ${isDone ? 'text-gray-500' : (isUrgent ? 'text-red-500 animate-pulse font-bold' : 'text-accent')} font-bold mb-1 font-mono">${e.date} ${isDone ? '[已完成]' : ''}</div>
                 <div class="text-xs ${isDone ? 'text-gray-500 line-through' : 'text-white'} font-bold mb-1">${e.name}</div>
                 <div class="text-[10px] text-gray-500 truncate">${e.description || ''}</div>
             `;
@@ -615,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!taskList) return;
         taskList.innerHTML = '';
         if (allData.tasks.length === 0) {
-            taskList.innerHTML = '<div class="text-xs text-gray-600 italic">Queue empty...</div>';
+            taskList.innerHTML = '<div class="text-xs text-gray-600 italic">暂无任务...</div>';
             return;
         }
         allData.tasks.sort((a, b) => {
@@ -697,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         if (filtered.length === 0) {
-            memoList.innerHTML = '<div class="text-xs text-gray-600 italic">Vault archive null...</div>';
+            memoList.innerHTML = '<div class="text-xs text-gray-600 italic">暂无备忘...</div>';
             return;
         }
 
@@ -722,14 +756,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'events') {
             fields = `
                 <div class="space-y-4">
-                    <input type="text" id="m-name" placeholder="Event Name" class="form-input" value="${data?.name || ''}" autocomplete="off">
+                    <input type="text" id="m-name" placeholder="事件名称" class="form-input" value="${data?.name || ''}" autocomplete="off">
                     <input type="date" id="m-date" class="form-input" value="${data?.date || ''}">
-                    <textarea id="m-desc" placeholder="Details/Description..." class="form-input h-24 pt-2 resize-none">${data?.description || ''}</textarea>
+                    <textarea id="m-desc" placeholder="详情描述..." class="form-input h-24 pt-2 resize-none">${data?.description || ''}</textarea>
                     <div class="flex items-center gap-2">
-                        <label class="text-[10px] text-gray-500 uppercase">Status:</label>
+                        <label class="text-[10px] text-gray-500 uppercase">状态:</label>
                         <select id="m-status" class="form-input text-[10px] w-24 appearance-none bg-accent/10 border-accent/20 text-accent font-bold h-8">
-                            <option value="active" ${data?.status !== 'done' ? 'selected' : ''}>ACTIVE</option>
-                            <option value="done" ${data?.status === 'done' ? 'selected' : ''}>DONE</option>
+                            <option value="active" ${data?.status !== 'done' ? 'selected' : ''}>进行中</option>
+                            <option value="done" ${data?.status === 'done' ? 'selected' : ''}>已完成</option>
                         </select>
                     </div>
                 </div>
@@ -737,13 +771,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'tasks') {
             fields = `
                 <div class="space-y-4">
-                    <input type="text" id="m-name" placeholder="Task Description" class="form-input" value="${data?.name || ''}" autocomplete="off">
+                    <input type="text" id="m-name" placeholder="任务描述" class="form-input" value="${data?.name || ''}" autocomplete="off">
                     <input type="date" id="m-deadline" class="form-input" value="${data?.deadline || ''}">
                     <div class="flex items-center gap-2">
-                        <label class="text-[10px] text-gray-500 uppercase">Status:</label>
+                        <label class="text-[10px] text-gray-500 uppercase">状态:</label>
                         <select id="m-status" class="form-input text-[10px] w-24 appearance-none bg-accent/10 border-accent/20 text-accent font-bold h-8">
-                            <option value="active" ${data?.status !== 'done' ? 'selected' : ''}>ACTIVE</option>
-                            <option value="done" ${data?.status === 'done' ? 'selected' : ''}>DONE</option>
+                            <option value="active" ${data?.status !== 'done' ? 'selected' : ''}>进行中</option>
+                            <option value="done" ${data?.status === 'done' ? 'selected' : ''}>已完成</option>
                         </select>
                     </div>
                 </div>
@@ -751,9 +785,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'memos') {
             fields = `
                 <div class="space-y-4">
-                    <input type="text" id="m-name" placeholder="Memo Title" class="form-input" value="${data?.name || ''}" autocomplete="off">
+                    <input type="text" id="m-name" placeholder="备忘标题" class="form-input" value="${data?.name || ''}" autocomplete="off">
                     <input type="date" id="m-date" class="form-input" value="${data?.date || ''}">
-                    <textarea id="m-content" placeholder="Content/Passwords/Secure Notes..." class="form-input h-32 pt-2 resize-none">${data?.content || ''}</textarea>
+                    <textarea id="m-content" placeholder="内容详情/加密笔记..." class="form-input h-32 pt-2 resize-none">${data?.content || ''}</textarea>
                 </div>
             `;
         }
@@ -762,14 +796,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-form glass w-full max-w-sm border border-white/10 shadow-2xl rounded-lg">
                 <div class="flex items-center gap-2 mb-6">
                     <div class="w-1 h-3 bg-accent"></div>
-                    <h3 class="text-accent text-[10px] font-bold uppercase tracking-[0.2em]">MANAGE :: ${type.slice(0, -1)}</h3>
+                    <h3 class="text-accent text-[10px] font-bold uppercase tracking-[0.2em]">管理 :: ${type}</h3>
                 </div>
                 ${fields}
                 <div class="flex justify-between gap-3 pt-6 mt-2 border-t border-white/5">
-                    ${data ? `<button onclick="deleteEntry('${type}', '${data.id}')" class="text-red-500/60 hover:text-red-500 text-[10px] font-bold tracking-tighter">TERMINATE</button>` : '<span></span>'}
+                    ${data ? `<button onclick="deleteEntry('${type}', '${data.id}')" class="text-red-500/60 hover:text-red-500 text-[10px] font-bold tracking-tighter">删除条目</button>` : '<span></span>'}
                     <div class="flex gap-4">
-                        <button onclick="closeModal()" class="text-gray-500 hover:text-white text-[10px] font-bold">CANCEL</button>
-                        <button onclick="saveEntry('${type}', '${data?.id || ''}')" class="bg-accent hover:bg-white text-black font-bold px-4 py-1.5 text-[10px] rounded transition-all">SYNC_TO_CLOUD</button>
+                        <button onclick="closeModal()" class="text-gray-500 hover:text-white text-[10px] font-bold">取消</button>
+                        <button onclick="saveEntry('${type}', '${data?.id || ''}')" class="bg-accent hover:bg-white text-black font-bold px-4 py-1.5 text-[10px] rounded transition-all">保存更改</button>
                     </div>
                 </div>
             </div>
@@ -844,44 +878,44 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="p-4 bg-white/[0.03] rounded border border-accent/20 relative animate-fade-in">
                 <div class="flex flex-col gap-4 mb-6">
                     <div>
-                        <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">PROJECT_NAME</div>
+                        <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">项目名称</div>
                         <input type="text" id="edit-p-name" value="${p.name}" class="form-input font-bold text-accent" autocomplete="off">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">START_DATE</div>
+                            <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">启动日期</div>
                             <input type="date" id="edit-p-start" value="${p.startDate || ''}" class="form-input">
                         </div>
                         <div>
-                            <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">END_DATE</div>
+                            <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">结束日期</div>
                             <div class="flex gap-2 items-center">
                                 <input type="date" id="edit-p-end" value="${isOngoing ? '' : (p.deadline || '')}" class="form-input ${isOngoing ? 'opacity-50 cursor-not-allowed' : ''}" ${isOngoing ? 'disabled' : ''}>
                                 <label class="flex items-center gap-1 cursor-pointer select-none bg-accent/10 px-2 py-1 rounded border border-accent/20 hover:bg-accent/20 transition-colors">
                                     <input type="checkbox" id="edit-p-ongoing" ${isOngoing ? 'checked' : ''} onchange="toggleDateInput(this)" class="accent-accent">
-                                    <span class="text-[10px] text-accent font-bold">NOW</span>
+                                    <span class="text-[10px] text-accent font-bold">长期/进行中</span>
                                 </label>
                             </div>
                         </div>
                     </div>
                     <div>
-                        <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">MISSION_OBJECTIVES</div>
+                        <div class="text-[10px] text-gray-500 uppercase mb-1 px-1">项目/任务目标</div>
                         <textarea id="edit-p-desc" class="form-input text-xs h-10 resize-none pt-2">${p.description || ''}</textarea>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 mb-3 px-1 border-b border-white/5 pb-2">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SUB_SEQUENCES</span>
-                    <button onclick="addNewSubtaskRow()" class="text-[10px] text-accent hover:underline">+ ADD</button>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">子任务序列</span>
+                    <button onclick="addNewSubtaskRow()" class="text-[10px] text-accent hover:underline">+ 添加</button>
                 </div>
                 <div id="edit-subtasks-list" class="space-y-2 mb-6 max-h-[150px] overflow-y-auto pr-1 thin-scroll">
                     ${(p.subtasks || []).map((s, idx) => `
                         <div class="flex gap-2 items-center bg-white/[0.02] p-2 rounded">
-                            <input type="text" value="${s.name}" class="form-input text-[10px] flex-grow" placeholder="Task Name" autocomplete="off">
+                            <input type="text" value="${s.name}" class="form-input text-[10px] flex-grow" placeholder="任务名称" autocomplete="off">
                             <input type="date" value="${s.deadline}" class="form-input text-[10px] w-28">
                             <select class="form-input text-[10px] w-20 appearance-none bg-accent/10 border-accent/20 text-accent font-bold">
-                                <option value="active" ${s.status === 'active' ? 'selected' : ''}>ACTIVE</option>
-                                <option value="pending" ${s.status === 'pending' ? 'selected' : ''}>PENDING</option>
-                                <option value="done" ${s.status === 'done' ? 'selected' : ''}>DONE</option>
+                                <option value="active" ${s.status === 'active' ? 'selected' : ''}>进行中</option>
+                                <option value="pending" ${s.status === 'pending' ? 'selected' : ''}>已挂起</option>
+                                <option value="done" ${s.status === 'done' ? 'selected' : ''}>已完成</option>
                             </select>
                             <button onclick="this.parentElement.remove()" class="text-red-500/80 hover:text-red-500 px-1">×</button>
                         </div>
@@ -889,10 +923,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="flex justify-between pt-4 mt-2 border-t border-white/5">
-                    <button onclick="deleteProject('${p.id}')" class="text-red-500/60 hover:text-red-500 text-[10px] font-bold">PURGE_UNIT</button>
+                    <button onclick="deleteProject('${p.id}')" class="text-red-500/60 hover:text-red-500 text-[10px] font-bold">删除项目</button>
                     <div class="flex gap-4 items-center">
-                        <button onclick="toggleProjectEdit()" class="text-gray-500 hover:text-white text-[10px] font-bold uppercase">ABORT</button>
-                        <button onclick="saveProjectChanges('${p.id}')" class="bg-accent hover:bg-white text-black font-bold px-6 py-2 text-[10px] rounded transition-all">EXECUTE_SAVE</button>
+                        <button onclick="toggleProjectEdit()" class="text-gray-500 hover:text-white text-[10px] font-bold uppercase">取消</button>
+                        <button onclick="saveProjectChanges('${p.id}')" class="bg-accent hover:bg-white text-black font-bold px-6 py-2 text-[10px] rounded transition-all">保存更改</button>
                     </div>
                 </div>
             </div>
@@ -1015,9 +1049,126 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Root Listeners
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const emailLoginBtn = document.getElementById('emailLoginBtn');
+
+    // Toggle Elements
+    const showRegisterBtn = document.getElementById('showRegisterBtn');
+    const showForgotBtn = document.getElementById('showForgotBtn');
+    const showLoginBtns = document.querySelectorAll('.showLoginBtn'); // Class for multiple back buttons
+
+    // Views
+    const loginFormView = document.getElementById('login-form-view');
+    const registerFormView = document.getElementById('register-form-view');
+    const forgotFormView = document.getElementById('forgot-form-view');
+
+    // Action Elements
+    const registerBtn = document.getElementById('registerBtn');
+    const regEmailInput = document.getElementById('regEmailInput');
+    const regPasswordInput = document.getElementById('regPasswordInput');
+
+    const resetPassBtn = document.getElementById('resetPassBtn');
+    const resetEmailInput = document.getElementById('resetEmailInput');
+
+    // Toggle Logic
+    if (showRegisterBtn) showRegisterBtn.onclick = () => {
+        loginFormView.classList.add('hidden');
+        registerFormView.classList.remove('hidden');
+        forgotFormView.classList.add('hidden');
+    };
+
+    if (showForgotBtn) showForgotBtn.onclick = () => {
+        loginFormView.classList.add('hidden');
+        registerFormView.classList.add('hidden');
+        forgotFormView.classList.remove('hidden');
+    };
+
+    showLoginBtns.forEach(btn => {
+        btn.onclick = () => {
+            registerFormView.classList.add('hidden');
+            forgotFormView.classList.add('hidden');
+            loginFormView.classList.remove('hidden');
+        };
+    });
+
+    // Reset Password Logic
+    if (resetPassBtn) {
+        resetPassBtn.onclick = async () => {
+            const email = resetEmailInput.value;
+            if (!email) return alert("Please enter your registered email address.");
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert(`Recovery Protocol Initiated: Reset link sent to ${email}. Check your inbox.`);
+                // Return to login
+                forgotFormView.classList.add('hidden');
+                loginFormView.classList.remove('hidden');
+            } catch (error) {
+                console.error("Reset failed", error);
+                alert("Recovery Failed: " + error.message);
+            }
+        };
+    }
+
+    // Login Logic
+    if (emailLoginBtn) {
+        emailLoginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) return alert("Credentials required.");
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                if (!userCredential.user.emailVerified) {
+                    // Check specifically if it's the admin or a verified user constraint
+                    // For now, allow but warn. Or enforce? 
+                    // User asked for "prevent invalid emails".
+                    // We will enforce it.
+                    if (userCredential.user.emailVerified === false) {
+                        alert("ACCESS DENIED: Email verification pending. Please check your inbox.");
+                        await auth.signOut();
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("Login failed", error);
+                alert("Access Denied: " + error.message);
+            }
+        });
+    }
+
+    // Register Logic
+    if (registerBtn) {
+        registerBtn.onclick = async () => {
+            const email = regEmailInput.value;
+            const password = regPasswordInput.value;
+            if (!email || !password) return alert("All fields required for initialization.");
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                await userCredential.user.sendEmailVerification();
+
+                alert(`PROTOCOL INITIATED: Verification link sent to ${email}. Please verify to access system.`);
+                await auth.signOut();
+
+                // Return to login
+                registerFormView.classList.add('hidden');
+                loginFormView.classList.remove('hidden');
+                emailInput.value = email;
+            } catch (error) {
+                console.error("Registration failed", error);
+                alert("Initialization Failed: " + error.message);
+            }
+        };
+    }
+
     if (adminLoginBtn) adminLoginBtn.onclick = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider);
+        auth.signInWithPopup(provider).catch(error => {
+            console.error("Google Auth failed", error);
+            alert("Google Authentication failed: " + error.message);
+        });
     };
     if (logoutBtn) logoutBtn.onclick = () => auth.signOut();
     if (memoSearch) memoSearch.oninput = renderMemos;

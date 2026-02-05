@@ -29,8 +29,8 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link href="css/styles.css?v=1.4.2" rel="stylesheet">
-    <link href="css/admin_dashboard.css?v=1.4.2" rel="stylesheet">
+    <link href="css/styles.css?v=1.5" rel="stylesheet">
+    <link href="css/admin_dashboard.css?v=1.5" rel="stylesheet">
 </head>
 
 <body
@@ -42,16 +42,88 @@
     <!-- Login Container -->
     <div id="login-container"
         class="relative z-10 w-full max-w-md p-8 glass text-center animate-fade-in flex flex-col items-center justify-center">
-        <h1 class="text-2xl font-bold text-white mb-2 tracking-widest">SYSTEM_ACCESS</h1>
+        <h1 class="text-2xl font-bold text-white mb-2 tracking-widest">系统接入端口 :: SYSTEM_ACCESS</h1>
         <p
             class="text-xs text-accent mb-8 font-mono border border-accent/20 bg-accent/5 inline-block px-2 py-1 rounded">
-            RESTRICTED AREA</p>
-        <button id="portalLoginBtn"
-            class="w-3/4 bg-transparent border border-accent text-accent hover:bg-accent hover:text-black font-bold py-3 px-6 rounded transition-all shadow-[0_0_15px_rgba(0,255,157,0.1)] flex items-center justify-center gap-3">
-            Sign in with Google
-        </button>
+            限制区域 // RESTRICTED AREA</p>
+
+        <!-- Login Form -->
+        <div id="login-form-view" class="w-3/4 space-y-4">
+            <input type="email" id="emailInput" placeholder="电子邮箱 / EMAIL" autocomplete="email"
+                class="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-all font-mono text-sm placeholder-gray-600">
+            <input type="password" id="passwordInput" placeholder="访问密码 / PASSCODE" autocomplete="current-password"
+                class="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-all font-mono text-sm placeholder-gray-600">
+
+            <button id="emailLoginBtn"
+                class="w-full bg-accent text-black font-bold py-3 px-6 rounded hover:bg-white transition-all shadow-[0_0_10px_rgba(0,255,157,0.3)] flex items-center justify-center gap-2">
+                身份验证 // AUTHENTICATE
+            </button>
+
+            <div class="flex items-center justify-between mt-2">
+                <button id="showRegisterBtn"
+                    class="text-[10px] text-gray-500 hover:text-accent font-mono underline decoration-dotted underline-offset-4">
+                    新用户注册 // INITIALIZE_NEW_USER
+                </button>
+                <button id="showForgotBtn"
+                    class="text-[10px] text-gray-500 hover:text-red-400 font-mono underline decoration-dotted underline-offset-4">
+                    忘记密码? // LOST_CREDENTIALS
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] text-gray-500 font-mono">
+                <div class="h-px bg-white/10 flex-grow mr-4"></div>
+                <span>或 / OR</span>
+                <div class="h-px bg-white/10 flex-grow ml-4"></div>
+            </div>
+            <button id="portalLoginBtn"
+                class="w-full bg-transparent border border-white/20 text-gray-300 hover:text-white hover:border-white font-bold py-3 px-6 rounded transition-all flex items-center justify-center gap-3 text-xs">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                </svg>
+                Google 账号登录
+            </button>
+        </div>
+
+        <!-- Register Form (Hidden) -->
+        <div id="register-form-view" class="w-3/4 space-y-4 hidden">
+            <input type="email" id="regEmailInput" placeholder="注册邮箱 / EMAIL" autocomplete="email"
+                class="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-all font-mono text-sm placeholder-gray-600">
+            <input type="password" id="regPasswordInput" placeholder="设置密码 / SET_PASSCODE" autocomplete="new-password"
+                class="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-all font-mono text-sm placeholder-gray-600">
+
+            <button id="registerBtn"
+                class="w-full bg-transparent border border-accent text-accent hover:bg-accent hover:text-black font-bold py-3 px-6 rounded transition-all shadow-[0_0_10px_rgba(0,255,157,0.1)] flex items-center justify-center gap-2">
+                注册并验证 // REGISTER
+            </button>
+
+            <div class="flex justify-center mt-2">
+                <button id="showLoginBtn"
+                    class="text-[10px] text-gray-500 hover:text-white font-mono underline decoration-dotted underline-offset-4">
+                    << 返回登录 // BACK_TO_LOGIN </button>
+            </div>
+        </div>
+
+        <!-- Forgot Password Form (Hidden) -->
+        <div id="forgot-form-view" class="w-3/4 space-y-4 hidden">
+            <div class="text-xs text-gray-400 mb-2 font-mono">请输入您的注册邮箱，系统将发送重置链接。</div>
+            <input type="email" id="resetEmailInput" placeholder="注册邮箱 / EMAIL" autocomplete="email"
+                class="w-full bg-white/5 border border-white/10 text-white px-4 py-3 rounded focus:border-accent focus:outline-none focus:ring-1 focus:ring-red-400 transition-all font-mono text-sm placeholder-gray-600">
+
+            <button id="resetPassBtn"
+                class="w-full bg-transparent border border-red-400/50 text-red-400 hover:bg-red-400 hover:text-black font-bold py-3 px-6 rounded transition-all shadow-[0_0_10px_rgba(248,113,113,0.1)] flex items-center justify-center gap-2">
+                发送重置链接 // RECOVER_ACCESS
+            </button>
+
+            <div class="flex justify-center mt-2">
+                <button
+                    class="showLoginBtn text-[10px] text-gray-500 hover:text-white font-mono underline decoration-dotted underline-offset-4">
+                    << 返回登录 // BACK_TO_LOGIN </button>
+            </div>
+        </div>
+
         <a href="index.html" class="block mt-6 text-xs text-gray-500 hover:text-white transition-colors">
-            << Return to Main Terminal</a>
+            << 返回主终端 / Return to Main Terminal</a>
     </div>
 
     <!-- Dashboard Container (New 5-Area Layout) -->

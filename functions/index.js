@@ -126,11 +126,13 @@ async function processUserReport(uid, userEmail, transporter) {
 }
 
 /**
- * Scheduled Task
+ * Scheduled Task: Individualized Delivery
+ * Runs every hour to check which users need their report at this specific hour in their specific timezone.
  */
 exports.scheduledDailyReport = onSchedule({
-    schedule: "0 8 * * *",
-    timeZone: "Europe/Paris"
+    schedule: "every 1 hours", // Run hourly
+    timeZone: "UTC", // Server time reference
+    timeoutSeconds: 300
 }, async (event) => {
     const db = admin.firestore();
     const usersSnapshot = await db.collection("users").get();
@@ -140,13 +142,60 @@ exports.scheduledDailyReport = onSchedule({
     });
 
     const tasks = [];
+    const now = new Date();
+
     for (const doc of usersSnapshot.docs) {
         const userData = doc.data();
-        // 只有设置了 receiveReport 为 true 且有 email 的用户才接收
-        if (userData.email && userData.receiveReport !== false) {
-            tasks.push(processUserReport(doc.id, userData.email, transporter));
+        const uid = doc.id;
+
+        // Skip if disabled or no email
+        if (!userData.email || userData.receiveReport === false) continue;
+
+        // 1. Determine User's Target Time
+        const targetHour = userData.reportTime !== undefined ? userData.reportTime : 8; // Default 8 AM
+        const userTimezone = userData.timezone || 'Asia/Shanghai'; // Default Shanghai
+
+        try {
+            // 2. Get User's Current Local Time
+            // We use toLocaleString to convert server 'now' to user's wall-clock time
+            const localDateStr = now.toLocaleDateString("en-CA", { timeZone: userTimezone }); // "YYYY-MM-DD" in user land
+            const localHourStr = now.toLocaleTimeString("en-US", { timeZone: userTimezone, hour12: false, hour: 'numeric' });
+
+            // Handle edge case where "24" might be returned or similar quirks, although numeric usually gives 0-23
+            let currentLocalHour = parseInt(localHourStr);
+            if (isNaN(currentLocalHour)) continue;
+            if (currentLocalHour === 24) currentLocalHour = 0;
+
+            console.log(`Checking user ${uid} (${userTimezone}): Now ${currentLocalHour}:00, Target ${targetHour}:00. Last sent: ${userData.lastReportSentDate}`);
+
+            // 3. Match Logic
+            if (currentLocalHour === targetHour) {
+                // Check Idempotency (Don't send if already sent today in their timezone)
+                if (userData.lastReportSentDate === localDateStr) {
+                    console.log(`Skipping ${uid}: Already sent for ${localDateStr}`);
+                    continue;
+                }
+
+                // 4. Send & Update
+                const sendPromise = processUserReport(uid, userData.email, transporter)
+                    .then(async () => {
+                        // Mark as sent for this local date
+                        await db.collection("users").doc(uid).update({
+                            lastReportSentDate: localDateStr
+                        });
+                        console.log(`Report sent to ${userData.email} for ${localDateStr}`);
+                    })
+                    .catch(err => {
+                        console.error(`Failed to send report to ${uid}:`, err);
+                    });
+
+                tasks.push(sendPromise);
+            }
+        } catch (err) {
+            console.error(`Error processing user ${uid} time logic:`, err);
         }
     }
+
     await Promise.all(tasks);
 });
 
