@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return `
                         <div class="subtask-item subtask-${s.status || 'active'} flex justify-between items-center group rounded-sm px-3 py-2 border-l-2">
-                            <span class="text-xs truncate mr-2">${s.name}</span>
+                            <span class="text-xs mr-2 break-all">${s.name}</span>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] font-bold tracking-wider ${isUrgent ? 'text-yellow-400 animate-pulse' : statusClass}">${displayStatus}</span>
                                 <span class="text-xs ${isUrgent ? 'text-yellow-400 animate-pulse font-bold' : 'opacity-60'} font-mono">${s.deadline || ''}</span>
@@ -907,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">子任务序列</span>
                     <button onclick="addNewSubtaskRow()" class="text-[10px] text-accent hover:underline">+ 添加</button>
                 </div>
-                <div id="edit-subtasks-list" class="space-y-2 mb-6 max-h-[150px] overflow-y-auto pr-1 thin-scroll">
+                <div id="edit-subtasks-list" class="space-y-2 mb-6 max-h-[400px] overflow-y-auto pr-1 thin-scroll">
                     ${(p.subtasks || []).map((s, idx) => `
                         <div class="flex gap-2 items-center bg-white/[0.02] p-2 rounded">
                             <input type="text" value="${s.name}" class="form-input text-[10px] flex-grow" placeholder="任务名称" autocomplete="off">
@@ -946,9 +946,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" class="form-input text-[10px] flex-grow" placeholder="New subtask..." autocomplete="off">
             <input type="date" class="form-input text-[10px] w-28">
             <select class="form-input text-[10px] w-20 appearance-none bg-accent/10 border-accent/20 text-accent font-bold">
-                <option value="active">ACTIVE</option>
-                <option value="pending">PENDING</option>
-                <option value="done">DONE</option>
+                <option value="active">进行中</option>
+                <option value="pending">已挂起</option>
+                <option value="done">已完成</option>
             </select>
             <button onclick="this.parentElement.remove()" class="text-red-500/80 hover:text-red-500 px-1">×</button>
         `;
