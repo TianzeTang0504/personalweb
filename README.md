@@ -2,8 +2,6 @@
 
 A "Geek-style" personal website featuring a high-precision Task/Schedule Manager (Command Center) and an AI-powered portfolio/blog system. Built with **HTML/JS (Vanilla)** and **Firebase**.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Command+Center+Dashboard)
-
 ## Features
 
 - **Cyberpunk/Geek UI**: Glassmorphism, terminal aesthetics, and responsive animations.
