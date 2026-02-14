@@ -88,7 +88,7 @@ The AI reporting features live in the `functions/` directory.
 - **Registration**: Use the "Initial User Registration" or "Register" button to create your account.
 - **Email Verification**: You cannot access the dashboard until you verify your email (click the link sent by Firebase).
 - **Settings**: Once logged in, click the **Gear Icon** to configure:
-  - **Daily Report**: Enable/Disable.
+  - **Daily Report**: Enable/Disable
   - **Time & Timezone**: Set when you want to receive your AI briefing.
 
 ## 📄 License
