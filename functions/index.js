@@ -134,6 +134,9 @@ exports.scheduledDailyReport = onSchedule({
     timeZone: "UTC", // Server time reference
     timeoutSeconds: 300
 }, async (event) => {
+    console.log("Scheduled report disabled by user request.");
+    return; // Feature temporarily turned off
+
     const db = admin.firestore();
     const usersSnapshot = await db.collection("users").get();
     const transporter = nodemailer.createTransport({

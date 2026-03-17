@@ -80,6 +80,16 @@ The AI reporting features live in the `functions/` directory.
    firebase deploy
    ```
 
+### 6. Updating Cloud Functions
+If you make subsequent changes to the backend code in the `functions/` directory (e.g., editing `functions/index.js`), you **must** redeploy the functions for the changes to take effect on the server. You do not need to deploy the entire project every time.
+
+To **only** deploy Cloud Functions:
+```bash
+firebase deploy --only functions
+```
+
+*(Note: If you only modified formatting, logic, or text inside `index.js`, this command is sufficient. If you installed new npm packages, the deployment will automatically handle uploading the dependency requirements.)*
+
 ---
 
 ## 🛠 Usage Notes
