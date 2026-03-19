@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const dashboardContainer = document.getElementById('dashboard-container');
+    const commandCenterView = document.getElementById('workspace-command-center') || dashboardContainer;
     const loginContainer = document.getElementById('login-container');
     const userEmailDisplay = document.getElementById('userEmailDisplay');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -10,9 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectTabsList = document.getElementById('project-tabs-list');
     const projectDetails = document.getElementById('project-details');
     const eventCards = document.querySelector('.event-cards');
-    const taskList = document.querySelector('#task-panel .panel-body .space-y-3');
-    const memoList = document.querySelector('#memo-panel .panel-body .space-y-2');
-    const memoSearch = document.querySelector('.memo-search');
+    const taskList = commandCenterView.querySelector('#task-panel .panel-body .space-y-3');
+    const memoList = commandCenterView.querySelector('#memo-panel .panel-body .space-y-2');
+    const memoSearch = commandCenterView.querySelector('.memo-search');
 
     const settingsBtn = document.getElementById('settingsBtn');
     const genericModal = document.getElementById('genericModal');
@@ -39,7 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        firebase.initializeApp(window.firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(window.firebaseConfig);
+        }
         auth = firebase.auth();
         db = firebase.firestore();
 
@@ -56,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     email: user.email
                 }, { merge: true });
 
+                window.dispatchEvent(new CustomEvent('admin-auth-changed', { detail: { user } }));
+
                 setupListeners();
                 await checkAndMigrateOrInit(user);
 
@@ -65,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dashboardContainer.style.display = 'none';
                 dashboardContainer.classList.add('hidden');
                 currentUser = null;
+                window.dispatchEvent(new CustomEvent('admin-auth-changed', { detail: { user: null } }));
             }
         });
     }
@@ -1023,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Generic Add for Panels
-    document.querySelectorAll('.panel-header button').forEach(btn => {
+    commandCenterView.querySelectorAll('.panel-header button').forEach(btn => {
         const title = btn.parentElement.querySelector('.panel-title').textContent.toLowerCase();
         btn.onclick = async () => {
             if (title.includes('project')) {

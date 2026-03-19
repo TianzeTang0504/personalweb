@@ -31,6 +31,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link href="css/styles.css?v=1.5.1" rel="stylesheet">
     <link href="css/admin_dashboard.css?v=1.5.1" rel="stylesheet">
+    <link href="css/star-journal.css?v=1.0.0" rel="stylesheet">
 </head>
 
 <body
@@ -130,11 +131,15 @@
     <div id="dashboard-container" class="hidden relative z-10 flex flex-col gap-5 p-5 animate-fade-in">
 
         <!-- [1] Top Bar Area -->
-        <div class="flex justify-between items-center glass glass-no-float p-3 rounded-md border border-white/5">
+        <div class="admin-topbar glass glass-no-float p-3 rounded-md border border-white/5">
             <div class="flex items-center gap-2">
                 <div class="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
                 <span class="text-xs font-bold text-white uppercase tracking-tighter">Admin_Session :: </span>
                 <span id="userEmailDisplay" class="text-xs text-accent opacity-80">authenticating...</span>
+            </div>
+            <div class="workspace-switch" id="workspaceSwitch">
+                <button class="workspace-tab active" data-workspace="command-center">指挥中心</button>
+                <button class="workspace-tab" data-workspace="star-journal">观星日记本</button>
             </div>
             <div class="flex gap-4 relative z-50 pointer-events-auto">
                 <button id="settingsBtn" class="text-gray-400 hover:text-accent transition-colors p-1"
@@ -158,83 +163,158 @@
             </div>
         </div>
 
-        <!-- Main Body Grid -->
-        <div class="dashboard-grid">
+        <div id="workspace-command-center" class="workspace-view">
+            <!-- Main Body Grid -->
+            <div class="dashboard-grid">
 
-            <!-- LEFT COLUMN (Projects + Events) -->
-            <div style="display: contents;">
+                <!-- LEFT COLUMN (Projects + Events) -->
+                <div style="display: contents;">
 
-                <!-- [2] Project Area -->
-                <div id="project-panel" class="admin-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">PROJECTS</span>
-                        <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
-                            NEW</button>
-                    </div>
-                    <!-- Tabs for projects -->
-                    <div class="project-tabs" id="project-tabs-list">
-                        <!-- Content loaded via JS -->
-                    </div>
-                    <div class="panel-body text-xs">
-                        <div id="project-details" class="space-y-4">
-                            <!-- Content loaded via JS -->
-                            <div class="p-10 text-center opacity-20 italic">Loading active sectors...</div>
+                    <!-- [2] Project Area -->
+                    <div id="project-panel" class="admin-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">PROJECTS</span>
+                            <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
+                                NEW</button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- [3] Event Area -->
-                <div id="event-panel" class="admin-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">EVENTS</span>
-                        <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
-                            ADD</button>
-                    </div>
-                    <div class="panel-body">
-                        <div class="event-cards">
+                        <!-- Tabs for projects -->
+                        <div class="project-tabs" id="project-tabs-list">
                             <!-- Content loaded via JS -->
                         </div>
+                        <div class="panel-body text-xs">
+                            <div id="project-details" class="space-y-4">
+                                <!-- Content loaded via JS -->
+                                <div class="p-10 text-center opacity-20 italic">Loading active sectors...</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- [3] Event Area -->
+                    <div id="event-panel" class="admin-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">EVENTS</span>
+                            <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
+                                ADD</button>
+                        </div>
+                        <div class="panel-body">
+                            <div class="event-cards">
+                                <!-- Content loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
+
+
+                <!-- RIGHT COLUMN (Tasks + Memos) -->
+                <div id="right-column">
+
+                    <!-- [4] Task Area -->
+                    <div id="task-panel" class="admin-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">TASKS</span>
+                            <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
+                                TASK</button>
+                        </div>
+                        <div class="panel-body text-xs">
+                            <div class="space-y-3">
+                                <!-- Content loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- [5] Memo Area -->
+                    <div id="memo-panel" class="admin-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">MEMO</span>
+                            <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
+                                MEMO</button>
+                        </div>
+                        <div class="panel-body text-xs">
+                            <input type="text" class="memo-search" placeholder="SEARCH_VAULT..." autocomplete="off">
+                            <div class="space-y-2">
+                                <!-- Content loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <!-- End Right Column -->
 
             </div>
+        </div>
 
-
-
-            <!-- RIGHT COLUMN (Tasks + Memos) -->
-            <div id="right-column">
-
-                <!-- [4] Task Area -->
-                <div id="task-panel" class="admin-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">TASKS</span>
-                        <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
-                            TASK</button>
+        <div id="workspace-star-journal" class="workspace-view hidden">
+            <div class="star-journal-shell">
+                <aside class="star-panel star-list-panel">
+                    <div class="star-panel-header">
+                        <div>
+                            <div class="star-section-kicker">双人私密星空记录</div>
+                            <h2 class="star-panel-title">观星日记本</h2>
+                        </div>
+                        <button id="newSessionBtn" class="star-action-btn">+ 新建记录</button>
                     </div>
-                    <div class="panel-body text-xs">
-                        <div class="space-y-3">
-                            <!-- Content loaded via JS -->
+                    <div class="star-panel-body">
+                        <div id="starJournalStatus" class="star-status-banner hidden"></div>
+                        <div class="star-search-wrap">
+                            <input type="text" id="starSessionSearch" class="star-search-input"
+                                placeholder="搜索记录 / 地点 / 备注" autocomplete="off">
+                        </div>
+                        <div id="starSessionList" class="star-session-list">
+                            <div class="star-empty">
+                                <p>正在连接观星日记本...</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </aside>
 
-                <!-- [5] Memo Area -->
-                <div id="memo-panel" class="admin-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">MEMO</span>
-                        <button class="text-[10px] bg-accent/10 border border-accent/20 px-2 py-0.5 text-accent">+
-                            MEMO</button>
-                    </div>
-                    <div class="panel-body text-xs">
-                        <input type="text" class="memo-search" placeholder="SEARCH_VAULT..." autocomplete="off">
-                        <div class="space-y-2">
-                            <!-- Content loaded via JS -->
+                <section class="star-panel star-detail-panel">
+                    <div id="starSessionDetail" class="star-panel-body star-detail-body">
+                        <div class="star-empty star-empty-large">
+                            <p>选择一条记录查看这次观星的内容。</p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-            </div> <!-- End Right Column -->
+                <aside class="star-panel star-sidebar-panel">
+                    <div class="star-panel-header">
+                        <div>
+                            <div class="star-section-kicker">共享 / 筛选 / 回看</div>
+                            <h2 class="star-panel-title">日记操作</h2>
+                        </div>
+                    </div>
+                    <div class="star-panel-body star-sidebar-body">
+                        <section class="star-side-section">
+                            <div class="star-side-title">共享成员</div>
+                            <div id="journalMembers" class="star-members"></div>
+                            <div class="star-invite-wrap">
+                                <input type="email" id="partnerInviteEmail" class="star-search-input"
+                                    placeholder="输入对方邮箱" autocomplete="email">
+                                <button id="invitePartnerBtn" class="star-action-btn star-action-btn-full">邀请伙伴</button>
+                            </div>
+                        </section>
 
+                        <section class="star-side-section">
+                            <div class="star-side-title">筛选器</div>
+                            <label class="star-filter-label" for="starLocationFilter">地点</label>
+                            <select id="starLocationFilter" class="star-filter-select">
+                                <option value="all">全部地点</option>
+                            </select>
+                            <div class="star-filter-label star-filter-label-gap">标签</div>
+                            <div id="starTagFilter" class="star-tag-filter"></div>
+                        </section>
+
+                        <section class="star-side-section">
+                            <div class="star-side-title">同地点历史</div>
+                            <div id="sameLocationHistory" class="star-history-list">
+                                <div class="star-empty compact">
+                                    <p>选择一条记录后可按地点回看历史。</p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </aside>
+            </div>
         </div>
     </div>
 
@@ -242,14 +322,18 @@
     <div id="genericModal" class="modal-overlay">
         <!-- We'll populate this with JS based on what the user clicks -->
     </div>
+    <div id="starJournalModal" class="modal-overlay"></div>
+    <div id="photoEditorModal" class="modal-overlay"></div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
     <script src="js/firebase-config.js?v=1.5.1"></script>
     <script src="js/schedule.js?v=1.5.1"></script>
+    <script src="js/star-journal.js?v=1.0.0"></script>
 
 </body>
 

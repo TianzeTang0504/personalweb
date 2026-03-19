@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isJournalMember(journalId) {
+      return signedIn() &&
+        request.auth.uid in firestore.get(/databases/(default)/documents/starJournals/$(journalId)).data.memberUids;
+    }
+
+    match /star-journals/{journalId}/sessions/{sessionId}/photos/{photoId}/{fileName} {
+      allow read, write: if isJournalMember(journalId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

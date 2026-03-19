@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return signedIn() && currentUser().data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function journalDoc(journalId) {
+      return get(/databases/$(database)/documents/starJournals/$(journalId));
+    }
+
+    function isJournalMember(journalId) {
+      return signedIn() && request.auth.uid in journalDoc(journalId).data.memberUids;
+    }
+
+    function canAccessInvite() {
+      return signedIn() && (
+        request.auth.uid == resource.data.invitedByUid ||
+        request.auth.token.email == resource.data.email
+      );
+    }
+
+    function canCreateInvite() {
+      return signedIn() &&
+        request.resource.data.invitedByUid == request.auth.uid &&
+        isJournalMember(request.resource.data.journalId);
+    }
+
+    match /users/{userId} {
+      allow create: if isOwner(userId);
+      allow read, update, delete: if isOwner(userId) || isAdmin();
+
+      match /{document=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    match /starJournals/{journalId} {
+      allow create: if signedIn() &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.auth.uid in request.resource.data.memberUids;
+      allow read, update, delete: if isJournalMember(journalId);
+
+      match /sessions/{sessionId} {
+        allow read, write: if isJournalMember(journalId);
+
+        match /photos/{photoId} {
+          allow read, write: if isJournalMember(journalId);
+        }
+      }
+    }
+
+    match /starJournalInvites/{inviteId} {
+      allow create: if canCreateInvite();
+      allow read, update, delete: if canAccessInvite() || isJournalMember(resource.data.journalId);
+    }
+  }
+}
