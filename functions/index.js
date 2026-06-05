@@ -1,6 +1,7 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env"), quiet: true });
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onRequest } = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const { GoogleGenAI } = require("@google/genai");
@@ -28,6 +29,680 @@ const getAIInstance = () => {
 
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_PASS = process.env.GMAIL_PASS;
+const OPENAI_MODEL = process.env.OPENAI_WRITING_MODEL || "gpt-5.5";
+const WRITING_PROMPT_VERSION = "writing-coach-v1";
+const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+
+const WRITING_COACH_INSTRUCTIONS = `
+你是一个小说写作训练教练。
+你的任务不是代写、改写、续写或全文润色，而是基于用户自己的文本和统计数据，给出短、具体、可执行的训练反馈。
+
+原则：
+1. 只基于输入数据判断，不编造用户没有写过的内容。
+2. 必须指出具体证据，避免泛泛夸奖。
+3. 关注小说训练：人物欲望、冲突、场景推进、对白、节奏、氛围、转折。
+4. 引用用户文本只能使用很短摘录。
+5. 输出必须严格符合 JSON Schema，不要输出 Markdown。
+`;
+
+const EXERCISE_EVALUATION_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+    required: [
+        "summary",
+        "score",
+        "strengths",
+        "weaknesses",
+        "evidence",
+        "revisionTargets",
+        "nextPrompt"
+    ],
+    properties: {
+        summary: { type: "string" },
+        score: {
+            type: "object",
+            additionalProperties: false,
+            required: [
+                "characterDesire",
+                "conflictClarity",
+                "sceneProgression",
+                "proseControl",
+                "overall"
+            ],
+            properties: {
+                characterDesire: { type: "number" },
+                conflictClarity: { type: "number" },
+                sceneProgression: { type: "number" },
+                proseControl: { type: "number" },
+                overall: { type: "number" }
+            }
+        },
+        strengths: {
+            type: "array",
+            items: { type: "string" }
+        },
+        weaknesses: {
+            type: "array",
+            items: { type: "string" }
+        },
+        evidence: {
+            type: "array",
+            items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["quote", "point"],
+                properties: {
+                    quote: { type: "string" },
+                    point: { type: "string" }
+                }
+            }
+        },
+        revisionTargets: {
+            type: "array",
+            items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["target", "why", "exercise"],
+                properties: {
+                    target: { type: "string" },
+                    why: { type: "string" },
+                    exercise: { type: "string" }
+                }
+            }
+        },
+        nextPrompt: { type: "string" }
+    }
+};
+
+const WEEKLY_INSIGHT_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+    required: [
+        "headline",
+        "summaryText",
+        "statsRead",
+        "comparedToLastWeek",
+        "rhythm",
+        "strongestProgress",
+        "mainBlocker",
+        "evidence",
+        "nextWeekPlan"
+    ],
+    properties: {
+        headline: { type: "string" },
+        summaryText: { type: "string" },
+        statsRead: { type: "string" },
+        comparedToLastWeek: { type: "string" },
+        rhythm: { type: "string" },
+        strongestProgress: { type: "string" },
+        mainBlocker: { type: "string" },
+        evidence: {
+            type: "array",
+            items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["source", "point"],
+                properties: {
+                    source: { type: "string" },
+                    point: { type: "string" }
+                }
+            }
+        },
+        nextWeekPlan: {
+            type: "array",
+            items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["focus", "task"],
+                properties: {
+                    focus: { type: "string" },
+                    task: { type: "string" }
+                }
+            }
+        }
+    }
+};
+
+function assertAuthedUid(request) {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new HttpsError("unauthenticated", "请先登录写作空间。");
+    }
+    return uid;
+}
+
+function getOpenAIKey() {
+    const key = process.env.OPENAI_API_KEY;
+    if (!key) {
+        throw new HttpsError("failed-precondition", "OPENAI_API_KEY 未配置。");
+    }
+    return key;
+}
+
+function cleanId(value, fieldName) {
+    const clean = String(value || "").trim();
+    if (!clean || clean.length > 120 || !/^[A-Za-z0-9_-]+$/.test(clean)) {
+        throw new HttpsError("invalid-argument", `${fieldName} 无效。`);
+    }
+    return clean;
+}
+
+function cleanWeekId(value) {
+    const raw = String(value || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        throw new HttpsError("invalid-argument", "weekId 无效。");
+    }
+    const normalized = getWeekRange(parseDateId(raw)).weekId;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+        throw new HttpsError("invalid-argument", "weekId 无效。");
+    }
+    return normalized;
+}
+
+function truncateText(value, maxLength = 4000) {
+    const text = String(value || "").trim();
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength)}\n...[已截断]`;
+}
+
+function countWords(text) {
+    const value = String(text || "").trim();
+    if (!value) return 0;
+    const cjkMatches = value.match(/[\u3400-\u4dbf\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || [];
+    const latinText = value.replace(/[\u3400-\u4dbf\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g, " ");
+    const latinMatches = latinText.match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*/g) || [];
+    return cjkMatches.length + latinMatches.length;
+}
+
+function getDocData(doc) {
+    return { id: doc.id, ...doc.data() };
+}
+
+function timestampToDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value.toDate === "function") return value.toDate();
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseDateId(value) {
+    if (value instanceof Date) {
+        return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    }
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return new Date();
+    }
+    const [year, month, day] = value.split("-").map(Number);
+    const parsed = new Date(year, month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function getDateParts(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return {
+        id: `${y}-${m}-${d}`,
+        label: `${m}/${d}`
+    };
+}
+
+function getWeekRange(anchorDate = new Date()) {
+    const now = anchorDate instanceof Date ? anchorDate : parseDateId(anchorDate);
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() - day + 1);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    const startParts = getDateParts(start);
+    const endParts = getDateParts(end);
+    return {
+        weekId: startParts.id,
+        weekStart: start,
+        weekEnd: end,
+        weekStartDate: startParts.id,
+        weekEndDate: endParts.id,
+        label: `${startParts.label} - ${endParts.label}`
+    };
+}
+
+function shiftWeek(range, offset) {
+    const next = new Date(range.weekStart);
+    next.setDate(next.getDate() + offset * 7);
+    return getWeekRange(next);
+}
+
+function isDateInRange(value, range) {
+    const date = timestampToDate(value);
+    return Boolean(date && date >= range.weekStart && date <= range.weekEnd);
+}
+
+function extractResponseText(responseJson) {
+    if (typeof responseJson.output_text === "string") {
+        return responseJson.output_text;
+    }
+    const chunks = [];
+    (responseJson.output || []).forEach((item) => {
+        (item.content || []).forEach((content) => {
+            if (typeof content.text === "string") chunks.push(content.text);
+            if (typeof content.output_text === "string") chunks.push(content.output_text);
+        });
+    });
+    return chunks.join("\n").trim();
+}
+
+function parseStructuredJson(text) {
+    const clean = String(text || "")
+        .trim()
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "");
+    return JSON.parse(clean);
+}
+
+async function createOpenAIJsonResponse({ input, schema, schemaName, maxOutputTokens }) {
+    const response = await fetch(OPENAI_RESPONSES_URL, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${getOpenAIKey()}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: OPENAI_MODEL,
+            instructions: WRITING_COACH_INSTRUCTIONS,
+            input,
+            reasoning: { effort: "medium" },
+            max_output_tokens: maxOutputTokens,
+            text: {
+                format: {
+                    type: "json_schema",
+                    name: schemaName,
+                    strict: true,
+                    schema
+                }
+            }
+        })
+    });
+
+    const rawBody = await response.text();
+    let responseJson = null;
+    try {
+        responseJson = JSON.parse(rawBody);
+    } catch (error) {
+        console.error("OpenAI returned non-JSON response", rawBody.slice(0, 500));
+    }
+
+    if (!response.ok) {
+        console.error("OpenAI request failed", response.status, responseJson || rawBody.slice(0, 500));
+        throw new HttpsError("unavailable", "AI 服务暂时不可用，请稍后再试。");
+    }
+
+    try {
+        return {
+            data: parseStructuredJson(extractResponseText(responseJson || {})),
+            responseId: responseJson?.id || "",
+            usage: responseJson?.usage || null
+        };
+    } catch (error) {
+        console.error("Failed to parse OpenAI structured output", error, rawBody.slice(0, 500));
+        throw new HttpsError("internal", "AI 返回格式解析失败。");
+    }
+}
+
+function buildStatsSnapshot(statsDocs, exercises, range, allStatsDocs = statsDocs) {
+    const days = [];
+    for (let i = 0; i < 7; i += 1) {
+        const date = new Date(range.weekStart);
+        date.setDate(range.weekStart.getDate() + i);
+        const parts = getDateParts(date);
+        days.push({
+            date: parts.id,
+            draftWords: 0,
+            exerciseWords: 0,
+            totalWords: 0
+        });
+    }
+
+    const dayMap = new Map(days.map((day) => [day.date, day]));
+    statsDocs.forEach((entry) => {
+        const day = dayMap.get(entry.date || entry.id);
+        if (!day) return;
+        day.draftWords += Number(entry.draftWords || 0);
+        day.exerciseWords += Number(entry.exerciseWords || 0);
+        day.totalWords += Number(entry.totalWords || 0);
+    });
+
+    const writtenDays = new Set(
+        allStatsDocs
+            .filter((entry) => Number(entry.totalWords || 0) > 0)
+            .map((entry) => entry.date || entry.id)
+    );
+    let streak = 0;
+    const anchor = range.weekEnd > new Date() ? new Date() : range.weekEnd;
+    const cursor = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());
+    while (writtenDays.has(getDateParts(cursor).id)) {
+        streak += 1;
+        cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return {
+        draftWords: days.reduce((sum, day) => sum + day.draftWords, 0),
+        exerciseWords: days.reduce((sum, day) => sum + day.exerciseWords, 0),
+        totalWords: days.reduce((sum, day) => sum + day.totalWords, 0),
+        completedExercises: exercises.filter((exercise) => (
+            exercise.status === "done" && isDateInRange(exercise.completedAt, range)
+        )).length,
+        streak,
+        days
+    };
+}
+
+function pickWeeklyItems(items, range, includeFn, mapper, limit = 8) {
+    return items
+        .filter((item) => includeFn(item, range))
+        .sort((a, b) => {
+            const aDate = timestampToDate(a.updatedAt || a.completedAt || a.createdAt)?.getTime() || 0;
+            const bDate = timestampToDate(b.updatedAt || b.completedAt || b.createdAt)?.getTime() || 0;
+            return bDate - aDate;
+        })
+        .slice(0, limit)
+        .map(mapper);
+}
+
+async function loadUserWritingContext(userRef, range, previousRange) {
+    const [
+        draftsSnap,
+        exercisesSnap,
+        materialsSnap,
+        readingsSnap,
+        statsSnap,
+        previousReviewSnap
+    ] = await Promise.all([
+        userRef.collection("writingDrafts").get(),
+        userRef.collection("writingExercises").get(),
+        userRef.collection("writingMaterials").get(),
+        userRef.collection("readingBreakdowns").get(),
+        userRef.collection("writingStats").get(),
+        userRef.collection("writingWeeklyReviews").doc(previousRange.weekId).get()
+    ]);
+
+    const drafts = draftsSnap.docs.map(getDocData);
+    const exercises = exercisesSnap.docs.map(getDocData);
+    const materials = materialsSnap.docs.map(getDocData);
+    const readings = readingsSnap.docs.map(getDocData);
+    const allStats = statsSnap.docs.map(getDocData);
+    const currentStatsDocs = allStats.filter((entry) => {
+        const id = entry.date || entry.id;
+        return id >= range.weekStartDate && id <= range.weekEndDate;
+    });
+    const previousStatsDocs = allStats.filter((entry) => {
+        const id = entry.date || entry.id;
+        return id >= previousRange.weekStartDate && id <= previousRange.weekEndDate;
+    });
+
+    return {
+        stats: buildStatsSnapshot(currentStatsDocs, exercises, range, allStats),
+        previousStats: buildStatsSnapshot(previousStatsDocs, exercises, previousRange, allStats),
+        previousReview: previousReviewSnap.exists ? previousReviewSnap.data() : null,
+        drafts: pickWeeklyItems(
+            drafts,
+            range,
+            (item) => isDateInRange(item.updatedAt || item.createdAt, range),
+            (item) => ({
+                title: item.title || "未命名草稿",
+                wordCount: Number(item.wordCount || 0),
+                tags: Array.isArray(item.tags) ? item.tags.slice(0, 8) : [],
+                excerpt: truncateText(item.body, 900)
+            }),
+            6
+        ),
+        exercises: pickWeeklyItems(
+            exercises,
+            range,
+            (item) => isDateInRange(item.updatedAt || item.completedAt || item.createdAt, range),
+            (item) => ({
+                prompt: truncateText(item.prompt, 400),
+                focus: item.focus || "未分类",
+                status: item.status || "draft",
+                wordCount: Number(item.wordCount || 0),
+                body: truncateText(item.body, 900),
+                aiSummary: item.aiEvaluation?.summary || ""
+            }),
+            8
+        ),
+        materials: pickWeeklyItems(
+            materials,
+            range,
+            (item) => isDateInRange(item.updatedAt || item.createdAt, range),
+            (item) => ({
+                type: item.type || "未分类",
+                title: item.title || "未命名素材",
+                tags: Array.isArray(item.tags) ? item.tags.slice(0, 8) : [],
+                content: truncateText(item.content, 500)
+            }),
+            6
+        ),
+        readings: pickWeeklyItems(
+            readings,
+            range,
+            (item) => isDateInRange(item.updatedAt || item.createdAt, range),
+            (item) => ({
+                sourceTitle: item.sourceTitle || "未命名作品",
+                author: item.author || "",
+                lens: item.lens || "未分类",
+                excerpt: truncateText(item.excerpt, 500),
+                notes: truncateText(item.notes, 500),
+                tags: Array.isArray(item.tags) ? item.tags.slice(0, 8) : []
+            }),
+            6
+        )
+    };
+}
+
+function limitString(value, maxLength = 600) {
+    return truncateText(value, maxLength).replace(/\s+/g, " ").trim();
+}
+
+function limitStringArray(values, maxItems = 4, maxLength = 180) {
+    return (Array.isArray(values) ? values : [])
+        .map((value) => limitString(value, maxLength))
+        .filter(Boolean)
+        .slice(0, maxItems);
+}
+
+function normalizeScore(score = {}) {
+    return {
+        characterDesire: Number(score.characterDesire || 0),
+        conflictClarity: Number(score.conflictClarity || 0),
+        sceneProgression: Number(score.sceneProgression || 0),
+        proseControl: Number(score.proseControl || 0),
+        overall: Number(score.overall || 0)
+    };
+}
+
+function normalizeExerciseEvaluation(raw, responseMeta) {
+    return {
+        summary: limitString(raw.summary, 260),
+        score: normalizeScore(raw.score),
+        strengths: limitStringArray(raw.strengths, 3, 180),
+        weaknesses: limitStringArray(raw.weaknesses, 3, 180),
+        evidence: (Array.isArray(raw.evidence) ? raw.evidence : []).slice(0, 3).map((item) => ({
+            quote: limitString(item?.quote, 80),
+            point: limitString(item?.point, 180)
+        })).filter((item) => item.quote || item.point),
+        revisionTargets: (Array.isArray(raw.revisionTargets) ? raw.revisionTargets : []).slice(0, 3).map((item) => ({
+            target: limitString(item?.target, 160),
+            why: limitString(item?.why, 180),
+            exercise: limitString(item?.exercise, 220)
+        })).filter((item) => item.target || item.exercise),
+        nextPrompt: limitString(raw.nextPrompt, 260),
+        generatedAt: admin.firestore.Timestamp.now(),
+        model: OPENAI_MODEL,
+        promptVersion: WRITING_PROMPT_VERSION,
+        responseId: responseMeta.responseId || "",
+        usage: responseMeta.usage || null
+    };
+}
+
+function normalizeWeeklyInsight(raw, responseMeta) {
+    return {
+        headline: limitString(raw.headline, 160),
+        summaryText: limitString(raw.summaryText, 500),
+        statsRead: limitString(raw.statsRead, 360),
+        comparedToLastWeek: limitString(raw.comparedToLastWeek, 360),
+        rhythm: limitString(raw.rhythm, 360),
+        strongestProgress: limitString(raw.strongestProgress, 360),
+        mainBlocker: limitString(raw.mainBlocker, 360),
+        evidence: (Array.isArray(raw.evidence) ? raw.evidence : []).slice(0, 4).map((item) => ({
+            source: limitString(item?.source, 120),
+            point: limitString(item?.point, 220)
+        })).filter((item) => item.source || item.point),
+        nextWeekPlan: (Array.isArray(raw.nextWeekPlan) ? raw.nextWeekPlan : []).slice(0, 4).map((item) => ({
+            focus: limitString(item?.focus, 120),
+            task: limitString(item?.task, 260)
+        })).filter((item) => item.focus || item.task),
+        generatedAt: admin.firestore.Timestamp.now(),
+        model: OPENAI_MODEL,
+        promptVersion: WRITING_PROMPT_VERSION,
+        responseId: responseMeta.responseId || "",
+        usage: responseMeta.usage || null
+    };
+}
+
+exports.generateWritingExerciseEvaluation = onCall(async (request) => {
+    const uid = assertAuthedUid(request);
+    const exerciseId = cleanId(request.data?.exerciseId, "exerciseId");
+    const db = admin.firestore();
+    const exerciseRef = db.collection("users").doc(uid).collection("writingExercises").doc(exerciseId);
+    const exerciseSnap = await exerciseRef.get();
+
+    if (!exerciseSnap.exists) {
+        throw new HttpsError("not-found", "找不到这条练习。");
+    }
+
+    const exercise = exerciseSnap.data();
+    if (exercise.aiEvaluation) {
+        throw new HttpsError("already-exists", "这条练习已经生成过 AI 评估。");
+    }
+
+    const body = String(exercise.body || "").trim();
+    const wordCount = Number(exercise.wordCount || countWords(body));
+    if (wordCount < 30) {
+        throw new HttpsError("failed-precondition", "正文太短，先写到 30 字以上再评估。");
+    }
+
+    const promptInput = {
+        task: "请评估一条小说场景练习，给出训练教练式反馈。分数使用 1-5 分，5 分最好。",
+        exercise: {
+            focus: exercise.focus || "未分类",
+            prompt: truncateText(exercise.prompt, 800),
+            status: exercise.status || "draft",
+            wordCount,
+            body: truncateText(body, 8000)
+        },
+        outputLanguage: "中文"
+    };
+
+    const responseMeta = await createOpenAIJsonResponse({
+        input: JSON.stringify(promptInput, null, 2),
+        schema: EXERCISE_EVALUATION_SCHEMA,
+        schemaName: "writing_exercise_evaluation",
+        maxOutputTokens: 1600
+    });
+    const aiEvaluation = normalizeExerciseEvaluation(responseMeta.data, responseMeta);
+
+    await exerciseRef.set({
+        aiEvaluation,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return { aiEvaluation };
+});
+
+exports.generateWritingWeeklyInsight = onCall(async (request) => {
+    const uid = assertAuthedUid(request);
+    const weekId = cleanWeekId(request.data?.weekId);
+    const db = admin.firestore();
+    const userRef = db.collection("users").doc(uid);
+    const range = getWeekRange(parseDateId(weekId));
+    const previousRange = shiftWeek(range, -1);
+    const currentRange = getWeekRange(new Date());
+
+    if (range.weekId >= currentRange.weekId) {
+        throw new HttpsError("failed-precondition", "本周结束后才能生成正式 AI 周总结。");
+    }
+
+    const reviewRef = userRef.collection("writingWeeklyReviews").doc(range.weekId);
+    const reviewSnap = await reviewRef.get();
+    const currentReview = reviewSnap.exists ? reviewSnap.data() : {};
+
+    if (currentReview.aiInsight) {
+        throw new HttpsError("already-exists", "这一周已经生成过 AI 周总结。");
+    }
+
+    const context = await loadUserWritingContext(userRef, range, previousRange);
+    const hasWriting = context.stats.totalWords > 0 || context.exercises.length > 0 || context.drafts.length > 0;
+    const hasReview = String(currentReview.manualReview || "").trim().length > 0;
+
+    if (!hasWriting && !hasReview) {
+        throw new HttpsError("failed-precondition", "这一周还没有可总结的写作内容。");
+    }
+
+    const promptInput = {
+        task: "请生成小说写作训练周复盘。要比较上周变化，判断本周节奏，并给出下周训练计划。",
+        week: {
+            weekId: range.weekId,
+            label: range.label,
+            stats: context.stats,
+            manualReview: truncateText(currentReview.manualReview, 1600)
+        },
+        previousWeek: {
+            weekId: previousRange.weekId,
+            label: previousRange.label,
+            stats: context.previousStats,
+            aiSummary: truncateText(
+                context.previousReview?.aiInsight?.summaryText || context.previousReview?.aiSummary || "",
+                900
+            ),
+            manualReview: truncateText(context.previousReview?.manualReview || "", 700)
+        },
+        thisWeekContent: {
+            drafts: context.drafts,
+            exercises: context.exercises,
+            materials: context.materials,
+            readings: context.readings
+        },
+        outputLanguage: "中文"
+    };
+
+    const responseMeta = await createOpenAIJsonResponse({
+        input: JSON.stringify(promptInput, null, 2),
+        schema: WEEKLY_INSIGHT_SCHEMA,
+        schemaName: "writing_weekly_insight",
+        maxOutputTokens: 1800
+    });
+    const aiInsight = normalizeWeeklyInsight(responseMeta.data, responseMeta);
+
+    await reviewRef.set({
+        weekStart: range.weekStartDate,
+        weekEnd: range.weekEndDate,
+        manualReview: currentReview.manualReview || "",
+        aiInsight,
+        aiSummary: aiInsight.summaryText,
+        statsSnapshot: {
+            draftWords: context.stats.draftWords,
+            exerciseWords: context.stats.exerciseWords,
+            totalWords: context.stats.totalWords,
+            completedExercises: context.stats.completedExercises,
+            streak: context.stats.streak
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return { aiInsight, aiSummary: aiInsight.summaryText };
+});
 
 /**
  * Core Logic: Generate and send report for a single user

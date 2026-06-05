@@ -1,14 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (selector) => document.querySelector(selector);
 
-    const MATERIAL_LABELS = {
-        character: '人物',
-        place: '地点',
-        worldbuilding: '设定',
-        fragment: '片段',
-        dialogue: '对话',
-        idea: '灵感'
-    };
+    const CUSTOM_OPTION = '__custom__';
+    const DEFAULT_EXERCISE_FOCUSES = ['人物欲望', '冲突', '对白', '氛围', '转折', '节奏'];
+    const DEFAULT_READING_LENSES = ['人物', '冲突', '节奏', '氛围', '句子', '结尾'];
+    const DEFAULT_MATERIAL_TYPES = [
+        { id: 'character', label: '人物', builtin: true },
+        { id: 'place', label: '地点', builtin: true },
+        { id: 'worldbuilding', label: '设定', builtin: true },
+        { id: 'fragment', label: '片段', builtin: true },
+        { id: 'dialogue', label: '对话', builtin: true },
+        { id: 'idea', label: '灵感', builtin: true }
+    ];
 
     const PROMPT_BANK = [
         {
@@ -61,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         draftEmpty: $('#draftEmpty'),
         draftEditor: $('#draftEditor'),
         draftTitle: $('#draftTitle'),
-        draftTags: $('#draftTags'),
+        draftTagEditor: $('#draftTagEditor'),
         draftBody: $('#draftBody'),
         draftWordCount: $('#draftWordCount'),
         draftSaveState: $('#draftSaveState'),
@@ -71,13 +74,17 @@ document.addEventListener('DOMContentLoaded', () => {
         exerciseEmpty: $('#exerciseEmpty'),
         exerciseEditor: $('#exerciseEditor'),
         exerciseFocus: $('#exerciseFocus'),
+        exerciseCustomFocus: $('#exerciseCustomFocus'),
+        inspireExerciseBtn: $('#inspireExerciseBtn'),
         exercisePrompt: $('#exercisePrompt'),
         exerciseBody: $('#exerciseBody'),
         exerciseWordCount: $('#exerciseWordCount'),
         exerciseSaveState: $('#exerciseSaveState'),
         exerciseStatusBadge: $('#exerciseStatusBadge'),
+        evaluateExerciseBtn: $('#evaluateExerciseBtn'),
         completeExerciseBtn: $('#completeExerciseBtn'),
         deleteExerciseBtn: $('#deleteExerciseBtn'),
+        exerciseAiPanel: $('#exerciseAiPanel'),
         newMaterialBtn: $('#newMaterialBtn'),
         materialTypeFilter: $('#materialTypeFilter'),
         materialSearch: $('#materialSearch'),
@@ -85,8 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
         materialEmpty: $('#materialEmpty'),
         materialEditor: $('#materialEditor'),
         materialType: $('#materialType'),
+        materialCustomType: $('#materialCustomType'),
         materialTitle: $('#materialTitle'),
-        materialTags: $('#materialTags'),
+        materialTagEditor: $('#materialTagEditor'),
         materialContent: $('#materialContent'),
         materialSaveState: $('#materialSaveState'),
         deleteMaterialBtn: $('#deleteMaterialBtn'),
@@ -97,11 +105,25 @@ document.addEventListener('DOMContentLoaded', () => {
         readingSourceTitle: $('#readingSourceTitle'),
         readingAuthor: $('#readingAuthor'),
         readingLens: $('#readingLens'),
-        readingTags: $('#readingTags'),
+        readingCustomLens: $('#readingCustomLens'),
+        readingTagEditor: $('#readingTagEditor'),
         readingExcerpt: $('#readingExcerpt'),
         readingNotes: $('#readingNotes'),
         readingSaveState: $('#readingSaveState'),
         deleteReadingBtn: $('#deleteReadingBtn'),
+        manageExerciseCategoriesBtn: $('#manageExerciseCategoriesBtn'),
+        manageMaterialCategoriesBtn: $('#manageMaterialCategoriesBtn'),
+        manageReadingCategoriesBtn: $('#manageReadingCategoriesBtn'),
+        taxonomyModal: $('#taxonomyModal'),
+        taxonomyModalTitle: $('#taxonomyModalTitle'),
+        closeTaxonomyModalBtn: $('#closeTaxonomyModalBtn'),
+        taxonomyList: $('#taxonomyList'),
+        appDialog: $('#appDialog'),
+        appDialogKicker: $('#appDialogKicker'),
+        appDialogTitle: $('#appDialogTitle'),
+        appDialogMessage: $('#appDialogMessage'),
+        appDialogCancelBtn: $('#appDialogCancelBtn'),
+        appDialogConfirmBtn: $('#appDialogConfirmBtn'),
         weekLabel: $('#weekLabel'),
         statsTotalWords: $('#statsTotalWords'),
         statsDraftWords: $('#statsDraftWords'),
@@ -109,14 +131,24 @@ document.addEventListener('DOMContentLoaded', () => {
         statsCompleted: $('#statsCompleted'),
         statsStreak: $('#statsStreak'),
         dailyBars: $('#dailyBars'),
+        prevWeekBtn: $('#prevWeekBtn'),
+        nextWeekBtn: $('#nextWeekBtn'),
+        todayWeekBtn: $('#todayWeekBtn'),
+        weekPickerToggle: $('#weekPickerToggle'),
+        weekPicker: $('#weekPicker'),
+        weekContext: $('#weekContext'),
+        weekHistoryList: $('#weekHistoryList'),
         weeklyReview: $('#weeklyReview'),
         weeklyReviewSaveState: $('#weeklyReviewSaveState'),
-        aiSummary: $('#aiSummary')
+        aiSummaryBtn: $('#aiSummaryBtn'),
+        aiSummary: $('#aiSummary'),
+        weeklyAiPanel: $('#weeklyAiPanel')
     };
 
     const state = {
         auth: null,
         db: null,
+        functions: null,
         user: null,
         view: localStorage.getItem('writerView') || 'drafts',
         drafts: [],
@@ -125,13 +157,27 @@ document.addEventListener('DOMContentLoaded', () => {
         readings: [],
         stats: [],
         weeklyReviews: [],
+        taxonomy: normalizeTaxonomy(),
         activeDraftId: localStorage.getItem('writerActiveDraft') || null,
         activeExerciseId: localStorage.getItem('writerActiveExercise') || null,
         activeMaterialId: localStorage.getItem('writerActiveMaterial') || null,
         activeReadingId: localStorage.getItem('writerActiveReading') || null,
         materialFilter: 'all',
         materialQuery: '',
+        selectedWeekStartId: localStorage.getItem('writerSelectedWeekStart') || getWeekRange().weekId,
+        weekPickerOpen: false,
+        taxonomyManagerKind: null,
+        dialogResolve: null,
+        generatingExerciseId: null,
+        generatingWeeklyId: null,
+        generatedExerciseIds: new Set(),
+        generatedWeeklyIds: new Set(),
         promptIndex: Number(localStorage.getItem('writerPromptIndex') || '0'),
+        tagValues: {
+            draft: [],
+            material: [],
+            reading: []
+        },
         unsubs: [],
         timers: {},
         savedCounts: {
@@ -143,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 
     function init() {
+        selectWeek(state.selectedWeekStartId, { render: false });
+        renderTaxonomyControls();
         bindStaticEvents();
 
         try {
@@ -154,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             state.auth = firebase.auth();
             state.db = firebase.firestore();
+            state.functions = typeof firebase.functions === 'function' ? firebase.functions() : null;
             state.auth.onAuthStateChanged(handleAuthChange);
         } catch (error) {
             showAuthMessage(error.message || '写作空间初始化失败。');
@@ -185,7 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('writerActiveDraft', state.activeDraftId);
             renderDrafts(true);
         });
-        [els.draftTitle, els.draftTags, els.draftBody].forEach((input) => {
+        setupTagEditor('draft', els.draftTagEditor, scheduleDraftSave);
+        [els.draftTitle, els.draftBody].forEach((input) => {
             input.addEventListener('input', scheduleDraftSave);
         });
         els.deleteDraftBtn.addEventListener('click', deleteActiveDraft);
@@ -202,6 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('input', scheduleExerciseSave);
             input.addEventListener('change', scheduleExerciseSave);
         });
+        els.exerciseFocus.addEventListener('change', () => toggleCustomCategoryInput('exercise'));
+        els.exerciseCustomFocus.addEventListener('input', scheduleExerciseSave);
+        els.inspireExerciseBtn.addEventListener('click', inspireExercise);
+        els.evaluateExerciseBtn.addEventListener('click', generateExerciseEvaluation);
         els.completeExerciseBtn.addEventListener('click', toggleExerciseDone);
         els.deleteExerciseBtn.addEventListener('click', deleteActiveExercise);
 
@@ -221,10 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('writerActiveMaterial', state.activeMaterialId);
             renderMaterials(true);
         });
-        [els.materialType, els.materialTitle, els.materialTags, els.materialContent].forEach((input) => {
+        setupTagEditor('material', els.materialTagEditor, scheduleMaterialSave);
+        [els.materialType, els.materialCustomType, els.materialTitle, els.materialContent].forEach((input) => {
             input.addEventListener('input', scheduleMaterialSave);
             input.addEventListener('change', scheduleMaterialSave);
         });
+        els.materialType.addEventListener('change', () => toggleCustomCategoryInput('material'));
         els.deleteMaterialBtn.addEventListener('click', deleteActiveMaterial);
 
         els.newReadingBtn.addEventListener('click', createReading);
@@ -239,16 +295,78 @@ document.addEventListener('DOMContentLoaded', () => {
             els.readingSourceTitle,
             els.readingAuthor,
             els.readingLens,
-            els.readingTags,
+            els.readingCustomLens,
             els.readingExcerpt,
             els.readingNotes
         ].forEach((input) => {
             input.addEventListener('input', scheduleReadingSave);
             input.addEventListener('change', scheduleReadingSave);
         });
+        setupTagEditor('reading', els.readingTagEditor, scheduleReadingSave);
+        els.readingLens.addEventListener('change', () => toggleCustomCategoryInput('reading'));
         els.deleteReadingBtn.addEventListener('click', deleteActiveReading);
 
-        els.weeklyReview.addEventListener('input', scheduleWeeklyReviewSave);
+        els.prevWeekBtn.addEventListener('click', () => shiftSelectedWeek(-1));
+        els.nextWeekBtn.addEventListener('click', () => shiftSelectedWeek(1));
+        els.todayWeekBtn.addEventListener('click', () => selectWeek(getWeekRange().weekId));
+        els.weekPickerToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            state.weekPickerOpen = !state.weekPickerOpen;
+            renderReview();
+        });
+        els.weekHistoryList.addEventListener('click', (event) => {
+            const item = event.target.closest('[data-week-id]');
+            if (!item) return;
+            selectWeek(item.getAttribute('data-week-id'));
+        });
+        document.addEventListener('click', (event) => {
+            if (!state.weekPickerOpen || event.target.closest('.week-nav')) return;
+            state.weekPickerOpen = false;
+            renderReview();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape' || !state.weekPickerOpen) return;
+            state.weekPickerOpen = false;
+            renderReview();
+        });
+        els.manageExerciseCategoriesBtn.addEventListener('click', () => openTaxonomyManager('exercise'));
+        els.manageMaterialCategoriesBtn.addEventListener('click', () => openTaxonomyManager('material'));
+        els.manageReadingCategoriesBtn.addEventListener('click', () => openTaxonomyManager('reading'));
+        els.closeTaxonomyModalBtn.addEventListener('click', closeTaxonomyManager);
+        els.taxonomyModal.addEventListener('click', (event) => {
+            if (event.target === els.taxonomyModal) closeTaxonomyManager();
+        });
+        els.taxonomyList.addEventListener('click', async (event) => {
+            const renameBtn = event.target.closest('[data-taxonomy-rename]');
+            const deleteBtn = event.target.closest('[data-taxonomy-delete]');
+            if (renameBtn) {
+                await renameTaxonomyItem(renameBtn.getAttribute('data-taxonomy-rename'));
+            }
+            if (deleteBtn) {
+                await deleteTaxonomyItem(deleteBtn.getAttribute('data-taxonomy-delete'));
+            }
+        });
+        els.taxonomyList.addEventListener('keydown', async (event) => {
+            if (event.key !== 'Enter') return;
+            const input = event.target.closest('[data-taxonomy-input]');
+            if (!input) return;
+            event.preventDefault();
+            await renameTaxonomyItem(input.getAttribute('data-taxonomy-input'));
+        });
+        els.appDialogConfirmBtn.addEventListener('click', () => closeAppDialog(true));
+        els.appDialogCancelBtn.addEventListener('click', () => closeAppDialog(false));
+        els.appDialog.addEventListener('click', (event) => {
+            if (event.target === els.appDialog) closeAppDialog(false);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape' || els.appDialog.classList.contains('hidden')) return;
+            closeAppDialog(false);
+        });
+        els.weeklyReview.addEventListener('input', () => {
+            scheduleWeeklyReviewSave();
+            updateWeeklyAiButton(getCurrentWeeklyReview(), getWeeklyStats());
+        });
+        els.aiSummaryBtn.addEventListener('click', generateWeeklyInsight);
     }
 
     async function handleAuthChange(user) {
@@ -349,6 +467,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupListeners() {
+        const taxonomyUnsub = state.db.collection('users').doc(state.user.uid)
+            .collection('writingTaxonomy').doc('config')
+            .onSnapshot((doc) => {
+                state.taxonomy = normalizeTaxonomy(doc.exists ? doc.data() : null);
+                renderTaxonomyControls();
+                renderCurrentView();
+            }, (error) => {
+                console.error('Failed to read writing taxonomy', error);
+            });
+        state.unsubs.push(taxonomyUnsub);
+
         listenToCollection('writingDrafts', (docs) => {
             state.drafts = sortByUpdated(docs);
             seedSavedCounts('drafts', state.drafts);
@@ -419,12 +548,299 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCurrentView(true);
     }
 
+    async function selectWeek(weekId, options = {}) {
+        if (state.timers.weeklyReview && state.user) {
+            clearTimeout(state.timers.weeklyReview);
+            state.timers.weeklyReview = null;
+            try {
+                await saveWeeklyReview();
+            } catch (error) {
+                console.error('Failed to save review before switching weeks', error);
+            }
+        }
+        const currentWeekId = getWeekRange().weekId;
+        const normalized = normalizeWeekStartId(weekId);
+        state.selectedWeekStartId = compareWeekIds(normalized, currentWeekId) > 0 ? currentWeekId : normalized;
+        state.weekPickerOpen = false;
+        localStorage.setItem('writerSelectedWeekStart', state.selectedWeekStartId);
+        if (options.render !== false) {
+            renderReview(true);
+        }
+    }
+
+    async function shiftSelectedWeek(offset) {
+        const start = parseDateId(state.selectedWeekStartId);
+        start.setDate(start.getDate() + (offset * 7));
+        await selectWeek(getWeekRange(start).weekId);
+    }
+
+    function renderTaxonomyControls() {
+        const exerciseValue = els.exerciseFocus.value;
+        const materialValue = els.materialType.value;
+        const materialFilterValue = state.materialFilter;
+        const readingValue = els.readingLens.value;
+
+        setSelectOptions(
+            els.exerciseFocus,
+            state.taxonomy.exerciseFocuses.map((focus) => ({ value: focus, label: focus })),
+            exerciseValue,
+            { custom: true, blankLabel: '未分类' }
+        );
+        setSelectOptions(
+            els.materialType,
+            getVisibleMaterialTypes().map((type) => ({ value: type.id, label: type.label })),
+            materialValue,
+            { custom: true }
+        );
+        setSelectOptions(
+            els.materialTypeFilter,
+            [
+                { value: 'all', label: '全部类型' },
+                ...getVisibleMaterialTypes().map((type) => ({ value: type.id, label: type.label }))
+            ],
+            materialFilterValue,
+            { custom: false }
+        );
+        setSelectOptions(
+            els.readingLens,
+            state.taxonomy.readingLenses.map((lens) => ({ value: lens, label: lens })),
+            readingValue,
+            { custom: true }
+        );
+
+        if (state.materialFilter !== 'all' && !getVisibleMaterialTypes().some((type) => type.id === state.materialFilter)) {
+            state.materialFilter = 'all';
+            els.materialTypeFilter.value = 'all';
+        }
+    }
+
+    function setSelectOptions(select, options, preferredValue, config = {}) {
+        const allOptions = config.blankLabel ? [{ value: '', label: config.blankLabel }, ...options] : options;
+        const validPreferred = allOptions.some((option) => option.value === preferredValue);
+        const nextValue = validPreferred ? preferredValue : allOptions[0]?.value || '';
+        select.innerHTML = allOptions.map((option) => (
+            `<option value="${escapeAttr(option.value)}">${escapeHtml(option.label)}</option>`
+        )).join('');
+        if (config.custom) {
+            select.insertAdjacentHTML('beforeend', `<option value="${CUSTOM_OPTION}">自定义...</option>`);
+        }
+        select.value = nextValue;
+    }
+
+    function openTaxonomyManager(kind) {
+        state.taxonomyManagerKind = kind;
+        renderTaxonomyManager();
+        els.taxonomyModal.classList.remove('hidden');
+    }
+
+    function closeTaxonomyManager() {
+        state.taxonomyManagerKind = null;
+        els.taxonomyModal.classList.add('hidden');
+    }
+
+    function showAppDialog(options = {}) {
+        if (state.dialogResolve) {
+            closeAppDialog(false);
+        }
+
+        const {
+            kicker = 'Notice',
+            title = '提示',
+            message = '',
+            confirmText = '确定',
+            cancelText = '',
+            danger = false
+        } = options;
+
+        els.appDialogKicker.textContent = kicker;
+        els.appDialogTitle.textContent = title;
+        els.appDialogMessage.textContent = message;
+        els.appDialogConfirmBtn.textContent = confirmText;
+        els.appDialogCancelBtn.textContent = cancelText || '取消';
+        els.appDialogCancelBtn.classList.toggle('hidden', !cancelText);
+        els.appDialog.classList.toggle('danger', Boolean(danger));
+        els.appDialog.classList.remove('hidden');
+
+        setTimeout(() => els.appDialogConfirmBtn.focus(), 0);
+
+        return new Promise((resolve) => {
+            state.dialogResolve = resolve;
+        });
+    }
+
+    function closeAppDialog(result) {
+        if (!state.dialogResolve) return;
+        const resolve = state.dialogResolve;
+        state.dialogResolve = null;
+        els.appDialog.classList.add('hidden');
+        els.appDialog.classList.remove('danger');
+        resolve(Boolean(result));
+    }
+
+    function showNotice(title, message) {
+        return showAppDialog({
+            kicker: 'Notice',
+            title,
+            message,
+            confirmText: '知道了'
+        });
+    }
+
+    function confirmDanger(title, message, confirmText = '删除') {
+        return showAppDialog({
+            kicker: 'Confirm',
+            title,
+            message,
+            confirmText,
+            cancelText: '取消',
+            danger: true
+        });
+    }
+
+    function renderTaxonomyManager() {
+        const config = getTaxonomyManagerConfig(state.taxonomyManagerKind);
+        if (!config) return;
+        els.taxonomyModalTitle.textContent = config.title;
+        const rows = config.items.map((item) => {
+            if (item.builtin) {
+                return `
+                    <div class="taxonomy-row locked">
+                        <span class="taxonomy-row-label">${escapeHtml(item.label)}</span>
+                        <span class="taxonomy-row-badge">预设</span>
+                    </div>
+                `;
+            }
+            return `
+                <div class="taxonomy-row">
+                    <input data-taxonomy-input="${escapeAttr(item.id)}" value="${escapeAttr(item.label)}" autocomplete="off">
+                    <button class="secondary-btn compact" data-taxonomy-rename="${escapeAttr(item.id)}" type="button">改名</button>
+                    <button class="danger-btn" data-taxonomy-delete="${escapeAttr(item.id)}" type="button">删除</button>
+                </div>
+            `;
+        }).join('');
+        els.taxonomyList.innerHTML = rows || '<div class="taxonomy-empty">暂无分类</div>';
+    }
+
+    function getTaxonomyManagerConfig(kind) {
+        if (kind === 'exercise') {
+            return {
+                title: '管理训练重点',
+                field: 'exerciseFocuses',
+                collection: 'writingExercises',
+                docField: 'focus',
+                defaultLabels: DEFAULT_EXERCISE_FOCUSES,
+                items: state.taxonomy.exerciseFocuses.map((label) => ({
+                    id: label,
+                    label,
+                    builtin: DEFAULT_EXERCISE_FOCUSES.includes(label)
+                }))
+            };
+        }
+        if (kind === 'material') {
+            return {
+                title: '管理素材类型',
+                field: 'materialTypes',
+                items: getVisibleMaterialTypes().map((type) => ({
+                    id: type.id,
+                    label: type.label,
+                    builtin: Boolean(type.builtin),
+                    hidden: Boolean(type.hidden)
+                }))
+            };
+        }
+        if (kind === 'reading') {
+            return {
+                title: '管理拆解视角',
+                field: 'readingLenses',
+                collection: 'readingBreakdowns',
+                docField: 'lens',
+                defaultLabels: DEFAULT_READING_LENSES,
+                items: state.taxonomy.readingLenses.map((label) => ({
+                    id: label,
+                    label,
+                    builtin: DEFAULT_READING_LENSES.includes(label)
+                }))
+            };
+        }
+        return null;
+    }
+
+    async function renameTaxonomyItem(id) {
+        const config = getTaxonomyManagerConfig(state.taxonomyManagerKind);
+        if (!config) return;
+        const input = Array.from(els.taxonomyList.querySelectorAll('[data-taxonomy-input]'))
+            .find((node) => node.getAttribute('data-taxonomy-input') === id);
+        const nextLabel = input?.value.trim();
+        if (!nextLabel) return;
+
+        if (state.taxonomyManagerKind === 'material') {
+            const item = state.taxonomy.materialTypes.find((type) => type.id === id);
+            if (!item || item.builtin) return;
+            const exists = state.taxonomy.materialTypes.some((type) => type.id !== id && !type.hidden && type.label.toLowerCase() === nextLabel.toLowerCase());
+            if (exists) return showNotice('分类已存在', '这个分类已经存在，请换一个名字。');
+            item.label = nextLabel;
+            item.hidden = false;
+        } else {
+            if (config.defaultLabels.includes(id)) return;
+            const exists = config.defaultLabels.includes(nextLabel) || state.taxonomy[config.field].some((label) => label !== id && label.toLowerCase() === nextLabel.toLowerCase());
+            if (exists) return showNotice('分类已存在', '这个分类已经存在，请换一个名字。');
+            state.taxonomy[config.field] = state.taxonomy[config.field].map((label) => label === id ? nextLabel : label);
+            await updateTextCategoryReferences(config.collection, config.docField, id, nextLabel);
+        }
+
+        await persistTaxonomy();
+        renderTaxonomyControls();
+        renderTaxonomyManager();
+        renderCurrentView(true);
+    }
+
+    async function deleteTaxonomyItem(id) {
+        const config = getTaxonomyManagerConfig(state.taxonomyManagerKind);
+        if (!config) return;
+        const confirmed = await confirmDanger(
+            '移除自定义分类',
+            '从下拉中移除这个自定义分类？已有记录会保留原分类。',
+            '移除'
+        );
+        if (!confirmed) return;
+
+        if (state.taxonomyManagerKind === 'material') {
+            const item = state.taxonomy.materialTypes.find((type) => type.id === id);
+            if (!item || item.builtin) return;
+            item.hidden = true;
+        } else {
+            if (config.defaultLabels.includes(id)) return;
+            state.taxonomy[config.field] = state.taxonomy[config.field].filter((label) => label !== id);
+        }
+
+        await persistTaxonomy();
+        renderTaxonomyControls();
+        renderTaxonomyManager();
+        renderCurrentView(true);
+    }
+
+    async function updateTextCategoryReferences(collectionName, field, oldValue, newValue) {
+        if (!state.user || oldValue === newValue) return;
+        const localItems = collectionName === 'writingExercises' ? state.exercises : state.readings;
+        const matches = localItems.filter((item) => item[field] === oldValue);
+        if (!matches.length) return;
+        const batch = state.db.batch();
+        matches.slice(0, 450).forEach((item) => {
+            batch.update(getUserRef(collectionName).doc(item.id), {
+                [field]: newValue,
+                updatedAt: serverTimestamp()
+            });
+        });
+        await batch.commit();
+    }
+
     function renderShell() {
+        const currentWeekStats = getWeeklyStats(getWeekRange());
         els.draftCount.textContent = state.drafts.length;
         els.exerciseCount.textContent = state.exercises.length;
         els.materialCount.textContent = state.materials.length;
         els.readingCount.textContent = state.readings.length;
-        els.topWeekWords.textContent = `${formatNumber(getWeeklyStats().totalWords)} 字 / 本周`;
+        els.topWeekWords.textContent = `${formatNumber(currentWeekStats.totalWords)} 字 / 本周`;
     }
 
     function renderCurrentView(forcePopulate = false) {
@@ -435,14 +851,230 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.view === 'review') renderReview(forcePopulate);
     }
 
+    function setupTagEditor(key, editor, onChange) {
+        editor.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('[data-remove-tag]');
+            if (removeBtn) {
+                const tag = removeBtn.getAttribute('data-remove-tag');
+                state.tagValues[key] = state.tagValues[key].filter((item) => item !== tag);
+                renderTagEditor(key);
+                onChange();
+                return;
+            }
+            const input = editor.querySelector('.tag-chip-input');
+            if (input) input.focus();
+        });
+
+        editor.addEventListener('keydown', (event) => {
+            if (!event.target.classList.contains('tag-chip-input')) return;
+            if (event.key === 'Enter' || event.key === ',' || event.key === '，') {
+                event.preventDefault();
+                commitTagInput(key, onChange);
+            }
+            if (event.key === 'Backspace' && !event.target.value && state.tagValues[key].length) {
+                state.tagValues[key].pop();
+                renderTagEditor(key);
+                onChange();
+            }
+        });
+
+        editor.addEventListener('paste', (event) => {
+            if (!event.target.classList.contains('tag-chip-input')) return;
+            const text = event.clipboardData?.getData('text') || '';
+            if (!/[，,\n]/.test(text)) return;
+            event.preventDefault();
+            addTags(key, parseTags(text));
+            renderTagEditor(key);
+            onChange();
+        });
+
+        editor.addEventListener('focusout', (event) => {
+            if (!event.target.classList.contains('tag-chip-input')) return;
+            commitTagInput(key, onChange, { keepFocus: false });
+        });
+
+        renderTagEditor(key);
+    }
+
+    function renderTagEditor(key) {
+        const editor = getTagEditor(key);
+        if (!editor) return;
+        const placeholder = editor.getAttribute('data-placeholder') || '标签';
+        const chips = getTagValues(key).map((tag) => `
+            <span class="tag-chip">
+                ${escapeHtml(tag)}
+                <button type="button" data-remove-tag="${escapeAttr(tag)}" aria-label="删除 ${escapeAttr(tag)}">x</button>
+            </span>
+        `).join('');
+
+        editor.innerHTML = `
+            <div class="tag-chip-row">
+                ${chips}
+                <input class="tag-chip-input" type="text" autocomplete="off" placeholder="${escapeAttr(placeholder)}">
+            </div>
+        `;
+    }
+
+    function commitTagInput(key, onChange, options = {}) {
+        const editor = getTagEditor(key);
+        const input = editor?.querySelector('.tag-chip-input');
+        if (!input || !input.value.trim()) return;
+        const changed = addTags(key, parseTags(input.value));
+        input.value = '';
+        if (!changed) return;
+        renderTagEditor(key);
+        if (options.keepFocus !== false) {
+            getTagEditor(key)?.querySelector('.tag-chip-input')?.focus();
+        }
+        onChange();
+    }
+
+    function addTags(key, tags) {
+        const before = getTagValues(key).join('\u0000');
+        const existing = new Set(getTagValues(key).map((tag) => tag.toLowerCase()));
+        tags.forEach((tag) => {
+            const normalized = tag.trim();
+            if (!normalized || existing.has(normalized.toLowerCase())) return;
+            if (state.tagValues[key].length >= 12) return;
+            state.tagValues[key].push(normalized);
+            existing.add(normalized.toLowerCase());
+        });
+        return before !== getTagValues(key).join('\u0000');
+    }
+
+    function setTagValues(key, tags) {
+        state.tagValues[key] = normalizeTags(tags);
+        renderTagEditor(key);
+    }
+
+    function getTagValues(key) {
+        return normalizeTags(state.tagValues[key] || []);
+    }
+
+    function getTagEditor(key) {
+        return {
+            draft: els.draftTagEditor,
+            material: els.materialTagEditor,
+            reading: els.readingTagEditor
+        }[key];
+    }
+
+    function setTextCategoryValue(kind, value) {
+        const config = getTextCategoryConfig(kind);
+        if (!config) return;
+        if (!value) {
+            config.select.value = '';
+            config.input.value = '';
+        } else if (config.options.includes(value)) {
+            config.select.value = value;
+            config.input.value = '';
+        } else {
+            config.select.value = CUSTOM_OPTION;
+            config.input.value = value || '';
+        }
+        toggleCustomCategoryInput(kind);
+    }
+
+    function getPendingExerciseFocus() {
+        if (els.exerciseFocus.value === CUSTOM_OPTION) {
+            return els.exerciseCustomFocus.value.trim();
+        }
+        return els.exerciseFocus.value.trim();
+    }
+
+    function setMaterialTypeValue(typeId) {
+        if (getVisibleMaterialTypes().some((type) => type.id === typeId)) {
+            els.materialType.value = typeId;
+            els.materialCustomType.value = '';
+        } else {
+            els.materialType.value = CUSTOM_OPTION;
+            els.materialCustomType.value = getMaterialLabel(typeId);
+        }
+        toggleCustomCategoryInput('material');
+    }
+
+    function toggleCustomCategoryInput(kind) {
+        const config = {
+            exercise: { select: els.exerciseFocus, input: els.exerciseCustomFocus },
+            material: { select: els.materialType, input: els.materialCustomType },
+            reading: { select: els.readingLens, input: els.readingCustomLens }
+        }[kind];
+        if (!config) return;
+        const isCustom = config.select.value === CUSTOM_OPTION;
+        config.input.classList.toggle('hidden', !isCustom);
+        if (isCustom) config.input.focus();
+    }
+
+    async function resolveTextCategory(field, select, input, fallback) {
+        if (select.value !== CUSTOM_OPTION) return select.value || fallback;
+        const label = input.value.trim();
+        if (!label) return fallback;
+        await addTextTaxonomy(field, label);
+        select.value = label;
+        input.value = '';
+        input.classList.add('hidden');
+        return label;
+    }
+
+    async function resolveMaterialType(fallback) {
+        if (els.materialType.value !== CUSTOM_OPTION) return els.materialType.value || fallback;
+        const label = els.materialCustomType.value.trim();
+        if (!label) return fallback;
+        const id = await addMaterialType(label);
+        els.materialType.value = id;
+        els.materialCustomType.value = '';
+        els.materialCustomType.classList.add('hidden');
+        return id;
+    }
+
+    async function addTextTaxonomy(field, label) {
+        const clean = label.trim();
+        if (!clean) return;
+        const values = uniqueTextValues([...(state.taxonomy[field] || []), clean]);
+        state.taxonomy[field] = values;
+        renderTaxonomyControls();
+        await persistTaxonomy();
+    }
+
+    async function addMaterialType(label) {
+        const clean = label.trim();
+        const existing = state.taxonomy.materialTypes.find((type) => type.label.toLowerCase() === clean.toLowerCase());
+        if (existing) {
+            existing.hidden = false;
+            await persistTaxonomy();
+            renderTaxonomyControls();
+            return existing.id;
+        }
+        const id = makeCustomTypeId(clean);
+        state.taxonomy.materialTypes = [
+            ...state.taxonomy.materialTypes,
+            { id, label: clean, builtin: false }
+        ];
+        renderTaxonomyControls();
+        await persistTaxonomy();
+        return id;
+    }
+
+    async function persistTaxonomy() {
+        if (!state.user) return;
+        await state.db.collection('users').doc(state.user.uid)
+            .collection('writingTaxonomy').doc('config')
+            .set({
+                exerciseFocuses: state.taxonomy.exerciseFocuses,
+                materialTypes: state.taxonomy.materialTypes,
+                readingLenses: state.taxonomy.readingLenses,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+    }
+
     function renderDrafts(forcePopulate = false) {
         renderList(els.draftList, state.drafts, state.activeDraftId, 'draft');
         const draft = getActiveDraft();
         toggleEditor(els.draftEmpty, els.draftEditor, Boolean(draft));
         if (!draft) return;
-        if (forcePopulate || !isFocusedWithin([els.draftTitle, els.draftTags, els.draftBody])) {
+        if (forcePopulate || !isFocusedWithin([els.draftTitle, els.draftBody]) && !els.draftTagEditor.contains(document.activeElement)) {
             els.draftTitle.value = draft.title || '';
-            els.draftTags.value = tagsToText(draft.tags);
+            setTagValues('draft', draft.tags);
             els.draftBody.value = draft.body || '';
             els.draftSaveState.textContent = '已保存';
         }
@@ -478,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await getUserRef('writingDrafts').doc(draft.id).set({
             title: els.draftTitle.value.trim() || '未命名草稿',
             body: els.draftBody.value,
-            tags: parseTags(els.draftTags.value),
+            tags: getTagValues('draft'),
             wordCount,
             updatedAt: serverTimestamp()
         }, { merge: true });
@@ -489,10 +1121,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteActiveDraft() {
         const draft = getActiveDraft();
-        if (!draft || !confirm('删除这篇草稿？')) return;
+        if (!draft) return;
+        const confirmed = await confirmDanger('删除草稿', '删除这篇草稿？这个操作不能撤销。');
+        if (!confirmed) return;
+        setActiveId('activeDraftId', 'writerActiveDraft', getNextItemId(state.drafts, draft.id));
         await getUserRef('writingDrafts').doc(draft.id).delete();
-        state.activeDraftId = null;
-        localStorage.removeItem('writerActiveDraft');
     }
 
     function renderExercises(forcePopulate = false) {
@@ -500,8 +1133,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const exercise = getActiveExercise();
         toggleEditor(els.exerciseEmpty, els.exerciseEditor, Boolean(exercise));
         if (!exercise) return;
-        if (forcePopulate || !isFocusedWithin([els.exerciseFocus, els.exercisePrompt, els.exerciseBody])) {
-            els.exerciseFocus.value = exercise.focus || '人物欲望';
+        if (forcePopulate || !isFocusedWithin([els.exerciseFocus, els.exerciseCustomFocus, els.exercisePrompt, els.exerciseBody])) {
+            setTextCategoryValue('exercise', exercise.focus || '');
             els.exercisePrompt.value = exercise.prompt || '';
             els.exerciseBody.value = exercise.body || '';
             els.exerciseSaveState.textContent = '已保存';
@@ -511,16 +1144,15 @@ document.addEventListener('DOMContentLoaded', () => {
         els.exerciseStatusBadge.classList.toggle('done', done);
         els.completeExerciseBtn.textContent = done ? '重新打开' : '标记完成';
         els.exerciseWordCount.textContent = `${formatNumber(countWords(els.exerciseBody.value))} 字`;
+        renderExerciseAi(exercise.aiEvaluation);
+        updateExerciseAiButton(exercise);
     }
 
     async function createExercise() {
-        const prompt = PROMPT_BANK[state.promptIndex % PROMPT_BANK.length];
-        state.promptIndex += 1;
-        localStorage.setItem('writerPromptIndex', String(state.promptIndex));
         const ref = getUserRef('writingExercises').doc();
         await ref.set({
-            prompt: prompt.prompt,
-            focus: prompt.focus,
+            prompt: '',
+            focus: '',
             body: '',
             status: 'draft',
             wordCount: 0,
@@ -533,9 +1165,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setView('exercises');
     }
 
+    async function inspireExercise() {
+        const exercise = getActiveExercise();
+        if (!exercise) return;
+        const prompt = PROMPT_BANK[state.promptIndex % PROMPT_BANK.length];
+        state.promptIndex += 1;
+        localStorage.setItem('writerPromptIndex', String(state.promptIndex));
+        await addTextTaxonomy('exerciseFocuses', prompt.focus);
+        setTextCategoryValue('exercise', prompt.focus);
+        els.exercisePrompt.value = prompt.prompt;
+        await saveExercise();
+    }
+
     function scheduleExerciseSave() {
         const wordCount = countWords(els.exerciseBody.value);
         els.exerciseWordCount.textContent = `${formatNumber(wordCount)} 字`;
+        updateExerciseAiButton(getActiveExercise(), wordCount);
         debounce('exercise', saveExercise, els.exerciseSaveState);
     }
 
@@ -544,9 +1189,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!exercise) return;
         const wordCount = countWords(els.exerciseBody.value);
         const previousCount = getSavedCount('exercises', exercise);
+        const focus = await resolveTextCategory('exerciseFocuses', els.exerciseFocus, els.exerciseCustomFocus, exercise.focus || '');
         const data = {
             prompt: els.exercisePrompt.value.trim(),
-            focus: els.exerciseFocus.value,
+            focus,
             body: els.exerciseBody.value,
             wordCount,
             updatedAt: serverTimestamp()
@@ -565,15 +1211,105 @@ document.addEventListener('DOMContentLoaded', () => {
         const exercise = getActiveExercise();
         if (!exercise) return;
         const nextStatus = exercise.status === 'done' ? 'draft' : 'done';
+        if (nextStatus === 'done' && !getPendingExerciseFocus()) {
+            await showNotice('需要分类', '请先选择训练重点，或用“自定义...”填写一个分类，再标记完成。');
+            els.exerciseFocus.focus();
+            return;
+        }
         await saveExercise({ status: nextStatus });
     }
 
     async function deleteActiveExercise() {
         const exercise = getActiveExercise();
-        if (!exercise || !confirm('删除这条练习？')) return;
+        if (!exercise) return;
+        const confirmed = await confirmDanger('删除练习', '删除这条场景练习？这个操作不能撤销。');
+        if (!confirmed) return;
+        setActiveId('activeExerciseId', 'writerActiveExercise', getNextItemId(state.exercises, exercise.id));
         await getUserRef('writingExercises').doc(exercise.id).delete();
-        state.activeExerciseId = null;
-        localStorage.removeItem('writerActiveExercise');
+    }
+
+    function updateExerciseAiButton(exercise, wordCount = countWords(els.exerciseBody.value)) {
+        const generating = Boolean(exercise && state.generatingExerciseId === exercise.id);
+        const hasEvaluation = Boolean(exercise?.aiEvaluation || (exercise && state.generatedExerciseIds.has(exercise.id)));
+        els.evaluateExerciseBtn.disabled = !exercise || !state.functions || hasEvaluation || generating || wordCount < 30;
+        if (generating) {
+            els.evaluateExerciseBtn.textContent = '生成中';
+        } else if (hasEvaluation) {
+            els.evaluateExerciseBtn.textContent = '已评估';
+        } else {
+            els.evaluateExerciseBtn.textContent = 'AI评估';
+        }
+    }
+
+    function renderExerciseAi(evaluation) {
+        if (!evaluation) {
+            els.exerciseAiPanel.classList.add('hidden');
+            els.exerciseAiPanel.innerHTML = '';
+            return;
+        }
+
+        const score = evaluation.score || {};
+        const scores = [
+            ['欲望', score.characterDesire],
+            ['冲突', score.conflictClarity],
+            ['推进', score.sceneProgression],
+            ['文字', score.proseControl],
+            ['整体', score.overall]
+        ].map(([label, value]) => (
+            `<span class="ai-score-chip">${escapeHtml(label)} ${escapeHtml(formatScore(value))}</span>`
+        )).join('');
+
+        els.exerciseAiPanel.classList.remove('hidden');
+        els.exerciseAiPanel.innerHTML = `
+            <div class="ai-result-head">
+                <span>AI评估</span>
+                <small>${escapeHtml(evaluation.model || 'AI')}</small>
+            </div>
+            <p class="ai-result-summary">${escapeHtml(evaluation.summary || '')}</p>
+            <div class="ai-score-row">${scores}</div>
+            ${renderAiTextList('亮点', evaluation.strengths)}
+            ${renderAiTextList('卡点', evaluation.weaknesses)}
+            ${renderAiEvidence(evaluation.evidence)}
+            ${renderAiTargets(evaluation.revisionTargets)}
+            ${evaluation.nextPrompt ? `<div class="ai-next-prompt"><span>下一题</span><p>${escapeHtml(evaluation.nextPrompt)}</p></div>` : ''}
+        `;
+    }
+
+    async function generateExerciseEvaluation() {
+        const exercise = getActiveExercise();
+        if (!exercise) return;
+        if (exercise.aiEvaluation) {
+            await showNotice('已经评估过', '每条练习第一版只保留一次 AI 评估。');
+            return;
+        }
+        const wordCount = countWords(els.exerciseBody.value);
+        if (wordCount < 30) {
+            await showNotice('正文太短', '先写到 30 字以上，再让 AI 做训练反馈。');
+            return;
+        }
+        if (!state.functions) {
+            await showNotice('AI 暂不可用', 'Firebase Functions SDK 没有加载成功。');
+            return;
+        }
+
+        try {
+            await saveExercise();
+            state.generatingExerciseId = exercise.id;
+            updateExerciseAiButton(exercise, wordCount);
+            const generate = state.functions.httpsCallable('generateWritingExerciseEvaluation');
+            const result = await generate({ exerciseId: exercise.id });
+            if (result.data?.aiEvaluation) {
+                state.generatedExerciseIds.add(exercise.id);
+                renderExerciseAi(result.data.aiEvaluation);
+            }
+            await showNotice('AI评估已生成', '结果已经保存到这条练习里。');
+        } catch (error) {
+            console.error('Failed to generate exercise evaluation', error);
+            await showNotice('AI评估失败', normalizeFunctionError(error));
+        } finally {
+            state.generatingExerciseId = null;
+            updateExerciseAiButton(getActiveExercise());
+        }
     }
 
     function renderMaterials(forcePopulate = false) {
@@ -587,10 +1323,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const material = getActiveMaterial();
         toggleEditor(els.materialEmpty, els.materialEditor, Boolean(material));
         if (!material) return;
-        if (forcePopulate || !isFocusedWithin([els.materialType, els.materialTitle, els.materialTags, els.materialContent])) {
-            els.materialType.value = material.type || 'idea';
+        if (forcePopulate || !isFocusedWithin([els.materialType, els.materialCustomType, els.materialTitle, els.materialContent]) && !els.materialTagEditor.contains(document.activeElement)) {
+            setMaterialTypeValue(material.type || 'idea');
             els.materialTitle.value = material.title || '';
-            els.materialTags.value = tagsToText(material.tags);
+            setTagValues('material', material.tags);
             els.materialContent.value = material.content || '';
             els.materialSaveState.textContent = '已保存';
         }
@@ -601,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ref = getUserRef('writingMaterials').doc();
         await ref.set({
             type,
-            title: `${MATERIAL_LABELS[type] || '素材'}记录`,
+            title: `${getMaterialLabel(type)}记录`,
             content: '',
             tags: [],
             createdAt: serverTimestamp(),
@@ -619,11 +1355,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveMaterial() {
         const material = getActiveMaterial();
         if (!material) return;
+        const type = await resolveMaterialType(material.type || 'idea');
         await getUserRef('writingMaterials').doc(material.id).set({
-            type: els.materialType.value,
+            type,
             title: els.materialTitle.value.trim() || '未命名素材',
             content: els.materialContent.value,
-            tags: parseTags(els.materialTags.value),
+            tags: getTagValues('material'),
             updatedAt: serverTimestamp()
         }, { merge: true });
         els.materialSaveState.textContent = '已保存';
@@ -631,10 +1368,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteActiveMaterial() {
         const material = getActiveMaterial();
-        if (!material || !confirm('删除这条素材？')) return;
+        if (!material) return;
+        const confirmed = await confirmDanger('删除素材', '删除这条素材？这个操作不能撤销。');
+        if (!confirmed) return;
+        setActiveId('activeMaterialId', 'writerActiveMaterial', getNextItemId(getFilteredMaterials(), material.id));
         await getUserRef('writingMaterials').doc(material.id).delete();
-        state.activeMaterialId = null;
-        localStorage.removeItem('writerActiveMaterial');
     }
 
     function renderReading(forcePopulate = false) {
@@ -646,14 +1384,14 @@ document.addEventListener('DOMContentLoaded', () => {
             els.readingSourceTitle,
             els.readingAuthor,
             els.readingLens,
-            els.readingTags,
+            els.readingCustomLens,
             els.readingExcerpt,
             els.readingNotes
-        ])) {
+        ]) && !els.readingTagEditor.contains(document.activeElement)) {
             els.readingSourceTitle.value = reading.sourceTitle || '';
             els.readingAuthor.value = reading.author || '';
-            els.readingLens.value = reading.lens || '人物';
-            els.readingTags.value = tagsToText(reading.tags);
+            setTextCategoryValue('reading', reading.lens || DEFAULT_READING_LENSES[0]);
+            setTagValues('reading', reading.tags);
             els.readingExcerpt.value = reading.excerpt || '';
             els.readingNotes.value = reading.notes || '';
             els.readingSaveState.textContent = '已保存';
@@ -684,13 +1422,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveReading() {
         const reading = getActiveReading();
         if (!reading) return;
+        const lens = await resolveTextCategory('readingLenses', els.readingLens, els.readingCustomLens, reading.lens || DEFAULT_READING_LENSES[0]);
         await getUserRef('readingBreakdowns').doc(reading.id).set({
             sourceTitle: els.readingSourceTitle.value.trim() || '未命名作品',
             author: els.readingAuthor.value.trim(),
             excerpt: els.readingExcerpt.value,
-            lens: els.readingLens.value,
+            lens,
             notes: els.readingNotes.value,
-            tags: parseTags(els.readingTags.value),
+            tags: getTagValues('reading'),
             updatedAt: serverTimestamp()
         }, { merge: true });
         els.readingSaveState.textContent = '已保存';
@@ -698,31 +1437,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteActiveReading() {
         const reading = getActiveReading();
-        if (!reading || !confirm('删除这条拆解？')) return;
+        if (!reading) return;
+        const confirmed = await confirmDanger('删除拆解', '删除这条阅读拆解？这个操作不能撤销。');
+        if (!confirmed) return;
+        setActiveId('activeReadingId', 'writerActiveReading', getNextItemId(state.readings, reading.id));
         await getUserRef('readingBreakdowns').doc(reading.id).delete();
-        state.activeReadingId = null;
-        localStorage.removeItem('writerActiveReading');
     }
 
     function renderReview(forcePopulate = false) {
-        const range = getWeekRange();
-        const stats = getWeeklyStats();
-        const review = getCurrentWeeklyReview();
+        const range = getSelectedWeekRange();
+        const stats = getWeeklyStats(range);
+        const review = getCurrentWeeklyReview(range.weekId);
+        const currentWeekId = getWeekRange().weekId;
+        const isCurrentWeek = range.weekId === currentWeekId;
 
         els.weekLabel.textContent = `${range.startLabel} - ${range.endLabel}`;
+        els.weekContext.textContent = isCurrentWeek ? '本周' : '历史';
         els.statsTotalWords.textContent = formatNumber(stats.totalWords);
         els.statsDraftWords.textContent = formatNumber(stats.draftWords);
         els.statsExerciseWords.textContent = formatNumber(stats.exerciseWords);
         els.statsCompleted.textContent = formatNumber(stats.completedExercises);
         els.statsStreak.textContent = formatNumber(stats.streak);
-        els.topWeekWords.textContent = `${formatNumber(stats.totalWords)} 字 / 本周`;
+        els.nextWeekBtn.disabled = isCurrentWeek;
+        els.todayWeekBtn.disabled = isCurrentWeek;
+        els.weekPickerToggle.setAttribute('aria-expanded', String(state.weekPickerOpen));
+        els.weekPicker.classList.toggle('hidden', !state.weekPickerOpen);
+        renderWeekHistory(range.weekId);
         renderDailyBars(stats.days);
+        renderWeeklyAi(review?.aiInsight || null);
 
         if (forcePopulate || !isFocusedWithin([els.weeklyReview])) {
             els.weeklyReview.value = review?.manualReview || '';
-            els.aiSummary.value = review?.aiSummary || '';
+            els.aiSummary.value = review?.aiSummary || review?.aiInsight?.summaryText || '';
             els.weeklyReviewSaveState.textContent = '已保存';
         }
+        updateWeeklyAiButton(review, stats);
     }
 
     function scheduleWeeklyReviewSave() {
@@ -730,14 +1479,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveWeeklyReview() {
-        const range = getWeekRange();
-        const stats = getWeeklyStats();
-        const current = getCurrentWeeklyReview();
+        const range = getSelectedWeekRange();
+        const stats = getWeeklyStats(range);
+        const current = getCurrentWeeklyReview(range.weekId);
         await getUserRef('writingWeeklyReviews').doc(range.weekId).set({
             weekStart: range.weekStartDate,
             weekEnd: range.weekEndDate,
             manualReview: els.weeklyReview.value,
-            aiSummary: current?.aiSummary || '',
+            aiSummary: current?.aiSummary || current?.aiInsight?.summaryText || '',
             statsSnapshot: {
                 draftWords: stats.draftWords,
                 exerciseWords: stats.exerciseWords,
@@ -748,6 +1497,94 @@ document.addEventListener('DOMContentLoaded', () => {
             updatedAt: serverTimestamp()
         }, { merge: true });
         els.weeklyReviewSaveState.textContent = '已保存';
+    }
+
+    function updateWeeklyAiButton(review, stats = getWeeklyStats()) {
+        const range = getSelectedWeekRange();
+        const currentWeekId = getWeekRange().weekId;
+        const isCurrentOrFutureWeek = compareWeekIds(range.weekId, currentWeekId) >= 0;
+        const generating = state.generatingWeeklyId === range.weekId;
+        const hasInsight = Boolean(review?.aiInsight || state.generatedWeeklyIds.has(range.weekId));
+        const hasContent = Number(stats.totalWords || 0) > 0 || Boolean((review?.manualReview || els.weeklyReview.value || '').trim());
+        els.aiSummaryBtn.disabled = !state.functions || isCurrentOrFutureWeek || hasInsight || generating || !hasContent;
+        if (generating) {
+            els.aiSummaryBtn.textContent = '生成中';
+        } else if (hasInsight) {
+            els.aiSummaryBtn.textContent = '已总结';
+        } else if (isCurrentOrFutureWeek) {
+            els.aiSummaryBtn.textContent = '本周结束后可用';
+        } else {
+            els.aiSummaryBtn.textContent = 'AI 周总结';
+        }
+    }
+
+    function renderWeeklyAi(insight) {
+        if (!insight) {
+            els.weeklyAiPanel.classList.add('hidden');
+            els.weeklyAiPanel.innerHTML = '';
+            return;
+        }
+
+        els.weeklyAiPanel.classList.remove('hidden');
+        els.weeklyAiPanel.innerHTML = `
+            <div class="ai-result-head">
+                <span>${escapeHtml(insight.headline || 'AI周总结')}</span>
+                <small>${escapeHtml(insight.model || 'AI')}</small>
+            </div>
+            <p class="ai-result-summary">${escapeHtml(insight.summaryText || '')}</p>
+            <div class="ai-grid-notes">
+                ${renderAiNote('数据', insight.statsRead)}
+                ${renderAiNote('对比', insight.comparedToLastWeek)}
+                ${renderAiNote('节奏', insight.rhythm)}
+                ${renderAiNote('进步', insight.strongestProgress)}
+                ${renderAiNote('卡点', insight.mainBlocker)}
+            </div>
+            ${renderAiEvidence(insight.evidence)}
+            ${renderAiPlan(insight.nextWeekPlan)}
+        `;
+    }
+
+    async function generateWeeklyInsight() {
+        const range = getSelectedWeekRange();
+        const review = getCurrentWeeklyReview(range.weekId);
+        const stats = getWeeklyStats(range);
+        if (compareWeekIds(range.weekId, getWeekRange().weekId) >= 0) {
+            await showNotice('本周还没结束', '进入下一周后，再回到这一周生成正式 AI 周总结。');
+            return;
+        }
+        if (review?.aiInsight) {
+            await showNotice('已经总结过', '每周第一版只保留一次 AI 周总结。');
+            return;
+        }
+        if (!state.functions) {
+            await showNotice('AI 暂不可用', 'Firebase Functions SDK 没有加载成功。');
+            return;
+        }
+        if (!stats.totalWords && !els.weeklyReview.value.trim()) {
+            await showNotice('暂无内容', '这一周还没有可总结的写作内容。');
+            return;
+        }
+
+        try {
+            await saveWeeklyReview();
+            state.generatingWeeklyId = range.weekId;
+            updateWeeklyAiButton(review, stats);
+            const generate = state.functions.httpsCallable('generateWritingWeeklyInsight');
+            const result = await generate({ weekId: range.weekId });
+            const insight = result.data?.aiInsight || null;
+            if (insight) {
+                state.generatedWeeklyIds.add(range.weekId);
+                els.aiSummary.value = result.data?.aiSummary || insight.summaryText || '';
+                renderWeeklyAi(insight);
+            }
+            await showNotice('AI周总结已生成', '结果已经保存到这一周的复盘里。');
+        } catch (error) {
+            console.error('Failed to generate weekly insight', error);
+            await showNotice('AI周总结失败', normalizeFunctionError(error));
+        } finally {
+            state.generatingWeeklyId = null;
+            updateWeeklyAiButton(getCurrentWeeklyReview(range.weekId), getWeeklyStats(range));
+        }
     }
 
     async function recordWritingDelta(field, delta) {
@@ -799,8 +1636,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    function getWeeklyStats() {
-        const range = getWeekRange();
+    function renderAiTextList(title, values) {
+        const items = Array.isArray(values) ? values.filter(Boolean) : [];
+        if (!items.length) return '';
+        return `
+            <div class="ai-result-section">
+                <h4>${escapeHtml(title)}</h4>
+                <ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+            </div>
+        `;
+    }
+
+    function renderAiEvidence(values) {
+        const items = Array.isArray(values) ? values.filter(Boolean) : [];
+        if (!items.length) return '';
+        return `
+            <div class="ai-result-section">
+                <h4>证据</h4>
+                <ul>${items.map((item) => {
+                    const quote = item.quote || item.source || '';
+                    const point = item.point || '';
+                    return `<li>${quote ? `<em>${escapeHtml(quote)}</em>` : ''}${point ? `<span>${escapeHtml(point)}</span>` : ''}</li>`;
+                }).join('')}</ul>
+            </div>
+        `;
+    }
+
+    function renderAiTargets(values) {
+        const items = Array.isArray(values) ? values.filter(Boolean) : [];
+        if (!items.length) return '';
+        return `
+            <div class="ai-result-section">
+                <h4>下次练</h4>
+                <ul>${items.map((item) => `
+                    <li>
+                        <strong>${escapeHtml(item.target || '')}</strong>
+                        ${item.why ? `<span>${escapeHtml(item.why)}</span>` : ''}
+                        ${item.exercise ? `<small>${escapeHtml(item.exercise)}</small>` : ''}
+                    </li>
+                `).join('')}</ul>
+            </div>
+        `;
+    }
+
+    function renderAiPlan(values) {
+        const items = Array.isArray(values) ? values.filter(Boolean) : [];
+        if (!items.length) return '';
+        return `
+            <div class="ai-result-section">
+                <h4>下周计划</h4>
+                <ul>${items.map((item) => `
+                    <li>
+                        <strong>${escapeHtml(item.focus || '')}</strong>
+                        <span>${escapeHtml(item.task || '')}</span>
+                    </li>
+                `).join('')}</ul>
+            </div>
+        `;
+    }
+
+    function renderAiNote(title, value) {
+        if (!value) return '';
+        return `
+            <div class="ai-note">
+                <span>${escapeHtml(title)}</span>
+                <p>${escapeHtml(value)}</p>
+            </div>
+        `;
+    }
+
+    function renderWeekHistory(activeWeekId) {
+        const weeks = getHistoryWeeks();
+        let currentMonth = '';
+        const html = weeks.map((week) => {
+            const monthLabel = getWeekMonthLabel(week.weekId);
+            const monthHead = monthLabel === currentMonth ? '' : `<div class="week-month-label">${escapeHtml(monthLabel)}</div>`;
+            currentMonth = monthLabel;
+            const meta = getWeekHistoryMeta(week);
+            return `
+                ${monthHead}
+                <button class="week-history-item ${week.weekId === activeWeekId ? 'active' : ''}" data-week-id="${escapeAttr(week.weekId)}" type="button">
+                    <span>${escapeHtml(week.startLabel)} - ${escapeHtml(week.endLabel)}</span>
+                    <small>${escapeHtml(meta)}</small>
+                </button>
+            `;
+        }).join('');
+
+        els.weekHistoryList.innerHTML = html || '<div class="week-empty">暂无历史</div>';
+    }
+
+    function getWeeklyStats(range = getSelectedWeekRange()) {
         const dayMap = new Map();
         for (let i = 0; i < 7; i += 1) {
             const date = new Date(range.weekStart);
@@ -839,18 +1764,18 @@ document.addEventListener('DOMContentLoaded', () => {
             exerciseWords,
             totalWords,
             completedExercises,
-            streak: getWritingStreak()
+            streak: getWritingStreak(range.weekEnd > new Date() ? new Date() : range.weekEnd)
         };
     }
 
-    function getWritingStreak() {
+    function getWritingStreak(anchorDate = new Date()) {
         const writtenDays = new Set(
             state.stats
                 .filter((entry) => Number(entry.totalWords || 0) > 0)
                 .map((entry) => entry.date)
         );
         let streak = 0;
-        const cursor = new Date();
+        const cursor = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
         while (writtenDays.has(getDateParts(cursor).id)) {
             streak += 1;
             cursor.setDate(cursor.getDate() - 1);
@@ -858,8 +1783,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return streak;
     }
 
-    function getCurrentWeeklyReview() {
-        const weekId = getWeekRange().weekId;
+    function getCurrentWeeklyReview(weekId = getSelectedWeekRange().weekId) {
         return state.weeklyReviews.find((review) => review.id === weekId) || null;
     }
 
@@ -872,7 +1796,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 material.title,
                 material.content,
                 tagsToText(material.tags),
-                MATERIAL_LABELS[material.type]
+                getMaterialLabel(material.type)
             ].join(' ').toLowerCase();
             return haystack.includes(state.materialQuery);
         });
@@ -890,7 +1814,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const date = formatDate(item.updatedAt || item.createdAt);
         if (type === 'draft') return `${formatNumber(item.wordCount || 0)} 字 / ${date}`;
         if (type === 'exercise') return `${item.status === 'done' ? '已完成' : '草稿'} / ${formatNumber(item.wordCount || 0)} 字`;
-        if (type === 'material') return `${MATERIAL_LABELS[item.type] || '素材'} / ${date}`;
+        if (type === 'material') return `${getMaterialLabel(item.type)} / ${date}`;
         if (type === 'reading') return `${item.lens || '拆解'} / ${date}`;
         return date;
     }
@@ -907,6 +1831,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (items.some((item) => item.id === state[key])) return;
         state[key] = items[0]?.id || null;
         if (state[key]) localStorage.setItem(storageKey, state[key]);
+        else localStorage.removeItem(storageKey);
+    }
+
+    function getNextItemId(items, currentId) {
+        const index = items.findIndex((item) => item.id === currentId);
+        if (index === -1) return items[0]?.id || null;
+        return items[index + 1]?.id || items[index - 1]?.id || null;
+    }
+
+    function setActiveId(key, storageKey, id) {
+        state[key] = id || null;
+        if (id) localStorage.setItem(storageKey, id);
         else localStorage.removeItem(storageKey);
     }
 
@@ -992,6 +1928,86 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.isArray(tags) ? tags.join(', ') : '';
     }
 
+    function normalizeTags(tags) {
+        return uniqueTextValues(Array.isArray(tags) ? tags : [])
+            .filter(Boolean)
+            .slice(0, 12);
+    }
+
+    function normalizeTaxonomy(data = null) {
+        return {
+            exerciseFocuses: uniqueTextValues([
+                ...DEFAULT_EXERCISE_FOCUSES,
+                ...(Array.isArray(data?.exerciseFocuses) ? data.exerciseFocuses : [])
+            ]),
+            materialTypes: normalizeMaterialTypes(data?.materialTypes),
+            readingLenses: uniqueTextValues([
+                ...DEFAULT_READING_LENSES,
+                ...(Array.isArray(data?.readingLenses) ? data.readingLenses : [])
+            ])
+        };
+    }
+
+    function normalizeMaterialTypes(types) {
+        const map = new Map(DEFAULT_MATERIAL_TYPES.map((type) => [type.id, { ...type }]));
+        if (Array.isArray(types)) {
+            types.forEach((type) => {
+                if (!type || !type.id || !type.label) return;
+                const existing = map.get(type.id);
+                map.set(type.id, {
+                    id: String(type.id),
+                    label: String(type.label).trim(),
+                    builtin: Boolean(existing?.builtin || type.builtin),
+                    hidden: Boolean(type.hidden)
+                });
+            });
+        }
+        return Array.from(map.values()).filter((type) => type.label);
+    }
+
+    function getVisibleMaterialTypes() {
+        return state.taxonomy.materialTypes.filter((type) => !type.hidden);
+    }
+
+    function uniqueTextValues(values) {
+        const seen = new Set();
+        const result = [];
+        values.forEach((value) => {
+            const clean = String(value || '').trim();
+            const key = clean.toLowerCase();
+            if (!clean || seen.has(key)) return;
+            seen.add(key);
+            result.push(clean);
+        });
+        return result;
+    }
+
+    function getTextCategoryConfig(kind) {
+        return {
+            exercise: {
+                select: els.exerciseFocus,
+                input: els.exerciseCustomFocus,
+                options: state.taxonomy.exerciseFocuses
+            },
+            reading: {
+                select: els.readingLens,
+                input: els.readingCustomLens,
+                options: state.taxonomy.readingLenses
+            }
+        }[kind];
+    }
+
+    function getMaterialLabel(typeId) {
+        const match = state.taxonomy.materialTypes.find((type) => type.id === typeId);
+        return match?.label || DEFAULT_MATERIAL_TYPES.find((type) => type.id === typeId)?.label || typeId || '素材';
+    }
+
+    function makeCustomTypeId(label) {
+        const ascii = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24);
+        const suffix = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+        return `custom_${ascii || 'type'}_${suffix}`;
+    }
+
     function countWords(text) {
         const value = (text || '').trim();
         if (!value) return 0;
@@ -1001,8 +2017,72 @@ document.addEventListener('DOMContentLoaded', () => {
         return cjkMatches.length + latinMatches.length;
     }
 
-    function getWeekRange() {
-        const now = new Date();
+    function getHistoryWeeks() {
+        const currentWeekId = getWeekRange().weekId;
+        const weekMap = new Map();
+        const ensureWeek = (weekId) => {
+            const normalized = normalizeWeekStartId(weekId);
+            if (compareWeekIds(normalized, currentWeekId) > 0) return null;
+            if (!weekMap.has(normalized)) {
+                const range = getWeekRange(parseDateId(normalized));
+                weekMap.set(normalized, {
+                    ...range,
+                    draftWords: 0,
+                    exerciseWords: 0,
+                    totalWords: 0,
+                    hasReview: false
+                });
+            }
+            return weekMap.get(normalized);
+        };
+
+        ensureWeek(currentWeekId);
+        ensureWeek(state.selectedWeekStartId);
+
+        state.stats.forEach((entry) => {
+            if (!entry.date) return;
+            const week = ensureWeek(getWeekRange(parseDateId(entry.date)).weekId);
+            if (!week) return;
+            week.draftWords += Number(entry.draftWords || 0);
+            week.exerciseWords += Number(entry.exerciseWords || 0);
+            week.totalWords += Number(entry.totalWords || 0);
+        });
+
+        state.weeklyReviews.forEach((review) => {
+            const weekId = review.weekStart || review.id;
+            const week = ensureWeek(weekId);
+            if (!week) return;
+            week.hasReview = Boolean((review.manualReview || '').trim() || (review.aiSummary || '').trim());
+            if (!week.totalWords && review.statsSnapshot?.totalWords) {
+                week.totalWords = Number(review.statsSnapshot.totalWords || 0);
+            }
+        });
+
+        return Array.from(weekMap.values())
+            .filter((week) => week.weekId === currentWeekId || week.weekId === state.selectedWeekStartId || week.totalWords > 0 || week.hasReview)
+            .sort((a, b) => compareWeekIds(b.weekId, a.weekId))
+            .slice(0, 78);
+    }
+
+    function getWeekHistoryMeta(week) {
+        const parts = [];
+        if (week.weekId === getWeekRange().weekId) parts.push('本周');
+        if (week.totalWords > 0) parts.push(`${formatNumber(week.totalWords)} 字`);
+        if (week.hasReview) parts.push('复盘');
+        return parts.join(' / ') || '空白';
+    }
+
+    function getWeekMonthLabel(weekId) {
+        const date = parseDateId(weekId);
+        return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function getSelectedWeekRange() {
+        return getWeekRange(parseDateId(state.selectedWeekStartId));
+    }
+
+    function getWeekRange(anchorDate = new Date()) {
+        const now = anchorDate instanceof Date ? anchorDate : parseDateId(anchorDate);
         const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const day = start.getDay() || 7;
         start.setDate(start.getDate() - day + 1);
@@ -1020,6 +2100,28 @@ document.addEventListener('DOMContentLoaded', () => {
             startLabel: startParts.label,
             endLabel: endParts.label
         };
+    }
+
+    function normalizeWeekStartId(value) {
+        const parsed = parseDateId(value);
+        return getWeekRange(parsed).weekId;
+    }
+
+    function compareWeekIds(a, b) {
+        return parseDateId(a).getTime() - parseDateId(b).getTime();
+    }
+
+    function parseDateId(value) {
+        if (value instanceof Date) {
+            return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+        }
+        if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return new Date();
+        }
+        const [year, month, day] = value.split('-').map(Number);
+        const parsed = new Date(year, month - 1, day);
+        if (Number.isNaN(parsed.getTime())) return new Date();
+        return parsed;
     }
 
     function getDateParts(date) {
@@ -1055,6 +2157,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatNumber(value) {
         return new Intl.NumberFormat('zh-CN').format(Number(value || 0));
+    }
+
+    function formatScore(value) {
+        const score = Number(value || 0);
+        if (!score) return '-';
+        return `${Math.max(1, Math.min(5, score)).toFixed(1)}`;
+    }
+
+    function normalizeFunctionError(error) {
+        const message = String(error?.message || '').trim();
+        if (message) return message;
+        if (error?.code === 'functions/already-exists') return '已经生成过，第一版不会覆盖旧结果。';
+        if (error?.code === 'functions/failed-precondition') return '当前内容还不满足生成条件。';
+        if (error?.code === 'functions/unauthenticated') return '请先登录后再使用 AI 功能。';
+        return '生成时遇到问题，请稍后再试。';
     }
 
     function escapeHtml(value) {

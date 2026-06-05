@@ -15,6 +15,10 @@ A "Geek-style" personal website featuring a high-precision Task/Schedule Manager
   - Powered by **Google Gemini API**.
   - **Customizable Schedule**: Users can set their preferred delivery time (hour) and Timezone.
   - Sent directly to your email via Gmail SMTP.
+- **Writing Practice Space (`writer.html`)**:
+  - A light, private writing workspace for drafts, scene practice, materials, reading breakdowns, and weekly reviews.
+  - Uses Firebase Auth and stores data under `users/{uid}/...` private subcollections.
+  - Includes OpenAI-powered writing coaching for one-time scene evaluations and one-time weekly insights.
 
 ---
 
@@ -62,9 +66,52 @@ The AI reporting features live in the `functions/` directory.
    ```
 3. Edit `.env` and fill in your secrets:
    - `GEMINI_API_KEY`: Get your free API key from [Google AI Studio](https://aistudio.google.com/).
+   - `OPENAI_API_KEY`: Your OpenAI API key for the `writer.html` AI coaching features.
+   - `OPENAI_WRITING_MODEL`: Optional. Defaults to `gpt-5.5`.
    - `GMAIL_USER`: Your full Gmail address (e.g., `youremail@gmail.com`). This is the account that will *send* the emails.
    - `GMAIL_PASS`: Your Google **App Password**.
      - *How to get this*: Go to [Google Account Security](https://myaccount.google.com/security) > 2-Step Verification > App passwords. Create one named "Firebase" and copy the 16-character code. **Do not use your login password.**
+
+Example:
+```env
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+OPENAI_WRITING_MODEL=gpt-5.5
+GMAIL_USER=your_email@gmail.com
+GMAIL_PASS=your_16_digit_app_password_here
+```
+
+`functions/.env` is for local development and is ignored by Git. Do not commit real API keys. For production, configure the same environment variables or Firebase secrets before deploying Cloud Functions.
+
+### Writing AI Features
+
+The writing workspace is available directly at:
+```text
+writer.html
+```
+
+After login, writing data is stored privately in Firestore:
+
+- `users/{uid}/writingDrafts`
+- `users/{uid}/writingExercises`
+- `users/{uid}/writingMaterials`
+- `users/{uid}/readingBreakdowns`
+- `users/{uid}/writingWeeklyReviews`
+- `users/{uid}/writingStats`
+
+OpenAI coaching is implemented in Cloud Functions:
+
+- `generateWritingExerciseEvaluation({ exerciseId })`
+  - Reads one scene practice entry.
+  - Writes `aiEvaluation` back to that exercise.
+  - Refuses to overwrite an existing evaluation.
+- `generateWritingWeeklyInsight({ weekId })`
+  - Reads the selected week's stats, drafts, exercises, materials, reading notes, and previous weekly summary.
+  - Writes `aiInsight` and `aiSummary` back to that weekly review.
+  - Refuses to overwrite an existing weekly AI insight.
+  - Only allows completed weeks; the current week cannot generate a formal AI insight until the next week begins.
+
+The prompt is designed as a writing coach: it gives feedback only, does not ghostwrite, does not rewrite the user's text, and returns structured JSON for stable display. For normal personal usage with a weekly review plus several scene evaluations, expected cost is roughly under USD $1/month, depending on model pricing and usage.
 
 ### 5. Deploy
 1. Login to Firebase CLI:

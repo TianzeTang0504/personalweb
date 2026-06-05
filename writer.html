@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f6efe4">
     <title>Writing Room | Tianze Tang</title>
     <link rel="manifest" href="manifest.json">
-    <link href="css/writer.css?v=1.0.0" rel="stylesheet">
+    <link href="css/writer.css?v=1.1.0" rel="stylesheet">
 </head>
 
 <body>
@@ -101,8 +101,7 @@
                             <div id="draftEditor" class="editor-stack hidden">
                                 <input id="draftTitle" class="title-input" type="text" autocomplete="off"
                                     placeholder="草稿标题">
-                                <input id="draftTags" class="tag-input" type="text" autocomplete="off"
-                                    placeholder="标签，用逗号分隔">
+                                <div id="draftTagEditor" class="tag-editor" data-placeholder="标签，用 Enter 添加"></div>
                                 <textarea id="draftBody" class="long-editor" spellcheck="true"
                                     placeholder="从一个场景、一句对白、一个画面开始。"></textarea>
                                 <div class="editor-footer">
@@ -134,26 +133,38 @@
                             </div>
                             <div id="exerciseEditor" class="editor-stack hidden">
                                 <div class="inline-row">
-                                    <select id="exerciseFocus" class="select-input">
-                                        <option value="人物欲望">人物欲望</option>
-                                        <option value="冲突">冲突</option>
-                                        <option value="对白">对白</option>
-                                        <option value="氛围">氛围</option>
-                                        <option value="转折">转折</option>
-                                    </select>
+                                    <div class="category-control">
+                                        <div class="category-select-row">
+                                            <select id="exerciseFocus" class="select-input"></select>
+                                            <button id="manageExerciseCategoriesBtn" class="mini-tool-btn" type="button"
+                                                title="管理训练重点">管理</button>
+                                        </div>
+                                        <input id="exerciseCustomFocus" class="tag-input custom-category-input hidden"
+                                            type="text" autocomplete="off" placeholder="自定义训练重点">
+                                    </div>
                                     <span id="exerciseStatusBadge" class="status-pill">草稿</span>
                                 </div>
-                                <textarea id="exercisePrompt" class="prompt-editor" spellcheck="true"
-                                    placeholder="练习题"></textarea>
+                                <div class="prompt-field">
+                                    <div class="prompt-field-head">
+                                        <span>练习题</span>
+                                        <button id="inspireExerciseBtn" class="secondary-btn compact"
+                                            type="button">给点灵感</button>
+                                    </div>
+                                    <textarea id="exercisePrompt" class="prompt-editor" spellcheck="true"
+                                        placeholder="可以完全自由写，也可以点“给点灵感”抽一个题。"></textarea>
+                                </div>
                                 <textarea id="exerciseBody" class="long-editor" spellcheck="true"
                                     placeholder="写这个场景。"></textarea>
                                 <div class="editor-footer">
                                     <span id="exerciseWordCount">0 字</span>
                                     <span id="exerciseSaveState">已保存</span>
+                                    <button id="evaluateExerciseBtn" class="secondary-btn compact"
+                                        type="button">AI评估</button>
                                     <button id="completeExerciseBtn" class="secondary-btn compact"
                                         type="button">标记完成</button>
                                     <button id="deleteExerciseBtn" class="danger-btn" type="button">删除</button>
                                 </div>
+                                <div id="exerciseAiPanel" class="ai-result-panel hidden" aria-live="polite"></div>
                             </div>
                         </article>
                     </div>
@@ -191,16 +202,17 @@
                             </div>
                             <div id="materialEditor" class="editor-stack hidden">
                                 <div class="inline-row">
-                                    <select id="materialType" class="select-input">
-                                        <option value="character">人物</option>
-                                        <option value="place">地点</option>
-                                        <option value="worldbuilding">设定</option>
-                                        <option value="fragment">片段</option>
-                                        <option value="dialogue">对话</option>
-                                        <option value="idea">灵感</option>
-                                    </select>
-                                    <input id="materialTags" class="tag-input" type="text" autocomplete="off"
-                                        placeholder="标签">
+                                    <div class="category-control">
+                                        <div class="category-select-row">
+                                            <select id="materialType" class="select-input"></select>
+                                            <button id="manageMaterialCategoriesBtn" class="mini-tool-btn" type="button"
+                                                title="管理素材类型">管理</button>
+                                        </div>
+                                        <input id="materialCustomType" class="tag-input custom-category-input hidden"
+                                            type="text" autocomplete="off" placeholder="自定义素材类型">
+                                    </div>
+                                    <div id="materialTagEditor" class="tag-editor" data-placeholder="标签，用 Enter 添加">
+                                    </div>
                                 </div>
                                 <input id="materialTitle" class="title-input" type="text" autocomplete="off"
                                     placeholder="素材标题">
@@ -240,16 +252,17 @@
                                         placeholder="作者">
                                 </div>
                                 <div class="inline-row">
-                                    <select id="readingLens" class="select-input">
-                                        <option value="人物">人物</option>
-                                        <option value="冲突">冲突</option>
-                                        <option value="节奏">节奏</option>
-                                        <option value="氛围">氛围</option>
-                                        <option value="句子">句子</option>
-                                        <option value="结尾">结尾</option>
-                                    </select>
-                                    <input id="readingTags" class="tag-input" type="text" autocomplete="off"
-                                        placeholder="标签">
+                                    <div class="category-control">
+                                        <div class="category-select-row">
+                                            <select id="readingLens" class="select-input"></select>
+                                            <button id="manageReadingCategoriesBtn" class="mini-tool-btn" type="button"
+                                                title="管理拆解视角">管理</button>
+                                        </div>
+                                        <input id="readingCustomLens" class="tag-input custom-category-input hidden"
+                                            type="text" autocomplete="off" placeholder="自定义拆解视角">
+                                    </div>
+                                    <div id="readingTagEditor" class="tag-editor" data-placeholder="标签，用 Enter 添加">
+                                    </div>
                                 </div>
                                 <textarea id="readingExcerpt" class="excerpt-editor" spellcheck="true"
                                     placeholder="摘录"></textarea>
@@ -270,7 +283,20 @@
                             <p class="section-kicker">Weekly Review</p>
                             <h2 id="reviewTitle">周复盘</h2>
                         </div>
-                        <span id="weekLabel" class="week-label">本周</span>
+                        <div class="week-nav">
+                            <button id="prevWeekBtn" class="week-nav-btn" type="button" aria-label="上一周">&lt;</button>
+                            <button id="weekPickerToggle" class="week-picker-toggle" type="button"
+                                aria-expanded="false">
+                                <span id="weekLabel">本周</span>
+                                <small id="weekContext">本周</small>
+                            </button>
+                            <button id="nextWeekBtn" class="week-nav-btn" type="button" aria-label="下一周">&gt;</button>
+                            <button id="todayWeekBtn" class="secondary-btn compact" type="button">本周</button>
+                            <div id="weekPicker" class="week-picker hidden">
+                                <div class="week-picker-head">历史周</div>
+                                <div id="weekHistoryList" class="week-history-list"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="review-grid">
                         <div class="metric-tile">
@@ -308,17 +334,46 @@
                         <label for="aiSummary">AI Insight</label>
                         <textarea id="aiSummary" class="review-editor small" readonly
                             placeholder="AI 总结预留"></textarea>
+                        <div id="weeklyAiPanel" class="ai-result-panel hidden" aria-live="polite"></div>
                     </div>
                 </section>
             </main>
         </div>
     </div>
 
+    <div id="taxonomyModal" class="taxonomy-modal hidden" role="dialog" aria-modal="true"
+        aria-labelledby="taxonomyModalTitle">
+        <div class="taxonomy-panel">
+            <div class="taxonomy-panel-head">
+                <div>
+                    <p class="section-kicker">Taxonomy</p>
+                    <h2 id="taxonomyModalTitle">管理分类</h2>
+                </div>
+                <button id="closeTaxonomyModalBtn" class="icon-text-btn compact" type="button">关闭</button>
+            </div>
+            <div id="taxonomyList" class="taxonomy-list"></div>
+            <p class="taxonomy-note">预设分类不可改名或删除。删除自定义分类只会从下拉中移除，已有记录会保留原分类。</p>
+        </div>
+    </div>
+
+    <div id="appDialog" class="app-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+        <div class="app-dialog-panel">
+            <p id="appDialogKicker" class="section-kicker">Notice</p>
+            <h2 id="appDialogTitle">提示</h2>
+            <p id="appDialogMessage" class="app-dialog-message"></p>
+            <div class="app-dialog-actions">
+                <button id="appDialogCancelBtn" class="ghost-btn compact" type="button">取消</button>
+                <button id="appDialogConfirmBtn" class="primary-btn compact" type="button">确定</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
     <script src="js/firebase-config.js?v=1.5.1"></script>
-    <script src="js/writer.js?v=1.0.0"></script>
+    <script src="js/writer.js?v=1.1.1"></script>
 </body>
 
 </html>
