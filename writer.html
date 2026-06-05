@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f6efe4">
+    <title>Writing Room | Tianze Tang</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="css/writer.css?v=1.0.0" rel="stylesheet">
+</head>
+
+<body>
+    <div id="bootView" class="boot-view">
+        <div class="boot-mark"></div>
+        <p>正在连接写作空间...</p>
+    </div>
+
+    <section id="authView" class="auth-view hidden" aria-labelledby="authTitle">
+        <div class="auth-panel">
+            <a class="quiet-link" href="index.html">返回主页</a>
+            <div class="auth-kicker">Private Writing Room</div>
+            <h1 id="authTitle">写作练习空间</h1>
+            <form id="authForm" class="auth-form">
+                <label>
+                    <span>邮箱</span>
+                    <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com">
+                </label>
+                <label>
+                    <span>密码</span>
+                    <input id="authPassword" type="password" autocomplete="current-password" placeholder="访问密码">
+                </label>
+                <button id="emailSignInBtn" class="primary-btn" type="submit">登录</button>
+            </form>
+            <div class="auth-actions">
+                <button id="googleSignInBtn" class="secondary-btn" type="button">Google 登录</button>
+                <button id="createAccountBtn" class="ghost-btn" type="button">创建账号</button>
+                <button id="resetPasswordBtn" class="ghost-btn" type="button">重置密码</button>
+            </div>
+            <p id="authMessage" class="auth-message" role="status"></p>
+        </div>
+    </section>
+
+    <div id="appView" class="writer-app hidden">
+        <header class="writer-topbar">
+            <div class="brand-block">
+                <a class="quiet-link" href="index.html">Tianze Tang</a>
+                <h1>写作练习空间</h1>
+            </div>
+            <div class="topbar-meta">
+                <span id="topWeekWords">0 字 / 本周</span>
+                <span id="userEmail">未登录</span>
+                <button id="logoutBtn" class="icon-text-btn" type="button">退出</button>
+            </div>
+        </header>
+
+        <div class="writer-shell">
+            <aside class="writer-sidebar" aria-label="写作模块">
+                <nav id="writerNav" class="writer-nav">
+                    <button class="nav-tab active" data-view="drafts" type="button">
+                        <span>草稿</span>
+                        <small id="draftCount">0</small>
+                    </button>
+                    <button class="nav-tab" data-view="exercises" type="button">
+                        <span>场景练习</span>
+                        <small id="exerciseCount">0</small>
+                    </button>
+                    <button class="nav-tab" data-view="materials" type="button">
+                        <span>素材库</span>
+                        <small id="materialCount">0</small>
+                    </button>
+                    <button class="nav-tab" data-view="reading" type="button">
+                        <span>阅读拆解</span>
+                        <small id="readingCount">0</small>
+                    </button>
+                    <button class="nav-tab" data-view="review" type="button">
+                        <span>周复盘</span>
+                        <small id="reviewWeekBadge">本周</small>
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="writer-main">
+                <section id="view-drafts" class="writer-view active" aria-labelledby="draftsTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Drafts</p>
+                            <h2 id="draftsTitle">草稿</h2>
+                        </div>
+                        <button id="newDraftBtn" class="primary-btn compact" type="button">新建草稿</button>
+                    </div>
+                    <div class="split-workspace">
+                        <aside class="item-list-panel">
+                            <div id="draftList" class="item-list"></div>
+                        </aside>
+                        <article class="editor-panel">
+                            <div id="draftEmpty" class="empty-state">
+                                <h3>还没有草稿</h3>
+                                <p>新建一篇，先写下来。</p>
+                            </div>
+                            <div id="draftEditor" class="editor-stack hidden">
+                                <input id="draftTitle" class="title-input" type="text" autocomplete="off"
+                                    placeholder="草稿标题">
+                                <input id="draftTags" class="tag-input" type="text" autocomplete="off"
+                                    placeholder="标签，用逗号分隔">
+                                <textarea id="draftBody" class="long-editor" spellcheck="true"
+                                    placeholder="从一个场景、一句对白、一个画面开始。"></textarea>
+                                <div class="editor-footer">
+                                    <span id="draftWordCount">0 字</span>
+                                    <span id="draftSaveState">已保存</span>
+                                    <button id="deleteDraftBtn" class="danger-btn" type="button">删除</button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="view-exercises" class="writer-view" aria-labelledby="exercisesTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Scene Practice</p>
+                            <h2 id="exercisesTitle">场景练习</h2>
+                        </div>
+                        <button id="newExerciseBtn" class="primary-btn compact" type="button">新建练习</button>
+                    </div>
+                    <div class="split-workspace">
+                        <aside class="item-list-panel">
+                            <div id="exerciseList" class="item-list"></div>
+                        </aside>
+                        <article class="editor-panel">
+                            <div id="exerciseEmpty" class="empty-state">
+                                <h3>今天还没有练习</h3>
+                                <p>抽一个题，写一个完整场景。</p>
+                            </div>
+                            <div id="exerciseEditor" class="editor-stack hidden">
+                                <div class="inline-row">
+                                    <select id="exerciseFocus" class="select-input">
+                                        <option value="人物欲望">人物欲望</option>
+                                        <option value="冲突">冲突</option>
+                                        <option value="对白">对白</option>
+                                        <option value="氛围">氛围</option>
+                                        <option value="转折">转折</option>
+                                    </select>
+                                    <span id="exerciseStatusBadge" class="status-pill">草稿</span>
+                                </div>
+                                <textarea id="exercisePrompt" class="prompt-editor" spellcheck="true"
+                                    placeholder="练习题"></textarea>
+                                <textarea id="exerciseBody" class="long-editor" spellcheck="true"
+                                    placeholder="写这个场景。"></textarea>
+                                <div class="editor-footer">
+                                    <span id="exerciseWordCount">0 字</span>
+                                    <span id="exerciseSaveState">已保存</span>
+                                    <button id="completeExerciseBtn" class="secondary-btn compact"
+                                        type="button">标记完成</button>
+                                    <button id="deleteExerciseBtn" class="danger-btn" type="button">删除</button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="view-materials" class="writer-view" aria-labelledby="materialsTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Materials</p>
+                            <h2 id="materialsTitle">素材库</h2>
+                        </div>
+                        <button id="newMaterialBtn" class="primary-btn compact" type="button">新建素材</button>
+                    </div>
+                    <div class="library-toolbar">
+                        <select id="materialTypeFilter" class="select-input">
+                            <option value="all">全部类型</option>
+                            <option value="character">人物</option>
+                            <option value="place">地点</option>
+                            <option value="worldbuilding">设定</option>
+                            <option value="fragment">片段</option>
+                            <option value="dialogue">对话</option>
+                            <option value="idea">灵感</option>
+                        </select>
+                        <input id="materialSearch" class="search-input" type="search" autocomplete="off"
+                            placeholder="搜索素材">
+                    </div>
+                    <div class="split-workspace">
+                        <aside class="item-list-panel">
+                            <div id="materialList" class="item-list"></div>
+                        </aside>
+                        <article class="editor-panel">
+                            <div id="materialEmpty" class="empty-state">
+                                <h3>素材还空着</h3>
+                                <p>把人物、地点、对白先存起来。</p>
+                            </div>
+                            <div id="materialEditor" class="editor-stack hidden">
+                                <div class="inline-row">
+                                    <select id="materialType" class="select-input">
+                                        <option value="character">人物</option>
+                                        <option value="place">地点</option>
+                                        <option value="worldbuilding">设定</option>
+                                        <option value="fragment">片段</option>
+                                        <option value="dialogue">对话</option>
+                                        <option value="idea">灵感</option>
+                                    </select>
+                                    <input id="materialTags" class="tag-input" type="text" autocomplete="off"
+                                        placeholder="标签">
+                                </div>
+                                <input id="materialTitle" class="title-input" type="text" autocomplete="off"
+                                    placeholder="素材标题">
+                                <textarea id="materialContent" class="long-editor" spellcheck="true"
+                                    placeholder="素材内容"></textarea>
+                                <div class="editor-footer">
+                                    <span id="materialSaveState">已保存</span>
+                                    <button id="deleteMaterialBtn" class="danger-btn" type="button">删除</button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="view-reading" class="writer-view" aria-labelledby="readingTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Reading Notes</p>
+                            <h2 id="readingTitle">阅读拆解</h2>
+                        </div>
+                        <button id="newReadingBtn" class="primary-btn compact" type="button">新建拆解</button>
+                    </div>
+                    <div class="split-workspace">
+                        <aside class="item-list-panel">
+                            <div id="readingList" class="item-list"></div>
+                        </aside>
+                        <article class="editor-panel">
+                            <div id="readingEmpty" class="empty-state">
+                                <h3>还没有拆解</h3>
+                                <p>摘一段你喜欢的小说，拆它的手艺。</p>
+                            </div>
+                            <div id="readingEditor" class="editor-stack hidden">
+                                <div class="inline-row">
+                                    <input id="readingSourceTitle" class="title-input" type="text" autocomplete="off"
+                                        placeholder="作品名">
+                                    <input id="readingAuthor" class="tag-input" type="text" autocomplete="off"
+                                        placeholder="作者">
+                                </div>
+                                <div class="inline-row">
+                                    <select id="readingLens" class="select-input">
+                                        <option value="人物">人物</option>
+                                        <option value="冲突">冲突</option>
+                                        <option value="节奏">节奏</option>
+                                        <option value="氛围">氛围</option>
+                                        <option value="句子">句子</option>
+                                        <option value="结尾">结尾</option>
+                                    </select>
+                                    <input id="readingTags" class="tag-input" type="text" autocomplete="off"
+                                        placeholder="标签">
+                                </div>
+                                <textarea id="readingExcerpt" class="excerpt-editor" spellcheck="true"
+                                    placeholder="摘录"></textarea>
+                                <textarea id="readingNotes" class="long-editor" spellcheck="true"
+                                    placeholder="它为什么有效"></textarea>
+                                <div class="editor-footer">
+                                    <span id="readingSaveState">已保存</span>
+                                    <button id="deleteReadingBtn" class="danger-btn" type="button">删除</button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="view-review" class="writer-view" aria-labelledby="reviewTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Weekly Review</p>
+                            <h2 id="reviewTitle">周复盘</h2>
+                        </div>
+                        <span id="weekLabel" class="week-label">本周</span>
+                    </div>
+                    <div class="review-grid">
+                        <div class="metric-tile">
+                            <span>总字数</span>
+                            <strong id="statsTotalWords">0</strong>
+                        </div>
+                        <div class="metric-tile">
+                            <span>草稿</span>
+                            <strong id="statsDraftWords">0</strong>
+                        </div>
+                        <div class="metric-tile">
+                            <span>练习</span>
+                            <strong id="statsExerciseWords">0</strong>
+                        </div>
+                        <div class="metric-tile">
+                            <span>完成练习</span>
+                            <strong id="statsCompleted">0</strong>
+                        </div>
+                        <div class="metric-tile">
+                            <span>连续天数</span>
+                            <strong id="statsStreak">0</strong>
+                        </div>
+                    </div>
+                    <div id="dailyBars" class="daily-bars" aria-label="本周每日字数"></div>
+                    <div class="review-panel">
+                        <label for="weeklyReview">本周复盘</label>
+                        <textarea id="weeklyReview" class="review-editor" spellcheck="true"
+                            placeholder="这周练了什么；哪里卡住；下周练什么。"></textarea>
+                        <div class="editor-footer">
+                            <span id="weeklyReviewSaveState">已保存</span>
+                            <button id="aiSummaryBtn" class="secondary-btn compact" type="button" disabled>AI 周总结</button>
+                        </div>
+                    </div>
+                    <div class="review-panel ai-panel">
+                        <label for="aiSummary">AI Insight</label>
+                        <textarea id="aiSummary" class="review-editor small" readonly
+                            placeholder="AI 总结预留"></textarea>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js?v=1.5.1"></script>
+    <script src="js/writer.js?v=1.0.0"></script>
+</body>
+
+</html>
