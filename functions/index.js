@@ -387,15 +387,23 @@ function buildStatsSnapshot(statsDocs, exercises, range, allStatsDocs = statsDoc
         cursor.setDate(cursor.getDate() - 1);
     }
 
+    const rawDays = Array.from(dayMap.values());
+    const visibleDays = rawDays.map((day) => ({
+        ...day,
+        draftWords: Math.max(0, day.draftWords),
+        exerciseWords: Math.max(0, day.exerciseWords),
+        totalWords: Math.max(0, day.totalWords)
+    }));
+
     return {
-        draftWords: days.reduce((sum, day) => sum + day.draftWords, 0),
-        exerciseWords: days.reduce((sum, day) => sum + day.exerciseWords, 0),
-        totalWords: days.reduce((sum, day) => sum + day.totalWords, 0),
+        draftWords: Math.max(0, rawDays.reduce((sum, day) => sum + day.draftWords, 0)),
+        exerciseWords: Math.max(0, rawDays.reduce((sum, day) => sum + day.exerciseWords, 0)),
+        totalWords: Math.max(0, rawDays.reduce((sum, day) => sum + day.totalWords, 0)),
         completedExercises: exercises.filter((exercise) => (
             exercise.status === "done" && isDateInRange(exercise.completedAt, range)
         )).length,
         streak,
-        days
+        days: visibleDays
     };
 }
 

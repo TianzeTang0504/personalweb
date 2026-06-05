@@ -18,6 +18,7 @@ A "Geek-style" personal website featuring a high-precision Task/Schedule Manager
 - **Writing Practice Space (`writer.html`)**:
   - A light, private writing workspace for drafts, scene practice, materials, reading breakdowns, and weekly reviews.
   - Uses Firebase Auth and stores data under `users/{uid}/...` private subcollections.
+  - Weekly word stats are net counts: deleting or shrinking drafts/exercises deducts their contribution.
   - Includes OpenAI-powered writing coaching for one-time scene evaluations and one-time weekly insights.
 
 ---

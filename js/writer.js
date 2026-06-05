@@ -183,6 +183,10 @@ document.addEventListener('DOMContentLoaded', () => {
         savedCounts: {
             drafts: new Map(),
             exercises: new Map()
+        },
+        savedStatContributions: {
+            drafts: new Map(),
+            exercises: new Map()
         }
     };
 
@@ -1088,6 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: '',
             tags: [],
             wordCount: 0,
+            statsContributions: {},
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });
@@ -1107,15 +1112,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!draft) return;
         const wordCount = countWords(els.draftBody.value);
         const previousCount = getSavedCount('drafts', draft);
-        await getUserRef('writingDrafts').doc(draft.id).set({
+        const delta = wordCount - previousCount;
+        const statsContributions = getUpdatedStatContributions('drafts', draft, delta);
+        const draftRef = getUserRef('writingDrafts').doc(draft.id);
+        const batch = state.db.batch();
+        batch.set(draftRef, {
             title: els.draftTitle.value.trim() || '未命名草稿',
             body: els.draftBody.value,
             tags: getTagValues('draft'),
             wordCount,
+            statsContributions,
             updatedAt: serverTimestamp()
         }, { merge: true });
+        queueWritingDelta(batch, 'draftWords', delta);
+        await batch.commit();
         setSavedCount('drafts', draft.id, wordCount);
-        await recordWritingDelta('draftWords', wordCount - previousCount);
+        setSavedStatContributions('drafts', draft.id, statsContributions);
         els.draftSaveState.textContent = '已保存';
     }
 
@@ -1124,8 +1136,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!draft) return;
         const confirmed = await confirmDanger('删除草稿', '删除这篇草稿？这个操作不能撤销。');
         if (!confirmed) return;
+        const batch = state.db.batch();
+        queueReverseStatContributions(batch, 'draftWords', getDeleteStatContributions('drafts', draft));
+        batch.delete(getUserRef('writingDrafts').doc(draft.id));
         setActiveId('activeDraftId', 'writerActiveDraft', getNextItemId(state.drafts, draft.id));
-        await getUserRef('writingDrafts').doc(draft.id).delete();
+        await batch.commit();
+        state.savedCounts.drafts.delete(draft.id);
+        state.savedStatContributions.drafts.delete(draft.id);
     }
 
     function renderExercises(forcePopulate = false) {
@@ -1156,6 +1173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: '',
             status: 'draft',
             wordCount: 0,
+            statsContributions: {},
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
             completedAt: null
@@ -1189,21 +1207,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!exercise) return;
         const wordCount = countWords(els.exerciseBody.value);
         const previousCount = getSavedCount('exercises', exercise);
+        const delta = wordCount - previousCount;
+        const statsContributions = getUpdatedStatContributions('exercises', exercise, delta);
         const focus = await resolveTextCategory('exerciseFocuses', els.exerciseFocus, els.exerciseCustomFocus, exercise.focus || '');
         const data = {
             prompt: els.exercisePrompt.value.trim(),
             focus,
             body: els.exerciseBody.value,
             wordCount,
+            statsContributions,
             updatedAt: serverTimestamp()
         };
         if (options.status) {
             data.status = options.status;
             data.completedAt = options.status === 'done' ? serverTimestamp() : null;
         }
-        await getUserRef('writingExercises').doc(exercise.id).set(data, { merge: true });
+        const batch = state.db.batch();
+        batch.set(getUserRef('writingExercises').doc(exercise.id), data, { merge: true });
+        queueWritingDelta(batch, 'exerciseWords', delta);
+        await batch.commit();
         setSavedCount('exercises', exercise.id, wordCount);
-        await recordWritingDelta('exerciseWords', wordCount - previousCount);
+        setSavedStatContributions('exercises', exercise.id, statsContributions);
         els.exerciseSaveState.textContent = '已保存';
     }
 
@@ -1224,8 +1248,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!exercise) return;
         const confirmed = await confirmDanger('删除练习', '删除这条场景练习？这个操作不能撤销。');
         if (!confirmed) return;
+        const batch = state.db.batch();
+        queueReverseStatContributions(batch, 'exerciseWords', getDeleteStatContributions('exercises', exercise));
+        batch.delete(getUserRef('writingExercises').doc(exercise.id));
         setActiveId('activeExerciseId', 'writerActiveExercise', getNextItemId(state.exercises, exercise.id));
-        await getUserRef('writingExercises').doc(exercise.id).delete();
+        await batch.commit();
+        state.savedCounts.exercises.delete(exercise.id);
+        state.savedStatContributions.exercises.delete(exercise.id);
     }
 
     function updateExerciseAiButton(exercise, wordCount = countWords(els.exerciseBody.value)) {
@@ -1587,20 +1616,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function recordWritingDelta(field, delta) {
-        const safeDelta = Math.max(0, Number(delta) || 0);
-        if (!safeDelta || !state.user) return;
-        const today = getDateParts(new Date());
-        await getUserRef('writingStats').doc(today.id).set({
-            date: today.id,
-            draftWords: firebase.firestore.FieldValue.increment(field === 'draftWords' ? safeDelta : 0),
-            exerciseWords: firebase.firestore.FieldValue.increment(field === 'exerciseWords' ? safeDelta : 0),
-            totalWords: firebase.firestore.FieldValue.increment(safeDelta),
-            sessions: firebase.firestore.FieldValue.increment(1),
-            updatedAt: serverTimestamp()
-        }, { merge: true });
-    }
-
     function renderList(container, items, activeId, type) {
         if (!items.length) {
             container.innerHTML = `<div class="empty-state"><p>暂无记录</p></div>`;
@@ -1748,10 +1763,16 @@ document.addEventListener('DOMContentLoaded', () => {
             day.totalWords += Number(entry.totalWords || 0);
         });
 
-        const days = Array.from(dayMap.values());
-        const draftWords = days.reduce((sum, day) => sum + day.draftWords, 0);
-        const exerciseWords = days.reduce((sum, day) => sum + day.exerciseWords, 0);
-        const totalWords = days.reduce((sum, day) => sum + day.totalWords, 0);
+        const rawDays = Array.from(dayMap.values());
+        const draftWords = Math.max(0, rawDays.reduce((sum, day) => sum + day.draftWords, 0));
+        const exerciseWords = Math.max(0, rawDays.reduce((sum, day) => sum + day.exerciseWords, 0));
+        const totalWords = Math.max(0, rawDays.reduce((sum, day) => sum + day.totalWords, 0));
+        const days = rawDays.map((day) => ({
+            ...day,
+            draftWords: Math.max(0, day.draftWords),
+            exerciseWords: Math.max(0, day.exerciseWords),
+            totalWords: Math.max(0, day.totalWords)
+        }));
         const completedExercises = state.exercises.filter((exercise) => {
             if (exercise.status !== 'done') return false;
             const completed = timestampToDate(exercise.completedAt);
@@ -1851,6 +1872,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!state.savedCounts[type].has(item.id)) {
                 state.savedCounts[type].set(item.id, Number(item.wordCount || 0));
             }
+            if (!state.savedStatContributions[type].has(item.id)) {
+                state.savedStatContributions[type].set(item.id, normalizeStatContributions(item.statsContributions));
+            }
         });
     }
 
@@ -1863,6 +1887,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setSavedCount(type, id, count) {
         state.savedCounts[type].set(id, Number(count || 0));
+    }
+
+    function getSavedStatContributions(type, item) {
+        if (!state.savedStatContributions[type].has(item.id)) {
+            state.savedStatContributions[type].set(item.id, normalizeStatContributions(item.statsContributions));
+        }
+        return { ...state.savedStatContributions[type].get(item.id) };
+    }
+
+    function setSavedStatContributions(type, id, contributions) {
+        state.savedStatContributions[type].set(id, normalizeStatContributions(contributions));
     }
 
     function getActiveDraft() {
@@ -2008,6 +2043,64 @@ document.addEventListener('DOMContentLoaded', () => {
         return `custom_${ascii || 'type'}_${suffix}`;
     }
 
+    function normalizeStatContributions(value) {
+        const result = {};
+        if (!value || typeof value !== 'object') return result;
+        Object.entries(value).forEach(([dateId, amount]) => {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateId)) return;
+            const cleanAmount = Number(amount || 0);
+            if (!cleanAmount) return;
+            result[dateId] = cleanAmount;
+        });
+        return result;
+    }
+
+    function getUpdatedStatContributions(type, item, delta) {
+        const contributions = getSavedStatContributions(type, item);
+        const dateId = getDateParts(new Date()).id;
+        const cleanDelta = Number(delta || 0);
+        if (!cleanDelta) return contributions;
+        contributions[dateId] = Number(contributions[dateId] || 0) + cleanDelta;
+        if (!contributions[dateId]) delete contributions[dateId];
+        return contributions;
+    }
+
+    function getDeleteStatContributions(type, item) {
+        const contributions = getSavedStatContributions(type, item);
+        const hasContribution = Object.values(contributions).some((amount) => Number(amount || 0) !== 0);
+        if (hasContribution) return contributions;
+        const count = getSavedCount(type, item);
+        if (!count) return {};
+        return {
+            [getFallbackStatDate(item)]: count
+        };
+    }
+
+    function getFallbackStatDate(item) {
+        const date = timestampToDate(item.updatedAt || item.createdAt);
+        return getDateParts(date || new Date()).id;
+    }
+
+    function queueWritingDelta(batch, field, delta, dateId = getDateParts(new Date()).id) {
+        const cleanDelta = Number(delta || 0);
+        if (!cleanDelta || !state.user) return;
+        const statRef = getUserRef('writingStats').doc(dateId);
+        batch.set(statRef, {
+            date: dateId,
+            draftWords: firebase.firestore.FieldValue.increment(field === 'draftWords' ? cleanDelta : 0),
+            exerciseWords: firebase.firestore.FieldValue.increment(field === 'exerciseWords' ? cleanDelta : 0),
+            totalWords: firebase.firestore.FieldValue.increment(cleanDelta),
+            sessions: firebase.firestore.FieldValue.increment(cleanDelta > 0 ? 1 : 0),
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+    }
+
+    function queueReverseStatContributions(batch, field, contributions) {
+        Object.entries(normalizeStatContributions(contributions)).forEach(([dateId, amount]) => {
+            queueWritingDelta(batch, field, -Number(amount || 0), dateId);
+        });
+    }
+
     function countWords(text) {
         const value = (text || '').trim();
         if (!value) return 0;
@@ -2059,6 +2152,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         return Array.from(weekMap.values())
+            .map((week) => ({
+                ...week,
+                draftWords: Math.max(0, week.draftWords),
+                exerciseWords: Math.max(0, week.exerciseWords),
+                totalWords: Math.max(0, week.totalWords)
+            }))
             .filter((week) => week.weekId === currentWeekId || week.weekId === state.selectedWeekStartId || week.totalWords > 0 || week.hasReview)
             .sort((a, b) => compareWeekIds(b.weekId, a.weekId))
             .slice(0, 78);
