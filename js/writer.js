@@ -193,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
         completeExerciseBtn: $('#completeExerciseBtn'),
         deleteExerciseBtn: $('#deleteExerciseBtn'),
         exerciseAiPanel: $('#exerciseAiPanel'),
+        exerciseReflectionPanel: $('#exerciseReflectionPanel'),
+        exerciseReflection: $('#exerciseReflection'),
+        exerciseReflectionSaveState: $('#exerciseReflectionSaveState'),
         newMaterialBtn: $('#newMaterialBtn'),
         materialTypeFilter: $('#materialTypeFilter'),
         materialSearch: $('#materialSearch'),
@@ -366,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         els.exerciseFocus.addEventListener('change', () => toggleCustomCategoryInput('exercise'));
         els.exerciseCustomFocus.addEventListener('input', scheduleExerciseSave);
+        els.exerciseReflection.addEventListener('input', scheduleExerciseReflectionSave);
         els.inspireExerciseBtn.addEventListener('click', inspireExercise);
         els.evaluateExerciseBtn.addEventListener('click', generateExerciseEvaluation);
         els.completeExerciseBtn.addEventListener('click', toggleExerciseDone);
@@ -1304,18 +1308,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const exercise = getActiveExercise();
         toggleEditor(els.exerciseEmpty, els.exerciseEditor, Boolean(exercise));
         if (!exercise) return;
-        if (forcePopulate || !isFocusedWithin([els.exerciseFocus, els.exerciseCustomFocus, els.exercisePrompt, els.exerciseBody])) {
+        const locked = isExerciseLocked(exercise);
+        if (forcePopulate || !isFocusedWithin([els.exerciseFocus, els.exerciseCustomFocus, els.exercisePrompt, els.exerciseBody, els.exerciseReflection])) {
             setTextCategoryValue('exercise', exercise.focus || '');
             els.exercisePrompt.value = exercise.prompt || '';
             els.exerciseBody.value = exercise.body || '';
+            els.exerciseReflection.value = exercise.aiReflection || '';
             els.exerciseSaveState.textContent = '已保存';
+            els.exerciseReflectionSaveState.textContent = '已保存';
         }
         const done = exercise.status === 'done';
         els.exerciseStatusBadge.textContent = done ? '已完成' : '草稿';
         els.exerciseStatusBadge.classList.toggle('done', done);
         els.completeExerciseBtn.textContent = done ? '重新打开' : '标记完成';
         els.exerciseWordCount.textContent = `${formatNumber(countWords(els.exerciseBody.value))} 字`;
+        setExerciseLockedState(locked);
         renderExerciseAi(exercise.aiEvaluation);
+        renderExerciseReflection(exercise);
         updateExerciseAiButton(exercise);
     }
 
@@ -1359,15 +1368,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function scheduleExerciseSave() {
+        const exercise = getActiveExercise();
+        if (isExerciseLocked(exercise)) return;
         const wordCount = countWords(els.exerciseBody.value);
         els.exerciseWordCount.textContent = `${formatNumber(wordCount)} 字`;
-        updateExerciseAiButton(getActiveExercise(), wordCount);
+        updateExerciseAiButton(exercise, wordCount);
         debounce('exercise', saveExercise, els.exerciseSaveState);
     }
 
     async function saveExercise(options = {}) {
         const exercise = getActiveExercise();
         if (!exercise) return;
+        if (isExerciseLocked(exercise)) return;
         const wordCount = countWords(els.exerciseBody.value);
         const previousCount = getSavedCount('exercises', exercise);
         const delta = wordCount - previousCount;
@@ -1394,9 +1406,28 @@ document.addEventListener('DOMContentLoaded', () => {
         els.exerciseSaveState.textContent = '已保存';
     }
 
+    function scheduleExerciseReflectionSave() {
+        debounce('exerciseReflection', saveExerciseReflection, els.exerciseReflectionSaveState);
+    }
+
+    async function saveExerciseReflection() {
+        const exercise = getActiveExercise();
+        if (!exercise || !isExerciseLocked(exercise)) return;
+        await getUserRef('writingExercises').doc(exercise.id).set({
+            aiReflection: els.exerciseReflection.value,
+            reflectionUpdatedAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+        els.exerciseReflectionSaveState.textContent = '已保存';
+    }
+
     async function toggleExerciseDone() {
         const exercise = getActiveExercise();
         if (!exercise) return;
+        if (isExerciseLocked(exercise)) {
+            await showNotice('练习已锁定', 'AI 评估生成后，这条练习的正文和状态会固定下来。你可以在“我的备注”里继续记录想法。');
+            return;
+        }
         const nextStatus = exercise.status === 'done' ? 'draft' : 'done';
         if (nextStatus === 'done' && !getPendingExerciseFocus()) {
             await showNotice('需要分类', '请先选择训练重点，或用“自定义...”填写一个分类，再标记完成。');
@@ -1430,6 +1461,35 @@ document.addEventListener('DOMContentLoaded', () => {
             els.evaluateExerciseBtn.textContent = '已评估';
         } else {
             els.evaluateExerciseBtn.textContent = 'AI评估';
+        }
+    }
+
+    function isExerciseLocked(exercise) {
+        return Boolean(exercise?.aiEvaluation || (exercise && state.generatedExerciseIds.has(exercise.id)));
+    }
+
+    function setExerciseLockedState(locked) {
+        [
+            els.exerciseFocus,
+            els.exerciseCustomFocus,
+            els.exercisePrompt,
+            els.exerciseBody,
+            els.inspireExerciseBtn,
+            els.completeExerciseBtn,
+            els.manageExerciseCategoriesBtn
+        ].forEach((input) => {
+            input.disabled = locked;
+        });
+        els.exerciseEditor.classList.toggle('exercise-locked', locked);
+        els.exercisePrompt.readOnly = locked;
+        els.exerciseBody.readOnly = locked;
+    }
+
+    function renderExerciseReflection(exercise) {
+        const locked = isExerciseLocked(exercise);
+        els.exerciseReflectionPanel.classList.toggle('hidden', !locked);
+        if (!locked && document.activeElement !== els.exerciseReflection) {
+            els.exerciseReflection.value = '';
         }
     }
 
@@ -1493,6 +1553,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.data?.aiEvaluation) {
                 state.generatedExerciseIds.add(exercise.id);
                 renderExerciseAi(result.data.aiEvaluation);
+                setExerciseLockedState(true);
+                renderExerciseReflection({ ...exercise, aiEvaluation: result.data.aiEvaluation });
             }
             await showNotice('AI评估已生成', '结果已经保存到这条练习里。');
         } catch (error) {

@@ -658,6 +658,7 @@ exports.generateWritingExerciseEvaluation = onCall(async (request) => {
 
     await exerciseRef.set({
         aiEvaluation,
+        aiLockedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 

@@ -783,6 +783,19 @@ textarea:focus {
     border-radius: var(--radius);
 }
 
+.exercise-locked .prompt-editor,
+.exercise-locked .long-editor,
+.exercise-locked .select-input,
+.exercise-locked .custom-category-input {
+    color: var(--ink-soft);
+    background: var(--paper-deep);
+    border-color: #e7dac8;
+}
+
+.exercise-reflection-panel {
+    margin-top: 2px;
+}
+
 .empty-state {
     display: grid;
     place-items: center;

@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f6efe4">
     <title>Writing Room | Tianze Tang</title>
     <link rel="manifest" href="manifest.json">
-    <link href="css/writer.css?v=1.2.2" rel="stylesheet">
+    <link href="css/writer.css?v=1.2.3" rel="stylesheet">
 </head>
 
 <body>
@@ -169,6 +169,14 @@
                                     <button id="deleteExerciseBtn" class="danger-btn" type="button">删除</button>
                                 </div>
                                 <div id="exerciseAiPanel" class="ai-result-panel hidden" aria-live="polite"></div>
+                                <div id="exerciseReflectionPanel" class="review-panel exercise-reflection-panel hidden">
+                                    <label for="exerciseReflection">我的备注</label>
+                                    <textarea id="exerciseReflection" class="review-editor small" spellcheck="true"
+                                        placeholder="写下你对这次练习和 AI 反馈的判断、收获、不同意的地方。"></textarea>
+                                    <div class="editor-footer">
+                                        <span id="exerciseReflectionSaveState">已保存</span>
+                                    </div>
+                                </div>
                             </div>
                         </article>
                     </div>
@@ -377,7 +385,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
     <script src="js/firebase-config.js?v=1.5.1"></script>
-    <script src="js/writer.js?v=1.1.6"></script>
+    <script src="js/writer.js?v=1.1.7"></script>
 </body>
 
 </html>
