@@ -351,7 +351,58 @@ async function createOpenAIJsonResponse({ input, schema, schemaName, maxOutputTo
     }
 }
 
-function buildStatsSnapshot(statsDocs, exercises, range, allStatsDocs = statsDocs) {
+function normalizeStatContributions(value) {
+    const result = {};
+    if (!value || typeof value !== "object") return result;
+    Object.entries(value).forEach(([dateId, amount]) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateId)) return;
+        const cleanAmount = Number(amount || 0);
+        if (!cleanAmount) return;
+        result[dateId] = cleanAmount;
+    });
+    return result;
+}
+
+function getFallbackStatDate(item) {
+    const date = timestampToDate(item.updatedAt || item.createdAt);
+    return getDateParts(date || new Date()).id;
+}
+
+function getItemContributionSource(item) {
+    const contributions = normalizeStatContributions(item.statsContributions);
+    if (Object.keys(contributions).length) return contributions;
+    const wordCount = Number(item.wordCount || 0);
+    if (!wordCount) return {};
+    return {
+        [getFallbackStatDate(item)]: wordCount
+    };
+}
+
+function addItemsToStatsMap(dayMap, items, field) {
+    items.forEach((item) => {
+        Object.entries(getItemContributionSource(item)).forEach(([dateId, amount]) => {
+            const day = dayMap.get(dateId);
+            if (!day) return;
+            const cleanAmount = Number(amount || 0);
+            day[field] += cleanAmount;
+            day.totalWords += cleanAmount;
+        });
+    });
+}
+
+function getWritingDayTotals(drafts, exercises) {
+    const totals = new Map();
+    const addItem = (item) => {
+        Object.entries(getItemContributionSource(item)).forEach(([dateId, amount]) => {
+            totals.set(dateId, Number(totals.get(dateId) || 0) + Number(amount || 0));
+        });
+    };
+    drafts.forEach(addItem);
+    exercises.forEach(addItem);
+    return totals;
+}
+
+function buildStatsSnapshot(drafts, exercises, range) {
     const days = [];
     for (let i = 0; i < 7; i += 1) {
         const date = new Date(range.weekStart);
@@ -366,18 +417,13 @@ function buildStatsSnapshot(statsDocs, exercises, range, allStatsDocs = statsDoc
     }
 
     const dayMap = new Map(days.map((day) => [day.date, day]));
-    statsDocs.forEach((entry) => {
-        const day = dayMap.get(entry.date || entry.id);
-        if (!day) return;
-        day.draftWords += Number(entry.draftWords || 0);
-        day.exerciseWords += Number(entry.exerciseWords || 0);
-        day.totalWords += Number(entry.totalWords || 0);
-    });
+    addItemsToStatsMap(dayMap, drafts, "draftWords");
+    addItemsToStatsMap(dayMap, exercises, "exerciseWords");
 
     const writtenDays = new Set(
-        allStatsDocs
-            .filter((entry) => Number(entry.totalWords || 0) > 0)
-            .map((entry) => entry.date || entry.id)
+        Array.from(getWritingDayTotals(drafts, exercises).entries())
+            .filter(([, total]) => total > 0)
+            .map(([dateId]) => dateId)
     );
     let streak = 0;
     const anchor = range.weekEnd > new Date() ? new Date() : range.weekEnd;
@@ -425,14 +471,12 @@ async function loadUserWritingContext(userRef, range, previousRange) {
         exercisesSnap,
         materialsSnap,
         readingsSnap,
-        statsSnap,
         previousReviewSnap
     ] = await Promise.all([
         userRef.collection("writingDrafts").get(),
         userRef.collection("writingExercises").get(),
         userRef.collection("writingMaterials").get(),
         userRef.collection("readingBreakdowns").get(),
-        userRef.collection("writingStats").get(),
         userRef.collection("writingWeeklyReviews").doc(previousRange.weekId).get()
     ]);
 
@@ -440,19 +484,10 @@ async function loadUserWritingContext(userRef, range, previousRange) {
     const exercises = exercisesSnap.docs.map(getDocData);
     const materials = materialsSnap.docs.map(getDocData);
     const readings = readingsSnap.docs.map(getDocData);
-    const allStats = statsSnap.docs.map(getDocData);
-    const currentStatsDocs = allStats.filter((entry) => {
-        const id = entry.date || entry.id;
-        return id >= range.weekStartDate && id <= range.weekEndDate;
-    });
-    const previousStatsDocs = allStats.filter((entry) => {
-        const id = entry.date || entry.id;
-        return id >= previousRange.weekStartDate && id <= previousRange.weekEndDate;
-    });
 
     return {
-        stats: buildStatsSnapshot(currentStatsDocs, exercises, range, allStats),
-        previousStats: buildStatsSnapshot(previousStatsDocs, exercises, previousRange, allStats),
+        stats: buildStatsSnapshot(drafts, exercises, range),
+        previousStats: buildStatsSnapshot(drafts, exercises, previousRange),
         previousReview: previousReviewSnap.exists ? previousReviewSnap.data() : null,
         drafts: pickWeeklyItems(
             drafts,

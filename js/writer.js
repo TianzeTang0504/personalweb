@@ -1755,13 +1755,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        state.stats.forEach((entry) => {
-            const day = dayMap.get(entry.date);
-            if (!day) return;
-            day.draftWords += Number(entry.draftWords || 0);
-            day.exerciseWords += Number(entry.exerciseWords || 0);
-            day.totalWords += Number(entry.totalWords || 0);
-        });
+        addItemsToStatsMap(dayMap, state.drafts, 'draftWords');
+        addItemsToStatsMap(dayMap, state.exercises, 'exerciseWords');
 
         const rawDays = Array.from(dayMap.values());
         const draftWords = Math.max(0, rawDays.reduce((sum, day) => sum + day.draftWords, 0));
@@ -1791,9 +1786,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getWritingStreak(anchorDate = new Date()) {
         const writtenDays = new Set(
-            state.stats
-                .filter((entry) => Number(entry.totalWords || 0) > 0)
-                .map((entry) => entry.date)
+            Array.from(getWritingDayTotals().entries())
+                .filter(([, total]) => total > 0)
+                .map(([dateId]) => dateId)
         );
         let streak = 0;
         const cursor = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
@@ -2081,6 +2076,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return getDateParts(date || new Date()).id;
     }
 
+    function getItemContributionSource(item) {
+        const contributions = normalizeStatContributions(item.statsContributions);
+        if (Object.keys(contributions).length) return contributions;
+        const wordCount = Number(item.wordCount || 0);
+        if (!wordCount) return {};
+        return {
+            [getFallbackStatDate(item)]: wordCount
+        };
+    }
+
+    function addItemsToStatsMap(dayMap, items, field) {
+        items.forEach((item) => {
+            Object.entries(getItemContributionSource(item)).forEach(([dateId, amount]) => {
+                const day = dayMap.get(dateId);
+                if (!day) return;
+                const cleanAmount = Number(amount || 0);
+                day[field] += cleanAmount;
+                day.totalWords += cleanAmount;
+            });
+        });
+    }
+
+    function getWritingDayTotals() {
+        const totals = new Map();
+        const addItem = (item) => {
+            Object.entries(getItemContributionSource(item)).forEach(([dateId, amount]) => {
+                totals.set(dateId, Number(totals.get(dateId) || 0) + Number(amount || 0));
+            });
+        };
+        state.drafts.forEach(addItem);
+        state.exercises.forEach(addItem);
+        return totals;
+    }
+
     function queueWritingDelta(batch, field, delta, dateId = getDateParts(new Date()).id) {
         const cleanDelta = Number(delta || 0);
         if (!cleanDelta || !state.user) return;
@@ -2132,13 +2161,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ensureWeek(currentWeekId);
         ensureWeek(state.selectedWeekStartId);
 
-        state.stats.forEach((entry) => {
-            if (!entry.date) return;
-            const week = ensureWeek(getWeekRange(parseDateId(entry.date)).weekId);
+        getWritingDayTotals().forEach((totalWords, dateId) => {
+            const week = ensureWeek(getWeekRange(parseDateId(dateId)).weekId);
             if (!week) return;
-            week.draftWords += Number(entry.draftWords || 0);
-            week.exerciseWords += Number(entry.exerciseWords || 0);
-            week.totalWords += Number(entry.totalWords || 0);
+            week.totalWords += Number(totalWords || 0);
         });
 
         state.weeklyReviews.forEach((review) => {
