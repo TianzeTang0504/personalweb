@@ -256,15 +256,38 @@ textarea:focus {
     font-size: 0.9rem;
 }
 
+.full-width {
+    width: 100%;
+}
+
+.auth-hint {
+    margin: 12px 0 18px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.auth-fallback {
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+}
+
+.auth-fallback summary {
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+}
+
+.auth-fallback[open] summary {
+    margin-bottom: 14px;
+}
+
 .auth-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-top: 14px;
-}
-
-.auth-actions .secondary-btn {
-    grid-column: 1 / -1;
 }
 
 .auth-message {

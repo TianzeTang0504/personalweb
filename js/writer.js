@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         db: null,
         functions: null,
         user: null,
-        view: localStorage.getItem('writerView') || 'drafts',
+        view: 'drafts',
         drafts: [],
         exercises: [],
         materials: [],
@@ -158,13 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
         stats: [],
         weeklyReviews: [],
         taxonomy: normalizeTaxonomy(),
-        activeDraftId: localStorage.getItem('writerActiveDraft') || null,
-        activeExerciseId: localStorage.getItem('writerActiveExercise') || null,
-        activeMaterialId: localStorage.getItem('writerActiveMaterial') || null,
-        activeReadingId: localStorage.getItem('writerActiveReading') || null,
+        activeDraftId: null,
+        activeExerciseId: null,
+        activeMaterialId: null,
+        activeReadingId: null,
         materialFilter: 'all',
         materialQuery: '',
-        selectedWeekStartId: localStorage.getItem('writerSelectedWeekStart') || getWeekRange().weekId,
+        selectedWeekStartId: getWeekRange().weekId,
         weekPickerOpen: false,
         taxonomyManagerKind: null,
         dialogResolve: null,
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         generatingWeeklyId: null,
         generatedExerciseIds: new Set(),
         generatedWeeklyIds: new Set(),
-        promptIndex: Number(localStorage.getItem('writerPromptIndex') || '0'),
+        promptIndex: 0,
         tagValues: {
             draft: [],
             material: [],
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = event.target.closest('[data-draft-id]');
             if (!item) return;
             state.activeDraftId = item.getAttribute('data-draft-id');
-            localStorage.setItem('writerActiveDraft', state.activeDraftId);
+            setLocalValue('writerActiveDraft', state.activeDraftId);
             renderDrafts(true);
         });
         setupTagEditor('draft', els.draftTagEditor, scheduleDraftSave);
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = event.target.closest('[data-exercise-id]');
             if (!item) return;
             state.activeExerciseId = item.getAttribute('data-exercise-id');
-            localStorage.setItem('writerActiveExercise', state.activeExerciseId);
+            setLocalValue('writerActiveExercise', state.activeExerciseId);
             renderExercises(true);
         });
         [els.exerciseFocus, els.exercisePrompt, els.exerciseBody].forEach((input) => {
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = event.target.closest('[data-material-id]');
             if (!item) return;
             state.activeMaterialId = item.getAttribute('data-material-id');
-            localStorage.setItem('writerActiveMaterial', state.activeMaterialId);
+            setLocalValue('writerActiveMaterial', state.activeMaterialId);
             renderMaterials(true);
         });
         setupTagEditor('material', els.materialTagEditor, scheduleMaterialSave);
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = event.target.closest('[data-reading-id]');
             if (!item) return;
             state.activeReadingId = item.getAttribute('data-reading-id');
-            localStorage.setItem('writerActiveReading', state.activeReadingId);
+            setLocalValue('writerActiveReading', state.activeReadingId);
             renderReading(true);
         });
         [
@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.user = user;
 
         if (!user) {
+            resetLoadedUserData();
             showSignedOut();
             return;
         }
@@ -390,9 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        loadUserLocalState(user);
         showSignedIn(user);
         await state.db.collection('users').doc(user.uid).set({
-            email: user.email || ''
+            email: user.email || '',
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            authProviders: user.providerData.map((provider) => provider.providerId).filter(Boolean),
+            lastLoginAt: serverTimestamp()
         }, { merge: true });
         setupListeners();
     }
@@ -407,8 +413,48 @@ document.addEventListener('DOMContentLoaded', () => {
         els.bootView.classList.add('hidden');
         els.authView.classList.add('hidden');
         els.appView.classList.remove('hidden');
-        els.userEmail.textContent = user.email || '已登录';
+        els.userEmail.textContent = user.displayName || user.email || '已登录';
         setView(state.view);
+    }
+
+    function loadUserLocalState(user) {
+        resetLoadedUserData();
+        const currentWeekId = getWeekRange().weekId;
+        state.view = getLocalValue('writerView', 'drafts', user.uid);
+        state.activeDraftId = getLocalValue('writerActiveDraft', null, user.uid);
+        state.activeExerciseId = getLocalValue('writerActiveExercise', null, user.uid);
+        state.activeMaterialId = getLocalValue('writerActiveMaterial', null, user.uid);
+        state.activeReadingId = getLocalValue('writerActiveReading', null, user.uid);
+        state.selectedWeekStartId = normalizeWeekStartId(getLocalValue('writerSelectedWeekStart', currentWeekId, user.uid));
+        if (compareWeekIds(state.selectedWeekStartId, currentWeekId) > 0) {
+            state.selectedWeekStartId = currentWeekId;
+        }
+        state.promptIndex = Number(getLocalValue('writerPromptIndex', '0', user.uid) || '0') || 0;
+        state.weekPickerOpen = false;
+    }
+
+    function resetLoadedUserData() {
+        state.drafts = [];
+        state.exercises = [];
+        state.materials = [];
+        state.readings = [];
+        state.stats = [];
+        state.weeklyReviews = [];
+        state.activeDraftId = null;
+        state.activeExerciseId = null;
+        state.activeMaterialId = null;
+        state.activeReadingId = null;
+        state.materialFilter = 'all';
+        state.materialQuery = '';
+        state.selectedWeekStartId = getWeekRange().weekId;
+        state.weekPickerOpen = false;
+        state.generatedExerciseIds.clear();
+        state.generatedWeeklyIds.clear();
+        state.savedCounts.drafts.clear();
+        state.savedCounts.exercises.clear();
+        state.savedStatContributions.drafts.clear();
+        state.savedStatContributions.exercises.clear();
+        state.tagValues = { draft: [], material: [], reading: [] };
     }
 
     async function signInWithEmail() {
@@ -542,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setView(view) {
         state.view = view || 'drafts';
-        localStorage.setItem('writerView', state.view);
+        setLocalValue('writerView', state.view);
         document.querySelectorAll('.writer-view').forEach((panel) => {
             panel.classList.toggle('active', panel.id === `view-${state.view}`);
         });
@@ -566,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalized = normalizeWeekStartId(weekId);
         state.selectedWeekStartId = compareWeekIds(normalized, currentWeekId) > 0 ? currentWeekId : normalized;
         state.weekPickerOpen = false;
-        localStorage.setItem('writerSelectedWeekStart', state.selectedWeekStartId);
+        setLocalValue('writerSelectedWeekStart', state.selectedWeekStartId);
         if (options.render !== false) {
             renderReview(true);
         }
@@ -1097,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatedAt: serverTimestamp()
         });
         state.activeDraftId = ref.id;
-        localStorage.setItem('writerActiveDraft', ref.id);
+        setLocalValue('writerActiveDraft', ref.id);
         setView('drafts');
     }
 
@@ -1179,7 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             completedAt: null
         });
         state.activeExerciseId = ref.id;
-        localStorage.setItem('writerActiveExercise', ref.id);
+        setLocalValue('writerActiveExercise', ref.id);
         setView('exercises');
     }
 
@@ -1188,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!exercise) return;
         const prompt = PROMPT_BANK[state.promptIndex % PROMPT_BANK.length];
         state.promptIndex += 1;
-        localStorage.setItem('writerPromptIndex', String(state.promptIndex));
+        setLocalValue('writerPromptIndex', String(state.promptIndex));
         await addTextTaxonomy('exerciseFocuses', prompt.focus);
         setTextCategoryValue('exercise', prompt.focus);
         els.exercisePrompt.value = prompt.prompt;
@@ -1345,8 +1391,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = getFilteredMaterials();
         if (!filtered.some((item) => item.id === state.activeMaterialId)) {
             state.activeMaterialId = filtered[0]?.id || null;
-            if (state.activeMaterialId) localStorage.setItem('writerActiveMaterial', state.activeMaterialId);
-            else localStorage.removeItem('writerActiveMaterial');
+            if (state.activeMaterialId) setLocalValue('writerActiveMaterial', state.activeMaterialId);
+            else removeLocalValue('writerActiveMaterial');
         }
         renderList(els.materialList, filtered, state.activeMaterialId, 'material');
         const material = getActiveMaterial();
@@ -1373,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatedAt: serverTimestamp()
         });
         state.activeMaterialId = ref.id;
-        localStorage.setItem('writerActiveMaterial', ref.id);
+        setLocalValue('writerActiveMaterial', ref.id);
         setView('materials');
     }
 
@@ -1440,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatedAt: serverTimestamp()
         });
         state.activeReadingId = ref.id;
-        localStorage.setItem('writerActiveReading', ref.id);
+        setLocalValue('writerActiveReading', ref.id);
         setView('reading');
     }
 
@@ -1846,8 +1892,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const [key, items, storageKey] = config;
         if (items.some((item) => item.id === state[key])) return;
         state[key] = items[0]?.id || null;
-        if (state[key]) localStorage.setItem(storageKey, state[key]);
-        else localStorage.removeItem(storageKey);
+        if (state[key]) setLocalValue(storageKey, state[key]);
+        else removeLocalValue(storageKey);
     }
 
     function getNextItemId(items, currentId) {
@@ -1858,8 +1904,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setActiveId(key, storageKey, id) {
         state[key] = id || null;
-        if (id) localStorage.setItem(storageKey, id);
-        else localStorage.removeItem(storageKey);
+        if (id) setLocalValue(storageKey, id);
+        else removeLocalValue(storageKey);
+    }
+
+    function getLocalValue(key, fallback = null, uid = state.user?.uid) {
+        if (!uid) return fallback;
+        const value = localStorage.getItem(getLocalKey(key, uid));
+        return value ?? fallback;
+    }
+
+    function setLocalValue(key, value, uid = state.user?.uid) {
+        if (!uid || value === undefined || value === null) return;
+        localStorage.setItem(getLocalKey(key, uid), String(value));
+    }
+
+    function removeLocalValue(key, uid = state.user?.uid) {
+        if (!uid) return;
+        localStorage.removeItem(getLocalKey(key, uid));
+    }
+
+    function getLocalKey(key, uid) {
+        return `writer:${uid}:${key}`;
     }
 
     function seedSavedCounts(type, items) {
