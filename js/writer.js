@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         generatingWeeklyId: null,
         generatedExerciseIds: new Set(),
         generatedWeeklyIds: new Set(),
-        promptIndex: 0,
+        lastPromptIndex: -1,
         tagValues: {
             draft: [],
             material: [],
@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (compareWeekIds(state.selectedWeekStartId, currentWeekId) > 0) {
             state.selectedWeekStartId = currentWeekId;
         }
-        state.promptIndex = Number(getLocalValue('writerPromptIndex', '0', user.uid) || '0') || 0;
+        state.lastPromptIndex = -1;
         state.weekPickerOpen = false;
     }
 
@@ -1340,13 +1340,22 @@ document.addEventListener('DOMContentLoaded', () => {
     async function inspireExercise() {
         const exercise = getActiveExercise();
         if (!exercise) return;
-        const prompt = PROMPT_BANK[state.promptIndex % PROMPT_BANK.length];
-        state.promptIndex += 1;
-        setLocalValue('writerPromptIndex', String(state.promptIndex));
+        const prompt = getRandomPrompt();
         await addTextTaxonomy('exerciseFocuses', prompt.focus);
         setTextCategoryValue('exercise', prompt.focus);
         els.exercisePrompt.value = prompt.prompt;
         await saveExercise();
+    }
+
+    function getRandomPrompt() {
+        if (!PROMPT_BANK.length) return { focus: '', prompt: '' };
+        if (PROMPT_BANK.length === 1) return PROMPT_BANK[0];
+        let index = Math.floor(Math.random() * PROMPT_BANK.length);
+        if (index === state.lastPromptIndex) {
+            index = (index + 1 + Math.floor(Math.random() * (PROMPT_BANK.length - 1))) % PROMPT_BANK.length;
+        }
+        state.lastPromptIndex = index;
+        return PROMPT_BANK[index];
     }
 
     function scheduleExerciseSave() {
