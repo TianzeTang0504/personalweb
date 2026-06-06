@@ -1,3 +1,19 @@
+@font-face {
+    font-family: "Alibaba PuHuiTi 3.0";
+    src: url("../assets/fonts/AlibabaPuHuiTi-3-55-Regular.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Alibaba PuHuiTi 3.0";
+    src: url("../assets/fonts/AlibabaPuHuiTi-3-65-Medium.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
 :root {
     color-scheme: light;
     --page: #f6efe4;
@@ -34,7 +50,7 @@ body {
         linear-gradient(180deg, rgba(223, 210, 192, 0.2) 1px, transparent 1px),
         var(--page);
     background-size: 72px 72px, 72px 72px, auto;
-    font-family: ui-serif, Georgia, "Times New Roman", "Noto Serif SC", serif;
+    font-family: "Alibaba PuHuiTi 3.0", "Alibaba PuHuiTi", "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -110,6 +126,7 @@ button:disabled {
 .empty-state h3 {
     margin: 0;
     letter-spacing: 0;
+    font-weight: 500;
 }
 
 .auth-panel h1 {
@@ -474,7 +491,7 @@ textarea:focus {
 .title-input {
     min-height: 48px;
     font-size: 1.35rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .tag-input {
@@ -649,7 +666,7 @@ textarea:focus {
     justify-content: space-between;
     gap: 12px;
     color: var(--ink);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .ai-result-head small {
@@ -968,7 +985,7 @@ textarea:focus {
     color: var(--ink);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 1.9rem;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .daily-bars {
@@ -1049,6 +1066,7 @@ textarea:focus {
 .taxonomy-panel-head h2 {
     margin: 0;
     font-size: 1.25rem;
+    font-weight: 500;
 }
 
 .taxonomy-list {
@@ -1142,6 +1160,7 @@ textarea:focus {
 .app-dialog-panel h2 {
     margin: 0;
     font-size: 1.28rem;
+    font-weight: 500;
 }
 
 .app-dialog-message {
