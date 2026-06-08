@@ -1,154 +1,189 @@
-# Personal Project Center & AI Portfolio
+# Personal Web Command Center
 
-A "Geek-style" personal website featuring a high-precision Task/Schedule Manager (Command Center) and an AI-powered portfolio/blog system. Built with **HTML/JS (Vanilla)** and **Firebase**.
+A personal static website and private-tool workspace built with vanilla HTML/CSS/JS, Firebase Auth, Firestore, Firebase Storage, and Cloud Functions.
 
-## Features
+The public site lives in `index.html`. Private tools live as standalone pages and use the same multi-user pattern: users sign in with Firebase Auth, and each user's data is stored under `users/{uid}/...`.
 
-- **Cyberpunk/Geek UI**: Glassmorphism, terminal aesthetics, and responsive animations.
-- **Admin Command Center**:
-  - **Project Management**: Track projects with start/end dates and subtask sequences.
-  - **Task & Event Tracking**: Urgent items highlight automatically.
-  - **Secure Vault**: Memo/Note storage.
-- **Authentication**: Fully integrated Email/Password login with "Forgot Password" flow.
-- **AI Intelligence Reports (Cloud Functions)**:
-  - Automatically generates a daily briefing summarizing your tasks and schedules.
-  - Powered by **Google Gemini API**.
-  - **Customizable Schedule**: Users can set their preferred delivery time (hour) and Timezone.
-  - Sent directly to your email via Gmail SMTP.
-- **Writing Practice Space (`writer.html`)**:
-  - A light, private writing workspace for drafts, scene practice, materials, reading breakdowns, and weekly reviews.
-  - Uses Firebase Auth and stores data under `users/{uid}/...` private subcollections.
-  - Google sign-in supports separate personal workspaces for each user account.
-  - Weekly word stats are net counts: deleting or shrinking drafts/exercises deducts their contribution.
-  - Includes OpenAI-powered writing coaching for one-time scene evaluations and one-time weekly insights.
+## Current Features
 
----
+- Public portfolio/blog homepage (`index.html`)
+  - Geek-style personal site with projects, blog/content modules, contact links, custom cursor, and audio/background effects.
+- Admin command center (`admin_portal.html`)
+  - Project, task, event, and memo management.
+  - Uses Firebase Auth and Firestore private user data.
+  - Legacy Gemini/Gmail daily report code still exists in Cloud Functions, but the scheduled report currently returns early and is disabled.
+- Writing practice room (`writer.html`)
+  - Private multi-user workspace for drafts, scene exercises, materials, reading breakdowns, weekly reviews, and writing stats.
+  - Google sign-in plus email/password fallback.
+  - Stores data under `users/{uid}/writingDrafts`, `writingExercises`, `writingMaterials`, `readingBreakdowns`, `writingWeeklyReviews`, `writingStats`, and `writingTaxonomy`.
+  - OpenAI-powered structured feedback for one-time scene evaluations and completed weekly insights.
+- Food Lab calorie tracker (`calorie.html`)
+  - Private multi-user weight-gain tracker for daily meals, food amounts, nutrition-label overrides, body logs, targets, and trend charts.
+  - Google sign-in plus email/password fallback, matching the writing room's auth behavior.
+  - Stores data under `users/{uid}/calorieSettings`, `calorieDays`, and `bodyLogs`.
+  - OpenAI-powered structured calorie/macronutrient estimates through a callable Cloud Function.
+  - No image input: estimates are based on food names, amounts, units, raw/cooked/packaged state, notes, and optional nutrition labels.
 
-## Replication & Setup Guide
+## Tech Stack
 
-If you wish to fork and deploy this system for yourself, follow these steps.
+- Frontend: vanilla HTML, CSS, and JavaScript
+- Backend: Firebase Cloud Functions v2
+- Auth: Firebase Authentication
+- Database: Cloud Firestore
+- Storage: Firebase Storage for star journal photos only
+- AI:
+  - OpenAI Responses API for writing feedback and calorie estimates
+  - Google Gemini API for legacy admin daily report code
+- Email: Nodemailer/Gmail SMTP for legacy daily report code
+
+## Setup
 
 ### 1. Prerequisites
-- **Node.js** (v18+ recommended)
-- **Firebase CLI** (`npm install -g firebase-tools`)
-- A **Google Cloud / Firebase** Account
 
-### 2. Firebase Project Setup
-1. Go to the [Firebase Console](https://console.firebase.google.com/).
-2. Create a new project.
-3. **Upgrade to Blaze Plan** (Pay-as-you-go): This is **REQUIRED** for Cloud Functions to make external network requests (to Gmail SMTP and Gemini API).
-   - *Note: The free usage tier is usually sufficient for personal use, but the plan upgrade is needed to unlock the network firewall.*
-4. **Enable Services**:
-   - **Authentication**: Enable **Email/Password**.
-   - **Firestore Database**: Create a database (Production mode).
-   - **Cloud Functions**: (Will be enabled upon deploy).
+- Node.js compatible with the Cloud Functions engine in `functions/package.json`
+- Firebase CLI
+- A Firebase project with Blaze enabled if you deploy Cloud Functions that call external APIs
 
-### 3. Client-Side Configuration
-You need to connect the frontend to your new Firebase project.
+### 2. Firebase Services
 
-1. In Firebase Console, go to *Project Settings > General*.
-2. Register a **Web app**.
-3. Copy the `firebaseConfig` object (keys, IDs, etc.).
-4. Open the following files in your code editor and find the `firebaseConfig` section to replace:
-   - `admin_portal.html`
-   - `index.html` (if applicable)
-   - `js/schedule.js` (Verify if config is initialized here)
+Enable:
 
-### 4. Backend Configuration (Environment)
-The AI reporting features live in the `functions/` directory.
+- Authentication
+  - Email/Password for fallback login
+  - Google provider for the private tools
+- Firestore Database
+- Cloud Functions
+- Firebase Storage if using star journal photo uploads
 
-1. Navigate to the functions folder:
-   ```bash
-   cd functions
-   npm install
-   ```
-2. Create your environment file:
-   ```bash
-   cp .env.example .env
-   ```
-3. Edit `.env` and fill in your secrets:
-   - `GEMINI_API_KEY`: Get your free API key from [Google AI Studio](https://aistudio.google.com/).
-   - `OPENAI_API_KEY`: Your OpenAI API key for the `writer.html` AI coaching features.
-   - `OPENAI_WRITING_MODEL`: Optional. Defaults to `gpt-5.5`.
-   - `GMAIL_USER`: Your full Gmail address (e.g., `youremail@gmail.com`). This is the account that will *send* the emails.
-   - `GMAIL_PASS`: Your Google **App Password**.
-     - *How to get this*: Go to [Google Account Security](https://myaccount.google.com/security) > 2-Step Verification > App passwords. Create one named "Firebase" and copy the 16-character code. **Do not use your login password.**
+Firestore rules already protect private user data:
 
-Example:
-```env
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
-OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
-OPENAI_WRITING_MODEL=gpt-5.5
-GMAIL_USER=your_email@gmail.com
-GMAIL_PASS=your_16_digit_app_password_here
+```text
+users/{uid}/...
 ```
 
-`functions/.env` is for local development and is ignored by Git. Do not commit real API keys. For production, configure the same environment variables or Firebase secrets before deploying Cloud Functions.
+Only the owner user or an admin user can read/write that user's private subcollections.
 
-### Writing AI Features
+### 3. Frontend Firebase Config
 
-The writing workspace is available directly at:
+The shared Firebase web config is in:
+
+```text
+js/firebase-config.js
+```
+
+The private pages load that file directly. If you fork the project, replace the config object with your Firebase web app config.
+
+### 4. Cloud Function Environment
+
+Create `functions/.env` for local development. Do not commit real secrets.
+
+```env
+OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+OPENAI_WRITING_MODEL=gpt-5.5
+OPENAI_CALORIE_MODEL=gpt-5.5
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GMAIL_USER=your_email@gmail.com
+GMAIL_PASS=your_google_app_password
+```
+
+Notes:
+
+- `OPENAI_API_KEY` is required for writing AI and calorie AI.
+- `OPENAI_WRITING_MODEL` is optional. It defaults to `gpt-5.5`.
+- `OPENAI_CALORIE_MODEL` is optional. It falls back to `OPENAI_WRITING_MODEL`.
+- `GEMINI_API_KEY`, `GMAIL_USER`, and `GMAIL_PASS` are only needed for the legacy admin daily report code.
+- In production, configure the same values as Firebase Functions environment variables or secrets before deploying.
+
+## Private Tool Pages
+
+### Writing Room
+
+Open:
+
 ```text
 writer.html
 ```
 
-After login, writing data is stored privately in Firestore:
-
-- `users/{uid}/writingDrafts`
-- `users/{uid}/writingExercises`
-- `users/{uid}/writingMaterials`
-- `users/{uid}/readingBreakdowns`
-- `users/{uid}/writingWeeklyReviews`
-- `users/{uid}/writingStats`
-
-OpenAI coaching is implemented in Cloud Functions:
+Cloud Functions:
 
 - `generateWritingExerciseEvaluation({ exerciseId })`
-  - Reads one scene practice entry.
+  - Reads one scene exercise from the signed-in user's `writingExercises`.
   - Writes `aiEvaluation` back to that exercise.
   - Refuses to overwrite an existing evaluation.
 - `generateWritingWeeklyInsight({ weekId })`
-  - Reads the selected week's stats, drafts, exercises, materials, reading notes, and previous weekly summary.
-  - Writes `aiInsight` and `aiSummary` back to that weekly review.
-  - Refuses to overwrite an existing weekly AI insight.
-  - Only allows completed weeks; the current week cannot generate a formal AI insight until the next week begins.
+  - Reads the selected completed week's writing data.
+  - Writes `aiInsight` and `aiSummary` to `writingWeeklyReviews/{weekId}`.
+  - Refuses to generate for the current week or overwrite an existing insight.
 
-The prompt is designed as a writing coach: it gives feedback only, does not ghostwrite, does not rewrite the user's text, and returns structured JSON for stable display. For normal personal usage with a weekly review plus several scene evaluations, expected cost is roughly under USD $1/month, depending on model pricing and usage.
+### Food Lab
 
-### 5. Deploy
-1. Login to Firebase CLI:
-   ```bash
-   firebase login
-   ```
-2. Initialize project (select your newly created project):
-   ```bash
-   firebase use --add
-   ```
-3. Deploy everything (Frontend + Backend):
-   ```bash
-   firebase deploy
-   ```
+Open:
 
-### 6. Updating Cloud Functions
-If you make subsequent changes to the backend code in the `functions/` directory (e.g., editing `functions/index.js`), you **must** redeploy the functions for the changes to take effect on the server. You do not need to deploy the entire project every time.
+```text
+calorie.html
+```
 
-To **only** deploy Cloud Functions:
+Firestore paths:
+
+- `users/{uid}/calorieSettings/main`
+- `users/{uid}/calorieDays/{YYYY-MM-DD}`
+- `users/{uid}/bodyLogs/{YYYY-MM-DD}`
+
+Cloud Function:
+
+- `estimateCalorieDay({ dateId })`
+  - Reads one day from the signed-in user's `calorieDays`.
+  - Validates food names and amounts.
+  - Computes rows with complete per-100g nutrition labels deterministically.
+  - Sends only the remaining rows to OpenAI for structured range estimates.
+  - Writes `aiEstimate` and `inputHash` back to that day.
+
+Default Food Lab targets are:
+
+```text
+3000 kcal
+125 g protein
+425 g carbs
+90 g fat
+```
+
+Users can edit targets in the page. The app treats AI estimates as stale when foods change after the last estimate.
+
+## Development
+
+Install functions dependencies:
+
+```bash
+cd functions
+npm install
+```
+
+Useful checks:
+
+```bash
+node --check js/writer.js
+node --check js/calorie.js
+node --check functions/index.js
+```
+
+Deploy all Firebase resources:
+
+```bash
+firebase deploy
+```
+
+Deploy only Cloud Functions after backend changes:
+
 ```bash
 firebase deploy --only functions
 ```
 
-*(Note: If you only modified formatting, logic, or text inside `index.js`, this command is sufficient. If you installed new npm packages, the deployment will automatically handle uploading the dependency requirements.)*
+Static frontend changes normally require deploying hosting/static files as configured for your Firebase project.
 
----
+## Notes For Maintenance
 
-## 🛠 Usage Notes
-
-- **Initial Access**: Open your deployed `admin_portal.html` URL.
-- **Registration**: Use the "Initial User Registration" or "Register" button to create your account.
-- **Email Verification**: You cannot access the dashboard until you verify your email (click the link sent by Firebase).
-- **Settings**: Once logged in, click the **Gear Icon** to configure:
-  - **Daily Report**: Enable/Disable
-  - **Time & Timezone**: Set when you want to receive your AI briefing.
-
-## 📄 License
-[MIT](LICENSE)
+- Do not expose OpenAI or Gemini API keys in frontend code.
+- Keep AI calls behind callable Cloud Functions.
+- Keep new private tool data under `users/{uid}/...` so existing Firestore rules protect it.
+- If you add or rename private tool pages, update this README and `AGENTS.md`.
+- The repository currently does not include a license file. Add one before publishing or distributing beyond personal use.

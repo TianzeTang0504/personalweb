@@ -30,7 +30,9 @@ const getAIInstance = () => {
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_PASS = process.env.GMAIL_PASS;
 const OPENAI_MODEL = process.env.OPENAI_WRITING_MODEL || "gpt-5.5";
+const OPENAI_CALORIE_MODEL = process.env.OPENAI_CALORIE_MODEL || OPENAI_MODEL;
 const WRITING_PROMPT_VERSION = "writing-coach-v1";
+const CALORIE_PROMPT_VERSION = "calorie-estimator-v1";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
 const WRITING_COACH_INSTRUCTIONS = `
@@ -43,6 +45,19 @@ const WRITING_COACH_INSTRUCTIONS = `
 3. 关注小说训练：人物欲望、冲突、场景推进、对白、节奏、氛围、转折。
 4. 引用用户文本只能使用很短摘录。
 5. 输出必须严格符合 JSON Schema，不要输出 Markdown。
+`;
+
+const CALORIE_ESTIMATOR_INSTRUCTIONS = `
+你是一个谨慎的营养估算助手，服务于个人增重记录。
+你只根据用户给出的原料、重量、单位、生熟状态、品牌备注和可选营养标签估算热量与三大营养素。
+
+原则：
+1. 不处理图片，不假装能从菜名精确知道热量。
+2. 有明确营养标签并可按重量换算的项目由系统确定性计算，你不要重新估算这些项目。
+3. 对缺少品牌、做法或净含量的信息，给出合理范围而不是单点值。
+4. 对单位为“份、碗、杯、袋、盒”等模糊量的项目，必须在 basis 或 missingInfo 中说明换算假设。
+5. 不给医疗建议，不评价健康风险，只做记录估算。
+6. 输出必须严格符合 JSON Schema，不要输出 Markdown。
 `;
 
 const EXERCISE_EVALUATION_SCHEMA = {
@@ -163,10 +178,75 @@ const WEEKLY_INSIGHT_SCHEMA = {
     }
 };
 
+const NUTRIENT_RANGE_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+    required: ["low", "mid", "high"],
+    properties: {
+        low: { type: "number" },
+        mid: { type: "number" },
+        high: { type: "number" }
+    }
+};
+
+const CALORIE_ESTIMATE_SCHEMA = {
+    type: "object",
+    additionalProperties: false,
+    required: [
+        "items",
+        "assumptions",
+        "warnings",
+        "missingInfo",
+        "confidence"
+    ],
+    properties: {
+        items: {
+            type: "array",
+            items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                    "ingredientId",
+                    "name",
+                    "kcal",
+                    "protein",
+                    "carbs",
+                    "fat",
+                    "basis",
+                    "confidence"
+                ],
+                properties: {
+                    ingredientId: { type: "string" },
+                    name: { type: "string" },
+                    kcal: NUTRIENT_RANGE_SCHEMA,
+                    protein: NUTRIENT_RANGE_SCHEMA,
+                    carbs: NUTRIENT_RANGE_SCHEMA,
+                    fat: NUTRIENT_RANGE_SCHEMA,
+                    basis: { type: "string" },
+                    confidence: { type: "string" }
+                }
+            }
+        },
+        assumptions: {
+            type: "array",
+            items: { type: "string" }
+        },
+        warnings: {
+            type: "array",
+            items: { type: "string" }
+        },
+        missingInfo: {
+            type: "array",
+            items: { type: "string" }
+        },
+        confidence: { type: "string" }
+    }
+};
+
 function assertAuthedUid(request) {
     const uid = request.auth?.uid;
     if (!uid) {
-        throw new HttpsError("unauthenticated", "请先登录写作空间。");
+        throw new HttpsError("unauthenticated", "请先登录。");
     }
     return uid;
 }
@@ -302,7 +382,14 @@ function parseStructuredJson(text) {
     return JSON.parse(clean);
 }
 
-async function createOpenAIJsonResponse({ input, schema, schemaName, maxOutputTokens }) {
+async function createOpenAIJsonResponse({
+    input,
+    schema,
+    schemaName,
+    maxOutputTokens,
+    instructions = WRITING_COACH_INSTRUCTIONS,
+    model = OPENAI_MODEL
+}) {
     const response = await fetch(OPENAI_RESPONSES_URL, {
         method: "POST",
         headers: {
@@ -310,8 +397,8 @@ async function createOpenAIJsonResponse({ input, schema, schemaName, maxOutputTo
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: OPENAI_MODEL,
-            instructions: WRITING_COACH_INSTRUCTIONS,
+            model,
+            instructions,
             input,
             reasoning: { effort: "medium" },
             max_output_tokens: maxOutputTokens,
@@ -613,6 +700,315 @@ function normalizeWeeklyInsight(raw, responseMeta) {
         usage: responseMeta.usage || null
     };
 }
+
+function cleanDateId(value, fieldName = "dateId") {
+    const raw = String(value || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        throw new HttpsError("invalid-argument", `${fieldName} 无效。`);
+    }
+    return raw;
+}
+
+function cleanCalorieId(value, fallback = "") {
+    const clean = String(value || fallback || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 80);
+    return clean || fallback;
+}
+
+function normalizeCalorieLabel(label = {}) {
+    const result = {};
+    ["kcal", "protein", "carbs", "fat"].forEach((key) => {
+        const value = Number(label?.[key]);
+        if (Number.isFinite(value) && value >= 0) {
+            result[key] = value;
+        }
+    });
+    return result;
+}
+
+function normalizeCalorieMeals(meals) {
+    return (Array.isArray(meals) ? meals : [])
+        .map((meal, index) => ({
+            id: cleanCalorieId(meal?.id, `meal_${index}`),
+            name: limitString(meal?.name || `餐次 ${index + 1}`, 40),
+            order: Number.isFinite(Number(meal?.order)) ? Number(meal.order) : index
+        }))
+        .sort((a, b) => a.order - b.order);
+}
+
+function normalizeCalorieIngredients(ingredients) {
+    return (Array.isArray(ingredients) ? ingredients : [])
+        .map((item, index) => ({
+            id: cleanCalorieId(item?.id, `ingredient_${index}`),
+            mealId: cleanCalorieId(item?.mealId, ""),
+            name: limitString(item?.name || "", 80),
+            amount: Number.isFinite(Number(item?.amount)) ? Number(item.amount) : null,
+            unit: limitString(item?.unit || "g", 20),
+            state: limitString(item?.state || "unknown", 30),
+            note: limitString(item?.note || "", 180),
+            labelPer100g: normalizeCalorieLabel(item?.labelPer100g),
+            order: Number.isFinite(Number(item?.order)) ? Number(item.order) : index
+        }))
+        .sort((a, b) => a.order - b.order);
+}
+
+function makeCalorieInputHash(day) {
+    const meals = normalizeCalorieMeals(day.meals).map((meal) => ({
+        id: meal.id,
+        name: meal.name,
+        order: meal.order
+    }));
+    const ingredients = normalizeCalorieIngredients(day.ingredients).map((item) => ({
+        id: item.id,
+        mealId: item.mealId,
+        name: item.name,
+        amount: item.amount,
+        unit: item.unit,
+        state: item.state,
+        note: item.note,
+        labelPer100g: item.labelPer100g,
+        order: item.order
+    }));
+    return simpleHash(JSON.stringify({
+        meals,
+        ingredients,
+        note: String(day.note || "")
+    }));
+}
+
+function simpleHash(value) {
+    let hash = 5381;
+    for (let i = 0; i < value.length; i += 1) {
+        hash = ((hash << 5) + hash) ^ value.charCodeAt(i);
+    }
+    return `h${(hash >>> 0).toString(36)}`;
+}
+
+function makeNutrientRange(value) {
+    const clean = Math.max(0, Number(value || 0));
+    return { low: clean, mid: clean, high: clean };
+}
+
+function makeEmptyCalorieTotals() {
+    return {
+        kcal: makeNutrientRange(0),
+        protein: makeNutrientRange(0),
+        carbs: makeNutrientRange(0),
+        fat: makeNutrientRange(0)
+    };
+}
+
+function normalizeNutrientRange(value = {}) {
+    if (typeof value === "number") return makeNutrientRange(value);
+    const values = [
+        Number(value.low || 0),
+        Number(value.mid || 0),
+        Number(value.high || 0)
+    ].map((number) => (Number.isFinite(number) ? Math.max(0, number) : 0)).sort((a, b) => a - b);
+    return {
+        low: values[0],
+        mid: values[1],
+        high: values[2]
+    };
+}
+
+function addCalorieTotals(target, addition) {
+    ["kcal", "protein", "carbs", "fat"].forEach((key) => {
+        const range = normalizeNutrientRange(addition?.[key]);
+        target[key].low += range.low;
+        target[key].mid += range.mid;
+        target[key].high += range.high;
+    });
+}
+
+function getDeterministicNutrition(item) {
+    const label = item.labelPer100g || {};
+    const hasFullLabel = ["kcal", "protein", "carbs", "fat"].every((key) => Number.isFinite(Number(label[key])));
+    const canScaleBy100 = Number(item.amount) > 0 && ["g", "ml"].includes(item.unit);
+    if (!hasFullLabel || !canScaleBy100) return null;
+
+    const scale = Number(item.amount) / 100;
+    return {
+        ingredientId: item.id,
+        name: item.name,
+        kcal: makeNutrientRange(Number(label.kcal) * scale),
+        protein: makeNutrientRange(Number(label.protein) * scale),
+        carbs: makeNutrientRange(Number(label.carbs) * scale),
+        fat: makeNutrientRange(Number(label.fat) * scale),
+        basis: `按营养标签每 100${item.unit} 和 ${item.amount}${item.unit} 确定性换算。`,
+        confidence: "high",
+        source: "label"
+    };
+}
+
+function normalizeCalorieEstimateItem(raw, fallbackItem = null) {
+    return {
+        ingredientId: cleanCalorieId(raw?.ingredientId, fallbackItem?.id || ""),
+        name: limitString(raw?.name || fallbackItem?.name || "未命名原料", 80),
+        kcal: normalizeNutrientRange(raw?.kcal),
+        protein: normalizeNutrientRange(raw?.protein),
+        carbs: normalizeNutrientRange(raw?.carbs),
+        fat: normalizeNutrientRange(raw?.fat),
+        basis: limitString(raw?.basis || "", 260),
+        confidence: limitString(raw?.confidence || "medium", 40),
+        source: raw?.source || "ai"
+    };
+}
+
+function combineCalorieEstimate({ rawAi, deterministicItems, aiItems, responseMeta, inputHash }) {
+    const totals = makeEmptyCalorieTotals();
+    const ingredientEstimates = [];
+
+    deterministicItems.forEach((item) => {
+        const normalized = normalizeCalorieEstimateItem(item);
+        ingredientEstimates.push(normalized);
+        addCalorieTotals(totals, normalized);
+    });
+
+    const aiItemsById = new Map((Array.isArray(rawAi?.items) ? rawAi.items : []).map((item) => [
+        cleanCalorieId(item?.ingredientId, ""),
+        item
+    ]));
+
+    aiItems.forEach((sourceItem) => {
+        const raw = aiItemsById.get(sourceItem.id);
+        if (!raw) {
+            ingredientEstimates.push({
+                ingredientId: sourceItem.id,
+                name: sourceItem.name,
+                kcal: makeNutrientRange(0),
+                protein: makeNutrientRange(0),
+                carbs: makeNutrientRange(0),
+                fat: makeNutrientRange(0),
+                basis: "AI 未返回该原料估算。",
+                confidence: "low",
+                source: "missing"
+            });
+            return;
+        }
+        const normalized = normalizeCalorieEstimateItem(raw, sourceItem);
+        ingredientEstimates.push(normalized);
+        addCalorieTotals(totals, normalized);
+    });
+
+    return {
+        totals,
+        ingredientEstimates,
+        assumptions: limitStringArray(rawAi?.assumptions, 8, 220),
+        warnings: limitStringArray(rawAi?.warnings, 8, 220),
+        missingInfo: limitStringArray(rawAi?.missingInfo, 8, 220),
+        confidence: limitString(rawAi?.confidence || "medium", 40),
+        inputHash,
+        generatedAt: admin.firestore.Timestamp.now(),
+        model: OPENAI_CALORIE_MODEL,
+        promptVersion: CALORIE_PROMPT_VERSION,
+        responseId: responseMeta?.responseId || "",
+        usage: responseMeta?.usage || null
+    };
+}
+
+exports.estimateCalorieDay = onCall(async (request) => {
+    const uid = assertAuthedUid(request);
+    const dateId = cleanDateId(request.data?.dateId);
+    const db = admin.firestore();
+    const dayRef = db.collection("users").doc(uid).collection("calorieDays").doc(dateId);
+    const daySnap = await dayRef.get();
+
+    if (!daySnap.exists) {
+        throw new HttpsError("not-found", "找不到这一天的热量记录。");
+    }
+
+    const day = { id: daySnap.id, ...daySnap.data() };
+    const meals = normalizeCalorieMeals(day.meals);
+    const mealNameById = new Map(meals.map((meal) => [meal.id, meal.name]));
+    const ingredients = normalizeCalorieIngredients(day.ingredients)
+        .filter((item) => item.name || item.amount || item.note || Object.keys(item.labelPer100g || {}).length);
+
+    if (!ingredients.length) {
+        throw new HttpsError("failed-precondition", "这一天还没有可估算的原料。");
+    }
+
+    const namedIngredients = ingredients.filter((item) => item.name);
+    if (!namedIngredients.length) {
+        throw new HttpsError("failed-precondition", "请至少填写一条原料名称。");
+    }
+
+    const missingAmount = namedIngredients.find((item) => !(Number(item.amount) > 0));
+    if (missingAmount) {
+        throw new HttpsError("invalid-argument", `“${missingAmount.name}” 缺少数量，无法估算。`);
+    }
+
+    const inputHash = makeCalorieInputHash({
+        meals,
+        ingredients,
+        note: day.note || ""
+    });
+    const deterministicItems = [];
+    const aiItems = [];
+
+    namedIngredients.forEach((item) => {
+        const deterministic = getDeterministicNutrition(item);
+        if (deterministic) {
+            deterministicItems.push(deterministic);
+        } else {
+            aiItems.push({
+                id: item.id,
+                mealName: mealNameById.get(item.mealId) || "未分类",
+                name: item.name,
+                amount: item.amount,
+                unit: item.unit,
+                state: item.state,
+                note: item.note,
+                labelPer100g: item.labelPer100g
+            });
+        }
+    });
+
+    let responseMeta = { data: { items: [], assumptions: [], warnings: [], missingInfo: [], confidence: "high" } };
+    if (aiItems.length) {
+        const promptInput = {
+            task: "请只估算 estimateIngredients 中的原料热量与三大营养素范围。deterministicItems 已由系统根据营养标签换算，不要重复估算。",
+            dateId,
+            dayNote: truncateText(day.note, 800),
+            units: "metric",
+            deterministicItems: deterministicItems.map((item) => ({
+                ingredientId: item.ingredientId,
+                name: item.name,
+                kcal: item.kcal,
+                protein: item.protein,
+                carbs: item.carbs,
+                fat: item.fat,
+                basis: item.basis
+            })),
+            estimateIngredients: aiItems,
+            outputLanguage: "中文"
+        };
+
+        responseMeta = await createOpenAIJsonResponse({
+            input: JSON.stringify(promptInput, null, 2),
+            schema: CALORIE_ESTIMATE_SCHEMA,
+            schemaName: "calorie_day_estimate",
+            maxOutputTokens: 1800,
+            instructions: CALORIE_ESTIMATOR_INSTRUCTIONS,
+            model: OPENAI_CALORIE_MODEL
+        });
+    }
+
+    const aiEstimate = combineCalorieEstimate({
+        rawAi: responseMeta.data,
+        deterministicItems,
+        aiItems,
+        responseMeta,
+        inputHash
+    });
+
+    await dayRef.set({
+        inputHash,
+        aiEstimate,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return { aiEstimate, inputHash };
+});
 
 exports.generateWritingExerciseEvaluation = onCall(async (request) => {
     const uid = assertAuthedUid(request);

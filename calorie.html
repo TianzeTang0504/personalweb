@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#eef3f1">
+    <title>Food Lab | Tianze Tang</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="css/calorie.css?v=1.0.0" rel="stylesheet">
+</head>
+
+<body>
+    <div id="bootView" class="boot-view">
+        <div class="boot-mark"></div>
+        <p>正在连接热量记录...</p>
+    </div>
+
+    <section id="authView" class="auth-view hidden" aria-labelledby="authTitle">
+        <div class="auth-panel">
+            <a class="quiet-link" href="index.html">返回主页</a>
+            <div class="auth-kicker">Private Food Lab</div>
+            <h1 id="authTitle">增重实验台</h1>
+            <button id="googleSignInBtn" class="primary-btn full-width" type="button">使用 Google 登录</button>
+            <p class="auth-hint">每个 Google 账号会进入独立的私人记录空间。</p>
+            <details class="auth-fallback">
+                <summary>邮箱登录备用</summary>
+                <form id="authForm" class="auth-form">
+                    <label>
+                        <span>邮箱</span>
+                        <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com">
+                    </label>
+                    <label>
+                        <span>密码</span>
+                        <input id="authPassword" type="password" autocomplete="current-password" placeholder="访问密码">
+                    </label>
+                    <button id="emailSignInBtn" class="secondary-btn" type="submit">邮箱登录</button>
+                </form>
+                <div class="auth-actions">
+                    <button id="createAccountBtn" class="ghost-btn" type="button">创建邮箱账号</button>
+                    <button id="resetPasswordBtn" class="ghost-btn" type="button">重置密码</button>
+                </div>
+            </details>
+            <p id="authMessage" class="auth-message" role="status"></p>
+        </div>
+    </section>
+
+    <div id="appView" class="calorie-app hidden">
+        <header class="calorie-topbar">
+            <div class="brand-block">
+                <a class="quiet-link" href="index.html">Tianze Tang</a>
+                <h1>Food Lab</h1>
+            </div>
+            <div class="topbar-meta">
+                <span id="topDateLabel">今天</span>
+                <span id="topCalorieStatus">0 / 3000 kcal</span>
+                <span id="userEmail">未登录</span>
+                <button id="logoutBtn" class="icon-text-btn" type="button">退出</button>
+            </div>
+        </header>
+
+        <div class="calorie-shell">
+            <aside class="calorie-sidebar" aria-label="热量管理模块">
+                <nav id="calorieNav" class="calorie-nav">
+                    <button class="nav-tab active" data-view="today" type="button">
+                        <span>今日记录</span>
+                        <small id="todayNavBadge">0 kcal</small>
+                    </button>
+                    <button class="nav-tab" data-view="timeline" type="button">
+                        <span>历史时间轴</span>
+                        <small id="timelineNavBadge">14 天</small>
+                    </button>
+                    <button class="nav-tab" data-view="body" type="button">
+                        <span>身体指标</span>
+                        <small id="bodyNavBadge">-- kg</small>
+                    </button>
+                    <button class="nav-tab" data-view="settings" type="button">
+                        <span>目标设置</span>
+                        <small id="settingsNavBadge">3000</small>
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="calorie-main">
+                <section id="view-today" class="calorie-view active" aria-labelledby="todayTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Daily Intake</p>
+                            <h2 id="todayTitle">今日记录</h2>
+                        </div>
+                        <div class="date-tools">
+                            <button id="prevDateBtn" class="icon-btn" type="button" title="前一天"
+                                aria-label="前一天">‹</button>
+                            <input id="dateInput" class="date-input" type="date">
+                            <button id="todayBtn" class="secondary-btn compact" type="button">今天</button>
+                            <button id="nextDateBtn" class="icon-btn" type="button" title="后一天"
+                                aria-label="后一天">›</button>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-tile">
+                            <span>热量</span>
+                            <strong id="metricCalories">0</strong>
+                            <small id="metricCalorieDelta">差 3000 kcal</small>
+                        </div>
+                        <div class="metric-tile">
+                            <span>蛋白质</span>
+                            <strong id="metricProtein">0g</strong>
+                            <small id="proteinTargetLabel">目标未设</small>
+                        </div>
+                        <div class="metric-tile">
+                            <span>碳水</span>
+                            <strong id="metricCarbs">0g</strong>
+                            <small id="carbsTargetLabel">目标未设</small>
+                        </div>
+                        <div class="metric-tile">
+                            <span>脂肪</span>
+                            <strong id="metricFat">0g</strong>
+                            <small id="fatTargetLabel">目标未设</small>
+                        </div>
+                    </div>
+
+                    <div class="estimate-panel">
+                        <div>
+                            <p class="section-kicker">Estimate Report</p>
+                            <h3 id="estimateStatusTitle">尚未估算</h3>
+                        </div>
+                        <div class="estimate-actions">
+                            <span id="estimateFreshness" class="status-pill muted">未生成</span>
+                            <button id="estimateBtn" class="primary-btn compact" type="button">AI 估算</button>
+                        </div>
+                    </div>
+
+                    <div id="estimateResult" class="estimate-result hidden"></div>
+
+                    <div class="toolbar-row">
+                        <button id="addMealBtn" class="primary-btn compact" type="button">新增餐次</button>
+                        <span id="daySaveState" class="save-state">已保存</span>
+                    </div>
+
+                    <div id="mealList" class="meal-list"></div>
+
+                    <div class="note-panel">
+                        <label for="dayNote">日备注</label>
+                        <textarea id="dayNote" class="note-editor" spellcheck="true"
+                            placeholder="训练、胃口、聚餐、外食误差。"></textarea>
+                    </div>
+                </section>
+
+                <section id="view-timeline" class="calorie-view" aria-labelledby="timelineTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Timeline</p>
+                            <h2 id="timelineTitle">历史时间轴</h2>
+                        </div>
+                        <div class="segmented-control" id="rangeControl">
+                            <button class="segment active" data-range="14" type="button">14 天</button>
+                            <button class="segment" data-range="30" type="button">30 天</button>
+                            <button class="segment" data-range="60" type="button">60 天</button>
+                        </div>
+                    </div>
+                    <div id="nutritionChart" class="chart-panel" aria-label="营养趋势图"></div>
+                    <div id="historyList" class="history-list"></div>
+                </section>
+
+                <section id="view-body" class="calorie-view" aria-labelledby="bodyTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Body Log</p>
+                            <h2 id="bodyTitle">身体指标</h2>
+                        </div>
+                        <span id="bodySaveState" class="save-state">已保存</span>
+                    </div>
+                    <div class="body-form">
+                        <label>
+                            <span>日期</span>
+                            <input id="bodyDateInput" class="date-input" type="date">
+                        </label>
+                        <label>
+                            <span>体重 kg</span>
+                            <input id="weightInput" class="number-input" type="number" inputmode="decimal" min="30"
+                                max="200" step="0.1" placeholder="62.0">
+                        </label>
+                        <label>
+                            <span>体脂率 %</span>
+                            <input id="bodyFatInput" class="number-input" type="number" inputmode="decimal" min="3"
+                                max="60" step="0.1" placeholder="13.0">
+                        </label>
+                    </div>
+                    <div class="note-panel">
+                        <label for="bodyNote">身体备注</label>
+                        <textarea id="bodyNote" class="note-editor small" spellcheck="true"
+                            placeholder="测量时间、训练状态、睡眠。"></textarea>
+                    </div>
+                    <div id="bodyChart" class="chart-panel" aria-label="身体指标趋势图"></div>
+                    <div id="bodyHistoryList" class="history-list"></div>
+                </section>
+
+                <section id="view-settings" class="calorie-view" aria-labelledby="settingsTitle">
+                    <div class="view-head">
+                        <div>
+                            <p class="section-kicker">Targets</p>
+                            <h2 id="settingsTitle">目标设置</h2>
+                        </div>
+                        <span id="settingsSaveState" class="save-state">已保存</span>
+                    </div>
+                    <div class="settings-grid">
+                        <label>
+                            <span>每日热量目标 kcal</span>
+                            <input id="dailyCalorieTarget" class="number-input" type="number" inputmode="numeric"
+                                min="1000" max="7000" step="50">
+                        </label>
+                        <label>
+                            <span>蛋白质目标 g</span>
+                            <input id="proteinTarget" class="number-input" type="number" inputmode="numeric" min="0"
+                                max="400" step="5" placeholder="可空">
+                        </label>
+                        <label>
+                            <span>碳水目标 g</span>
+                            <input id="carbsTarget" class="number-input" type="number" inputmode="numeric" min="0"
+                                max="900" step="10" placeholder="可空">
+                        </label>
+                        <label>
+                            <span>脂肪目标 g</span>
+                            <input id="fatTarget" class="number-input" type="number" inputmode="numeric" min="0"
+                                max="300" step="5" placeholder="可空">
+                        </label>
+                    </div>
+                    <div class="settings-note">
+                        <span>单位</span>
+                        <strong>metric</strong>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="appDialog" class="app-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle">
+        <div class="app-dialog-panel">
+            <p id="appDialogKicker" class="section-kicker">Notice</p>
+            <h2 id="appDialogTitle">提示</h2>
+            <p id="appDialogMessage" class="app-dialog-message"></p>
+            <div class="app-dialog-actions">
+                <button id="appDialogCancelBtn" class="ghost-btn compact" type="button">取消</button>
+                <button id="appDialogConfirmBtn" class="primary-btn compact" type="button">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+    <script src="js/firebase-config.js?v=1.5.1"></script>
+    <script src="js/calorie.js?v=1.0.0"></script>
+</body>
+
+</html>
