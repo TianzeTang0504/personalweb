@@ -32,6 +32,7 @@ Instructions for AI coding agents working in this repository.
 - Calorie AI function:
   - `estimateCalorieDay`
 - Food Lab estimates are food-name/amount based. Do not add image-based calorie estimation unless explicitly requested.
+- Food entry should stay lightweight: do not add manual protein/carbs/fat inputs unless explicitly requested.
 - Calorie estimates should return structured JSON ranges and include assumptions, warnings, and missing information.
 
 ## Frontend Style

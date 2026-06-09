@@ -18,11 +18,11 @@ The public site lives in `index.html`. Private tools live as standalone pages an
   - Stores data under `users/{uid}/writingDrafts`, `writingExercises`, `writingMaterials`, `readingBreakdowns`, `writingWeeklyReviews`, `writingStats`, and `writingTaxonomy`.
   - OpenAI-powered structured feedback for one-time scene evaluations and completed weekly insights.
 - Food Lab calorie tracker (`calorie.html`)
-  - Private multi-user weight-gain tracker for daily meals, food amounts, nutrition-label overrides, body logs, targets, and trend charts.
+  - Private multi-user weight-gain tracker for daily meals, food amounts, optional kcal/100g overrides, body logs, targets, and trend charts.
   - Google sign-in plus email/password fallback, matching the writing room's auth behavior.
   - Stores data under `users/{uid}/calorieSettings`, `calorieDays`, and `bodyLogs`.
   - OpenAI-powered structured calorie/macronutrient estimates through a callable Cloud Function.
-  - No image input: estimates are based on food names, amounts, units, raw/cooked/packaged state, notes, and optional nutrition labels.
+  - No image input: estimates are based on food names, amounts, units, raw/cooked/packaged state, notes, and optional kcal/100g labels.
 
 ## Tech Stack
 
@@ -134,8 +134,8 @@ Cloud Function:
 - `estimateCalorieDay({ dateId })`
   - Reads one day from the signed-in user's `calorieDays`.
   - Validates food names and amounts.
-  - Computes rows with complete per-100g nutrition labels deterministically.
-  - Sends only the remaining rows to OpenAI for structured range estimates.
+  - Uses kcal/100g entries and notes as strong evidence.
+  - Sends food rows to OpenAI for structured calorie and macronutrient range estimates.
   - Writes `aiEstimate` and `inputHash` back to that day.
 
 Default Food Lab targets are:

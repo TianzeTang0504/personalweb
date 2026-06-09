@@ -697,7 +697,7 @@ textarea:focus {
 .ingredient-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1180px;
+    min-width: 820px;
 }
 
 .estimate-table th,
@@ -1412,22 +1412,10 @@ textarea:focus {
     }
 
     .ingredient-table td:nth-child(7)::before {
-        content: "P";
-    }
-
-    .ingredient-table td:nth-child(8)::before {
-        content: "C";
-    }
-
-    .ingredient-table td:nth-child(9)::before {
-        content: "F";
-    }
-
-    .ingredient-table td:nth-child(10)::before {
         content: "";
     }
 
-    .ingredient-table td:nth-child(10) {
+    .ingredient-table td:nth-child(7) {
         grid-template-columns: 1fr;
     }
 

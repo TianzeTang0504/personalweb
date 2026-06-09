@@ -410,9 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th>状态</th>
                             <th>备注</th>
                             <th>kcal/100g</th>
-                            <th>P</th>
-                            <th>C</th>
-                            <th>F</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -457,18 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="ingredient-label-cell">
                     <input class="number-input mini-input" data-day-field data-label-field="kcal" type="number"
                         inputmode="decimal" min="0" step="0.1" value="${escapeAttr(numberToInput(label.kcal))}">
-                </td>
-                <td class="ingredient-label-cell">
-                    <input class="number-input mini-input" data-day-field data-label-field="protein" type="number"
-                        inputmode="decimal" min="0" step="0.1" value="${escapeAttr(numberToInput(label.protein))}">
-                </td>
-                <td class="ingredient-label-cell">
-                    <input class="number-input mini-input" data-day-field data-label-field="carbs" type="number"
-                        inputmode="decimal" min="0" step="0.1" value="${escapeAttr(numberToInput(label.carbs))}">
-                </td>
-                <td class="ingredient-label-cell">
-                    <input class="number-input mini-input" data-day-field data-label-field="fat" type="number"
-                        inputmode="decimal" min="0" step="0.1" value="${escapeAttr(numberToInput(label.fat))}">
                 </td>
                 <td class="ingredient-actions-cell">
                     <button class="danger-btn compact" data-delete-ingredient="${escapeAttr(item.id)}" type="button">删除</button>

@@ -49,15 +49,16 @@ const WRITING_COACH_INSTRUCTIONS = `
 
 const CALORIE_ESTIMATOR_INSTRUCTIONS = `
 你是一个谨慎的营养估算助手，服务于个人增重记录。
-你只根据用户给出的原料、重量、单位、生熟状态、品牌备注和可选营养标签估算热量与三大营养素。
+你只根据用户给出的食物名称、重量、单位、生熟状态、品牌备注和可选每 100g 热量估算热量与三大营养素。
 
 原则：
 1. 不处理图片，不假装能从菜名精确知道热量。
-2. 有明确营养标签并可按重量换算的项目由系统确定性计算，你不要重新估算这些项目。
-3. 对缺少品牌、做法或净含量的信息，给出合理范围而不是单点值。
-4. 对单位为“份、碗、杯、袋、盒”等模糊量的项目，必须在 basis 或 missingInfo 中说明换算假设。
-5. 不给医疗建议，不评价健康风险，只做记录估算。
-6. 输出必须严格符合 JSON Schema，不要输出 Markdown。
+2. 如果输入提供了 kcal/100g 或备注中写明整份热量，把它当作很强的热量依据；蛋白质、碳水和脂肪仍需根据食物类型估算。
+3. 有完整营养标签并可按重量换算的项目可能由系统确定性计算，你不要重新估算这些项目。
+4. 对缺少品牌、做法或净含量的信息，给出合理范围而不是单点值。
+5. 对单位为“份、碗、杯、袋、盒”等模糊量的项目，必须在 basis 或 missingInfo 中说明换算假设。
+6. 不给医疗建议，不评价健康风险，只做记录估算。
+7. 输出必须严格符合 JSON Schema，不要输出 Markdown。
 `;
 
 const EXERCISE_EVALUATION_SCHEMA = {
@@ -966,7 +967,7 @@ exports.estimateCalorieDay = onCall(async (request) => {
     let responseMeta = { data: { items: [], assumptions: [], warnings: [], missingInfo: [], confidence: "high" } };
     if (aiItems.length) {
         const promptInput = {
-            task: "请只估算 estimateIngredients 中的原料热量与三大营养素范围。deterministicItems 已由系统根据营养标签换算，不要重复估算。",
+            task: "请只估算 estimateIngredients 中的食物热量与三大营养素范围。deterministicItems 已由系统根据完整营养标签换算，不要重复估算。",
             dateId,
             dayNote: truncateText(day.note, 800),
             units: "metric",
