@@ -806,6 +806,14 @@ textarea:focus {
     border-left: 4px solid var(--sage);
 }
 
+.meal-card.is-collapsed .meal-head {
+    border-bottom: 0;
+}
+
+.meal-card.is-collapsed .meal-body {
+    display: none;
+}
+
 .meal-head {
     display: flex;
     align-items: center;
@@ -822,6 +830,45 @@ textarea:focus {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.meal-toggle {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    color: var(--sage);
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.meal-toggle:hover {
+    color: var(--charcoal);
+    background: var(--sage-soft);
+    border-color: var(--sage);
+}
+
+.meal-toggle-mark {
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.18s ease;
+}
+
+.meal-card.is-collapsed .meal-toggle-mark {
+    transform: translateX(-2px) rotate(-45deg);
+}
+
+.meal-body {
+    width: 100%;
     min-width: 0;
 }
 
@@ -1225,6 +1272,10 @@ textarea:focus {
         flex-direction: column;
     }
 
+    .meal-title-row {
+        width: 100%;
+    }
+
     .date-tools {
         width: 100%;
         display: grid;
@@ -1330,8 +1381,14 @@ textarea:focus {
 
     .meal-title-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: 32px minmax(0, 1fr) auto;
         width: 100%;
+    }
+
+    .meal-toggle {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
     }
 
     .meal-name-input {
@@ -1342,6 +1399,10 @@ textarea:focus {
     .meal-total {
         align-self: center;
         font-size: 0.78rem;
+        justify-self: end;
+        max-width: 128px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .ingredient-table-wrap,

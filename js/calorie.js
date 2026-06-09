@@ -173,15 +173,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.target.closest('[data-day-field]')) handleDayInput();
         });
         els.mealList.addEventListener('click', async (event) => {
+            const toggleMealBtn = event.target.closest('[data-toggle-meal]');
             const addBtn = event.target.closest('[data-add-ingredient]');
             const deleteMealBtn = event.target.closest('[data-delete-meal]');
             const deleteIngredientBtn = event.target.closest('[data-delete-ingredient]');
 
+            if (toggleMealBtn) {
+                toggleMeal(toggleMealBtn.getAttribute('data-toggle-meal'), toggleMealBtn.closest('[data-meal-id]'));
+                return;
+            }
             if (addBtn) {
                 addIngredient(addBtn.getAttribute('data-add-ingredient'));
+                return;
             }
             if (deleteMealBtn) {
                 await deleteMeal(deleteMealBtn.getAttribute('data-delete-meal'));
+                return;
             }
             if (deleteIngredientBtn) {
                 await deleteIngredient(deleteIngredientBtn.getAttribute('data-delete-ingredient'));
@@ -375,20 +382,29 @@ document.addEventListener('DOMContentLoaded', () => {
         els.mealList.innerHTML = meals.map((meal) => {
             const mealIngredients = ingredients.filter((item) => item.mealId === meal.id);
             const mealTotals = sumIngredientTotals(day, mealIngredients);
+            const expanded = isMealExpanded(meal.id);
+            const mealBodyId = `meal-body-${meal.id}`;
             return `
-                <article class="meal-card" data-meal-id="${escapeAttr(meal.id)}">
+                <article class="meal-card ${expanded ? '' : 'is-collapsed'}" data-meal-id="${escapeAttr(meal.id)}">
                     <div class="meal-head">
                         <div class="meal-title-row">
+                            <button class="meal-toggle" data-toggle-meal="${escapeAttr(meal.id)}" type="button"
+                                aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${escapeAttr(mealBodyId)}"
+                                aria-label="${escapeAttr(`${expanded ? '收起' : '展开'}${meal.name}`)}">
+                                <span class="meal-toggle-mark" aria-hidden="true"></span>
+                            </button>
                             <input class="text-input meal-name-input" data-day-field data-meal-name="${escapeAttr(meal.id)}"
                                 type="text" autocomplete="off" value="${escapeAttr(meal.name)}" placeholder="餐次">
-                            <span class="meal-total">${escapeHtml(formatMealTotal(mealTotals))}</span>
+                            <span class="meal-total">${escapeHtml(formatMealTotal(mealTotals, mealIngredients.length))}</span>
                         </div>
                         <div class="meal-actions">
                             <button class="secondary-btn compact" data-add-ingredient="${escapeAttr(meal.id)}" type="button">加食物</button>
                             <button class="danger-btn compact" data-delete-meal="${escapeAttr(meal.id)}" type="button">删除餐次</button>
                         </div>
                     </div>
-                    ${renderIngredientTable(mealIngredients)}
+                    <div class="meal-body" id="${escapeAttr(mealBodyId)}">
+                        ${renderIngredientTable(mealIngredients)}
+                    </div>
                 </article>
             `;
         }).join('');
@@ -460,6 +476,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `;
+    }
+
+    function toggleMeal(mealId, card) {
+        if (!mealId) return;
+        const expanded = !isMealExpanded(mealId);
+        setMealExpanded(mealId, expanded);
+        syncMealCardCollapsedState(card, expanded);
+    }
+
+    function syncMealCardCollapsedState(card, expanded) {
+        if (!card) return;
+        card.classList.toggle('is-collapsed', !expanded);
+        const button = card.querySelector('[data-toggle-meal]');
+        const mealName = card.querySelector('[data-meal-name]')?.value.trim() || '餐次';
+        if (button) {
+            button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            button.setAttribute('aria-label', `${expanded ? '收起' : '展开'}${mealName}`);
+        }
     }
 
     function renderTodayMetrics(day) {
@@ -583,6 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
             order: getMealsForRender(day).length
         };
         day.meals = [...getMealsForRender(day), nextMeal];
+        setMealExpanded(nextMeal.id, true);
         await saveDayObject(day);
         renderCurrentDay(true);
     }
@@ -607,6 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
             order: normalizeIngredients(day.ingredients).filter((item) => item.mealId === targetMealId).length
         };
         day.ingredients = [...normalizeIngredients(day.ingredients), nextIngredient];
+        setMealExpanded(targetMealId, true);
         await saveDayObject(day);
         renderCurrentDay(true);
     }
@@ -617,6 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const day = getCurrentFormOrStateDay();
         day.meals = getMealsForRender(day).filter((meal) => meal.id !== mealId);
         day.ingredients = normalizeIngredients(day.ingredients).filter((item) => item.mealId !== mealId);
+        setMealExpanded(mealId, false);
         await saveDayObject(day);
         renderCurrentDay(true);
     }
@@ -1578,10 +1615,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${formatNumber(clean.low, digits)}-${formatNumber(clean.high, digits)}${suffix}`;
     }
 
-    function formatMealTotal(totals) {
+    function formatMealTotal(totals, itemCount = 0) {
         const kcal = Math.round(totals.kcal.mid || 0);
-        if (!kcal) return '0 kcal';
-        return `${kcal} kcal · P ${formatNumber(totals.protein.mid, 1)}g`;
+        return `${formatNumber(kcal, 0)} kcal · ${formatNumber(itemCount, 0)} 项`;
     }
 
     function formatMacroTarget(key, current) {
@@ -1638,6 +1674,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function isFocusedWithin(elements) {
         return elements.some((element) => element && (element === document.activeElement || element.contains(document.activeElement)));
+    }
+
+    function isMealExpanded(mealId) {
+        return getExpandedMealIds().has(mealId);
+    }
+
+    function setMealExpanded(mealId, expanded) {
+        if (!mealId) return;
+        const expandedMealIds = getExpandedMealIds();
+        if (expanded) {
+            expandedMealIds.add(mealId);
+        } else {
+            expandedMealIds.delete(mealId);
+        }
+        setLocalValue(getMealExpansionStorageKey(), JSON.stringify([...expandedMealIds]));
+    }
+
+    function getExpandedMealIds() {
+        const raw = getLocalValue(getMealExpansionStorageKey(), '[]');
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                return new Set(parsed
+                    .map((value) => String(value || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80))
+                    .filter(Boolean));
+            }
+        } catch (error) {
+            // Fall through to the default collapsed state.
+        }
+        return new Set();
+    }
+
+    function getMealExpansionStorageKey(dateId = state.selectedDateId) {
+        return `calorieExpandedMeals:${normalizeDateId(dateId)}`;
     }
 
     function getLocalKey(key, uid = state.user?.uid) {
