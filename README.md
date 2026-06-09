@@ -18,7 +18,7 @@ The public site lives in `index.html`. Private tools live as standalone pages an
   - Stores data under `users/{uid}/writingDrafts`, `writingExercises`, `writingMaterials`, `readingBreakdowns`, `writingWeeklyReviews`, `writingStats`, and `writingTaxonomy`.
   - OpenAI-powered structured feedback for one-time scene evaluations and completed weekly insights.
 - Food Lab calorie tracker (`calorie.html`)
-  - Private multi-user weight-gain tracker for daily meals, food amounts, optional kcal/100g overrides, body logs, targets, and trend charts.
+  - Private multi-user calorie tracker for daily meals, food amounts, optional kcal/100g overrides, body logs, targets, and trend charts.
   - Google sign-in plus email/password fallback, matching the writing room's auth behavior.
   - Stores data under `users/{uid}/calorieSettings`, `calorieDays`, and `bodyLogs`.
   - OpenAI-powered structured calorie/macronutrient estimates through a callable Cloud Function.

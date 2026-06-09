@@ -54,7 +54,7 @@ const WRITING_COACH_INSTRUCTIONS = `
 `;
 
 const CALORIE_ESTIMATOR_INSTRUCTIONS = `
-你是一个谨慎的营养估算助手，服务于个人增重记录。
+你是一个谨慎的营养估算助手，服务于个人热量记录。
 你只根据用户给出的食物名称、重量、单位、生熟状态、品牌备注和可选每 100g 热量估算热量与三大营养素。
 
 原则：
