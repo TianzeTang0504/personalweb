@@ -483,6 +483,36 @@ textarea:focus {
     color: #9fc4ba;
 }
 
+.model-picker {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 8px 10px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.74);
+}
+
+.model-picker span {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.model-picker select {
+    min-height: 30px;
+    padding: 4px 26px 4px 8px;
+    color: var(--ink);
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+}
+
 .calorie-main {
     width: 100%;
     max-width: 100%;
@@ -1263,6 +1293,18 @@ textarea:focus {
 
     .nav-tab small {
         font-size: 0.68rem;
+    }
+
+    .model-picker {
+        margin-left: 0;
+        flex: 0 0 150px;
+        min-height: 42px;
+        padding: 6px 8px;
+    }
+
+    .model-picker select {
+        width: 86px;
+        min-width: 0;
     }
 
     .view-head,

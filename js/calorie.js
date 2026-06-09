@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
         proteinTarget: 125,
         carbsTarget: 425,
         fatTarget: 90,
+        aiModel: 'gpt-5.4-mini',
         units: 'metric'
     };
+    const CALORIE_AI_MODELS = ['gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini'];
     const DEFAULT_MEAL_DEFS = [
         { id: 'default_breakfast', name: '早餐' },
         { id: 'default_lunch', name: '午餐' },
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         topDateLabel: $('#topDateLabel'),
         topCalorieStatus: $('#topCalorieStatus'),
         calorieNav: $('#calorieNav'),
+        aiModelSelect: $('#aiModelSelect'),
         todayNavBadge: $('#todayNavBadge'),
         timelineNavBadge: $('#timelineNavBadge'),
         bodyNavBadge: $('#bodyNavBadge'),
@@ -210,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [els.dailyCalorieTarget, els.proteinTarget, els.carbsTarget, els.fatTarget].forEach((input) => {
             input.addEventListener('input', scheduleSettingsSave);
         });
+        els.aiModelSelect.addEventListener('change', scheduleSettingsSave);
 
         els.appDialogConfirmBtn.addEventListener('click', () => closeAppDialog(true));
         els.appDialogCancelBtn.addEventListener('click', () => closeAppDialog(false));
@@ -922,6 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
         els.proteinTarget.value = numberToInput(state.settings.proteinTarget);
         els.carbsTarget.value = numberToInput(state.settings.carbsTarget);
         els.fatTarget.value = numberToInput(state.settings.fatTarget);
+        els.aiModelSelect.value = normalizeAiModel(state.settings.aiModel);
         els.settingsNavBadge.textContent = formatNumber(state.settings.dailyCalorieTarget || 3000, 0);
     }
 
@@ -932,6 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             proteinTarget: nullableNumber(els.proteinTarget.value),
             carbsTarget: nullableNumber(els.carbsTarget.value),
             fatTarget: nullableNumber(els.fatTarget.value),
+            aiModel: els.aiModelSelect.value,
             units: 'metric'
         });
         renderTodayMetrics(getCurrentFormOrStateDay());
@@ -945,6 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
             proteinTarget: nullableNumber(els.proteinTarget.value),
             carbsTarget: nullableNumber(els.carbsTarget.value),
             fatTarget: nullableNumber(els.fatTarget.value),
+            aiModel: els.aiModelSelect.value,
             units: 'metric'
         });
         await getUserRef('calorieSettings').doc('main').set({
@@ -1359,8 +1366,13 @@ document.addEventListener('DOMContentLoaded', () => {
             proteinTarget: nullableNumber(data?.proteinTarget),
             carbsTarget: nullableNumber(data?.carbsTarget),
             fatTarget: nullableNumber(data?.fatTarget),
+            aiModel: normalizeAiModel(data?.aiModel),
             units: 'metric'
         };
+    }
+
+    function normalizeAiModel(value) {
+        return CALORIE_AI_MODELS.includes(value) ? value : DEFAULT_SETTINGS.aiModel;
     }
 
     function getBodyLogByDate(dateId) {

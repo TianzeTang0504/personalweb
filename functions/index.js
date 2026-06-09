@@ -29,8 +29,10 @@ const getAIInstance = () => {
 
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_PASS = process.env.GMAIL_PASS;
+const DEFAULT_CALORIE_MODEL = "gpt-5.4-mini";
+const CALORIE_MODEL_OPTIONS = new Set(["gpt-5.5", "gpt-5.4", "gpt-5.4-mini"]);
 const OPENAI_MODEL = process.env.OPENAI_WRITING_MODEL || "gpt-5.5";
-const OPENAI_CALORIE_MODEL = process.env.OPENAI_CALORIE_MODEL || OPENAI_MODEL;
+const OPENAI_CALORIE_MODEL = process.env.OPENAI_CALORIE_MODEL || DEFAULT_CALORIE_MODEL;
 const WRITING_PROMPT_VERSION = "writing-coach-v1";
 const CALORIE_PROMPT_VERSION = "calorie-estimator-v1";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
@@ -779,6 +781,13 @@ function normalizeCalorieTargets(data = {}) {
     };
 }
 
+function normalizeCalorieModel(value) {
+    const clean = String(value || "").trim();
+    if (CALORIE_MODEL_OPTIONS.has(clean)) return clean;
+    if (CALORIE_MODEL_OPTIONS.has(OPENAI_CALORIE_MODEL)) return OPENAI_CALORIE_MODEL;
+    return DEFAULT_CALORIE_MODEL;
+}
+
 function makeCalorieInputHash(day) {
     const meals = normalizeCalorieMeals(day.meals).map((meal) => ({
         id: meal.id,
@@ -882,7 +891,7 @@ function normalizeCalorieEstimateItem(raw, fallbackItem = null) {
     };
 }
 
-function combineCalorieEstimate({ rawAi, deterministicItems, aiItems, responseMeta, inputHash }) {
+function combineCalorieEstimate({ rawAi, deterministicItems, aiItems, responseMeta, inputHash, model }) {
     const totals = makeEmptyCalorieTotals();
     const ingredientEstimates = [];
 
@@ -928,7 +937,7 @@ function combineCalorieEstimate({ rawAi, deterministicItems, aiItems, responseMe
         confidence: limitString(rawAi?.confidence || "medium", 40),
         inputHash,
         generatedAt: admin.firestore.Timestamp.now(),
-        model: OPENAI_CALORIE_MODEL,
+        model: normalizeCalorieModel(model),
         promptVersion: CALORIE_PROMPT_VERSION,
         responseId: responseMeta?.responseId || "",
         usage: responseMeta?.usage || null
@@ -957,7 +966,9 @@ async function estimateCalorieDayImpl(request) {
     }
 
     const day = { id: daySnap.id, ...daySnap.data() };
-    const targets = normalizeCalorieTargets(settingsSnap.exists ? settingsSnap.data() : {});
+    const settings = settingsSnap.exists ? settingsSnap.data() : {};
+    const targets = normalizeCalorieTargets(settings);
+    const aiModel = normalizeCalorieModel(settings.aiModel);
     const meals = normalizeCalorieMeals(day.meals);
     const mealNameById = new Map(meals.map((meal) => [meal.id, meal.name]));
     const ingredients = normalizeCalorieIngredients(day.ingredients)
@@ -1035,7 +1046,7 @@ async function estimateCalorieDayImpl(request) {
         schemaName: "calorie_day_estimate",
         maxOutputTokens: getCalorieOutputTokenBudget(aiItems.length),
         instructions: CALORIE_ESTIMATOR_INSTRUCTIONS,
-        model: OPENAI_CALORIE_MODEL,
+        model: aiModel,
         reasoningEffort: "low"
     });
 
@@ -1044,7 +1055,8 @@ async function estimateCalorieDayImpl(request) {
         deterministicItems,
         aiItems,
         responseMeta,
-        inputHash
+        inputHash,
+        model: aiModel
     });
 
     await dayRef.set({

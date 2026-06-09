@@ -81,7 +81,7 @@ Create `functions/.env` for local development. Do not commit real secrets.
 ```env
 OPENAI_API_KEY=YOUR_OPENAI_API_KEY
 OPENAI_WRITING_MODEL=gpt-5.5
-OPENAI_CALORIE_MODEL=gpt-5.5
+OPENAI_CALORIE_MODEL=gpt-5.4-mini
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 GMAIL_USER=your_email@gmail.com
 GMAIL_PASS=your_google_app_password
@@ -91,7 +91,7 @@ Notes:
 
 - `OPENAI_API_KEY` is required for writing AI and calorie AI.
 - `OPENAI_WRITING_MODEL` is optional. It defaults to `gpt-5.5`.
-- `OPENAI_CALORIE_MODEL` is optional. It falls back to `OPENAI_WRITING_MODEL`.
+- `OPENAI_CALORIE_MODEL` is optional. Calorie estimates default to `gpt-5.4-mini` unless a whitelisted per-user `aiModel` is set.
 - `GEMINI_API_KEY`, `GMAIL_USER`, and `GMAIL_PASS` are only needed for the legacy admin daily report code.
 - In production, configure the same values as Firebase Functions environment variables or secrets before deploying.
 
@@ -136,6 +136,7 @@ Cloud Function:
   - Reads one day from the signed-in user's `calorieDays`.
   - Validates food names and amounts.
   - Uses kcal/100g entries and notes as strong evidence.
+  - Reads each user's `aiModel` setting; supported values are `gpt-5.5`, `gpt-5.4`, and `gpt-5.4-mini`.
   - Sends food rows to OpenAI for structured calorie and macronutrient range estimates.
   - Writes a short `dailyAssessment` into the Estimate Report.
   - Writes `aiEstimate` and `inputHash` back to that day.
