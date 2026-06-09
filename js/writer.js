@@ -197,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         exerciseReflection: $('#exerciseReflection'),
         exerciseReflectionSaveState: $('#exerciseReflectionSaveState'),
         newMaterialBtn: $('#newMaterialBtn'),
+        manageMaterialTypesTopBtn: $('#manageMaterialTypesTopBtn'),
         materialTypeFilter: $('#materialTypeFilter'),
         materialSearch: $('#materialSearch'),
         materialList: $('#materialList'),
@@ -446,6 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderReview();
         });
         els.manageExerciseCategoriesBtn.addEventListener('click', () => openTaxonomyManager('exercise'));
+        els.manageMaterialTypesTopBtn.addEventListener('click', () => openTaxonomyManager('material'));
         els.manageMaterialCategoriesBtn.addEventListener('click', () => openTaxonomyManager('material'));
         els.manageReadingCategoriesBtn.addEventListener('click', () => openTaxonomyManager('reading'));
         els.closeTaxonomyModalBtn.addEventListener('click', closeTaxonomyManager);
