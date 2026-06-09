@@ -679,6 +679,32 @@ textarea:focus {
     font-size: 1rem;
 }
 
+.daily-assessment-box {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    background: #f6f9f8;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--sage);
+    border-radius: var(--radius);
+    min-width: 0;
+}
+
+.daily-assessment-box label {
+    color: var(--teal);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.assessment-textarea {
+    min-height: 96px;
+    color: var(--ink-soft);
+    background: #ffffff;
+    resize: vertical;
+}
+
 .estimate-columns {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);

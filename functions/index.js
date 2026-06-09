@@ -34,6 +34,12 @@ const OPENAI_CALORIE_MODEL = process.env.OPENAI_CALORIE_MODEL || OPENAI_MODEL;
 const WRITING_PROMPT_VERSION = "writing-coach-v1";
 const CALORIE_PROMPT_VERSION = "calorie-estimator-v1";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+const DEFAULT_CALORIE_TARGETS = {
+    dailyCalorieTarget: 3000,
+    proteinTarget: 125,
+    carbsTarget: 425,
+    fatTarget: 90
+};
 
 const WRITING_COACH_INSTRUCTIONS = `
 你是一个小说写作训练教练。
@@ -198,6 +204,7 @@ const CALORIE_ESTIMATE_SCHEMA = {
         "assumptions",
         "warnings",
         "missingInfo",
+        "dailyAssessment",
         "confidence"
     ],
     properties: {
@@ -240,6 +247,7 @@ const CALORIE_ESTIMATE_SCHEMA = {
             type: "array",
             items: { type: "string" }
         },
+        dailyAssessment: { type: "string" },
         confidence: { type: "string" }
     }
 };
@@ -752,6 +760,19 @@ function normalizeCalorieIngredients(ingredients) {
         .sort((a, b) => a.order - b.order);
 }
 
+function normalizeCalorieTargets(data = {}) {
+    const cleanNumber = (value, fallback) => {
+        const number = Number(value);
+        return Number.isFinite(number) && number > 0 ? number : fallback;
+    };
+    return {
+        dailyCalorieTarget: cleanNumber(data.dailyCalorieTarget, DEFAULT_CALORIE_TARGETS.dailyCalorieTarget),
+        proteinTarget: cleanNumber(data.proteinTarget, DEFAULT_CALORIE_TARGETS.proteinTarget),
+        carbsTarget: cleanNumber(data.carbsTarget, DEFAULT_CALORIE_TARGETS.carbsTarget),
+        fatTarget: cleanNumber(data.fatTarget, DEFAULT_CALORIE_TARGETS.fatTarget)
+    };
+}
+
 function makeCalorieInputHash(day) {
     const meals = normalizeCalorieMeals(day.meals).map((meal) => ({
         id: meal.id,
@@ -897,6 +918,7 @@ function combineCalorieEstimate({ rawAi, deterministicItems, aiItems, responseMe
         assumptions: limitStringArray(rawAi?.assumptions, 8, 220),
         warnings: limitStringArray(rawAi?.warnings, 8, 220),
         missingInfo: limitStringArray(rawAi?.missingInfo, 8, 220),
+        dailyAssessment: limitString(rawAi?.dailyAssessment || "", 700),
         confidence: limitString(rawAi?.confidence || "medium", 40),
         inputHash,
         generatedAt: admin.firestore.Timestamp.now(),
@@ -911,14 +933,20 @@ exports.estimateCalorieDay = onCall(async (request) => {
     const uid = assertAuthedUid(request);
     const dateId = cleanDateId(request.data?.dateId);
     const db = admin.firestore();
-    const dayRef = db.collection("users").doc(uid).collection("calorieDays").doc(dateId);
-    const daySnap = await dayRef.get();
+    const userRef = db.collection("users").doc(uid);
+    const dayRef = userRef.collection("calorieDays").doc(dateId);
+    const settingsRef = userRef.collection("calorieSettings").doc("main");
+    const [daySnap, settingsSnap] = await Promise.all([
+        dayRef.get(),
+        settingsRef.get()
+    ]);
 
     if (!daySnap.exists) {
         throw new HttpsError("not-found", "找不到这一天的热量记录。");
     }
 
     const day = { id: daySnap.id, ...daySnap.data() };
+    const targets = normalizeCalorieTargets(settingsSnap.exists ? settingsSnap.data() : {});
     const meals = normalizeCalorieMeals(day.meals);
     const mealNameById = new Map(meals.map((meal) => [meal.id, meal.name]));
     const ingredients = normalizeCalorieIngredients(day.ingredients)
@@ -964,35 +992,39 @@ exports.estimateCalorieDay = onCall(async (request) => {
         }
     });
 
-    let responseMeta = { data: { items: [], assumptions: [], warnings: [], missingInfo: [], confidence: "high" } };
-    if (aiItems.length) {
-        const promptInput = {
-            task: "请只估算 estimateIngredients 中的食物热量与三大营养素范围。deterministicItems 已由系统根据完整营养标签换算，不要重复估算。",
-            dateId,
-            dayNote: truncateText(day.note, 800),
-            units: "metric",
-            deterministicItems: deterministicItems.map((item) => ({
-                ingredientId: item.ingredientId,
-                name: item.name,
-                kcal: item.kcal,
-                protein: item.protein,
-                carbs: item.carbs,
-                fat: item.fat,
-                basis: item.basis
-            })),
-            estimateIngredients: aiItems,
-            outputLanguage: "中文"
-        };
+    const promptInput = {
+        task: "请估算 estimateIngredients 中的食物热量与三大营养素范围，并生成一段“今日饮食评估”。deterministicItems 已由系统根据完整营养标签换算，不要重复估算。",
+        dateId,
+        dayNote: truncateText(day.note, 800),
+        units: "metric",
+        targets,
+        assessmentRequirements: [
+            "dailyAssessment 用中文输出 3-5 句短评。",
+            "判断今天相对目标热量是否够，蛋白质、碳水、脂肪是否大致均衡。",
+            "给出下一餐或明天最实际的一条调整建议。",
+            "不要使用医疗建议口吻，不要制造焦虑。"
+        ],
+        deterministicItems: deterministicItems.map((item) => ({
+            ingredientId: item.ingredientId,
+            name: item.name,
+            kcal: item.kcal,
+            protein: item.protein,
+            carbs: item.carbs,
+            fat: item.fat,
+            basis: item.basis
+        })),
+        estimateIngredients: aiItems,
+        outputLanguage: "中文"
+    };
 
-        responseMeta = await createOpenAIJsonResponse({
-            input: JSON.stringify(promptInput, null, 2),
-            schema: CALORIE_ESTIMATE_SCHEMA,
-            schemaName: "calorie_day_estimate",
-            maxOutputTokens: 1800,
-            instructions: CALORIE_ESTIMATOR_INSTRUCTIONS,
-            model: OPENAI_CALORIE_MODEL
-        });
-    }
+    const responseMeta = await createOpenAIJsonResponse({
+        input: JSON.stringify(promptInput, null, 2),
+        schema: CALORIE_ESTIMATE_SCHEMA,
+        schemaName: "calorie_day_estimate",
+        maxOutputTokens: 2200,
+        instructions: CALORIE_ESTIMATOR_INSTRUCTIONS,
+        model: OPENAI_CALORIE_MODEL
+    });
 
     const aiEstimate = combineCalorieEstimate({
         rawAi: responseMeta.data,

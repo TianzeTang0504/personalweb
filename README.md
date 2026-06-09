@@ -22,6 +22,7 @@ The public site lives in `index.html`. Private tools live as standalone pages an
   - Google sign-in plus email/password fallback, matching the writing room's auth behavior.
   - Stores data under `users/{uid}/calorieSettings`, `calorieDays`, and `bodyLogs`.
   - OpenAI-powered structured calorie/macronutrient estimates through a callable Cloud Function.
+  - Estimate Report includes a short daily diet assessment about target adequacy, balance, and practical next-step suggestions.
   - No image input: estimates are based on food names, amounts, units, raw/cooked/packaged state, notes, and optional kcal/100g labels.
 
 ## Tech Stack
@@ -136,6 +137,7 @@ Cloud Function:
   - Validates food names and amounts.
   - Uses kcal/100g entries and notes as strong evidence.
   - Sends food rows to OpenAI for structured calorie and macronutrient range estimates.
+  - Writes a short `dailyAssessment` into the Estimate Report.
   - Writes `aiEstimate` and `inputHash` back to that day.
 
 Default Food Lab targets are:

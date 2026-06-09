@@ -512,6 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `).join('')}
             </div>
+            ${renderDailyAssessment(estimate.dailyAssessment)}
             <div class="estimate-columns">
                 <div class="estimate-table-wrap">
                     <table class="estimate-table">
@@ -535,6 +536,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${renderNoteBlock('提醒', estimate.warnings)}
                     ${renderNoteBlock('缺失信息', estimate.missingInfo)}
                 </div>
+            </div>
+        `;
+    }
+
+    function renderDailyAssessment(assessment) {
+        const text = String(assessment || '').trim();
+        if (!text) return '';
+        return `
+            <div class="daily-assessment-box">
+                <label for="dailyAssessmentText">今日饮食评估</label>
+                <textarea id="dailyAssessmentText" class="assessment-textarea" readonly>${escapeHtml(text)}</textarea>
             </div>
         `;
     }
