@@ -1557,11 +1557,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function normalizeFunctionError(error) {
-        const code = error?.code || '';
-        if (code === 'functions/unauthenticated') return '请先登录后再使用 AI 功能。';
-        if (code === 'functions/failed-precondition') return error.message || '当前记录还不能估算。';
-        if (code === 'functions/invalid-argument') return error.message || '输入内容不完整。';
-        if (code === 'functions/unavailable') return 'AI 服务暂时不可用，请稍后再试。';
+        const code = String(error?.code || '').replace(/^functions\//, '');
+        if (code === 'unauthenticated') return '请先登录后再使用 AI 功能。';
+        if (code === 'not-found') return error.message || '找不到这一天的记录，请先保存后再估算。';
+        if (code === 'failed-precondition') return error.message || '当前记录还不能估算。';
+        if (code === 'invalid-argument') return error.message || '输入内容不完整。';
+        if (code === 'resource-exhausted') return error.message || 'AI 输出被截断，请减少当天食物条目后重试。';
+        if (code === 'unavailable') return 'AI 服务暂时不可用，请稍后再试。';
+        if (code === 'internal') {
+            return error.message && error.message !== 'internal'
+                ? error.message
+                : '热量估算后端执行失败，请稍后重试或查看函数日志。';
+        }
         return error?.message || '请求失败。';
     }
 

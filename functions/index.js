@@ -397,7 +397,8 @@ async function createOpenAIJsonResponse({
     schemaName,
     maxOutputTokens,
     instructions = WRITING_COACH_INSTRUCTIONS,
-    model = OPENAI_MODEL
+    model = OPENAI_MODEL,
+    reasoningEffort = "medium"
 }) {
     const response = await fetch(OPENAI_RESPONSES_URL, {
         method: "POST",
@@ -409,7 +410,7 @@ async function createOpenAIJsonResponse({
             model,
             instructions,
             input,
-            reasoning: { effort: "medium" },
+            reasoning: { effort: reasoningEffort },
             max_output_tokens: maxOutputTokens,
             text: {
                 format: {
@@ -433,6 +434,11 @@ async function createOpenAIJsonResponse({
     if (!response.ok) {
         console.error("OpenAI request failed", response.status, responseJson || rawBody.slice(0, 500));
         throw new HttpsError("unavailable", "AI 服务暂时不可用，请稍后再试。");
+    }
+
+    if (responseJson?.status === "incomplete") {
+        console.error("OpenAI response incomplete", responseJson?.incomplete_details || null, responseJson?.usage || null);
+        throw new HttpsError("resource-exhausted", "AI 输出被截断，请稍后重试；如果仍失败，可以先减少当天食物条目。");
     }
 
     try {
@@ -929,7 +935,12 @@ function combineCalorieEstimate({ rawAi, deterministicItems, aiItems, responseMe
     };
 }
 
-exports.estimateCalorieDay = onCall(async (request) => {
+function getCalorieOutputTokenBudget(itemCount) {
+    const count = Math.max(1, Number(itemCount || 0));
+    return Math.min(16000, Math.max(5000, 1800 + count * 700));
+}
+
+async function estimateCalorieDayImpl(request) {
     const uid = assertAuthedUid(request);
     const dateId = cleanDateId(request.data?.dateId);
     const db = admin.firestore();
@@ -1002,7 +1013,8 @@ exports.estimateCalorieDay = onCall(async (request) => {
             "dailyAssessment 用中文输出 3-5 句短评。",
             "判断今天相对目标热量是否够，蛋白质、碳水、脂肪是否大致均衡。",
             "给出下一餐或明天最实际的一条调整建议。",
-            "不要使用医疗建议口吻，不要制造焦虑。"
+            "不要使用医疗建议口吻，不要制造焦虑。",
+            "每个食物的 basis 控制在 30 个中文字符以内，避免冗长。"
         ],
         deterministicItems: deterministicItems.map((item) => ({
             ingredientId: item.ingredientId,
@@ -1021,9 +1033,10 @@ exports.estimateCalorieDay = onCall(async (request) => {
         input: JSON.stringify(promptInput, null, 2),
         schema: CALORIE_ESTIMATE_SCHEMA,
         schemaName: "calorie_day_estimate",
-        maxOutputTokens: 2200,
+        maxOutputTokens: getCalorieOutputTokenBudget(aiItems.length),
         instructions: CALORIE_ESTIMATOR_INSTRUCTIONS,
-        model: OPENAI_CALORIE_MODEL
+        model: OPENAI_CALORIE_MODEL,
+        reasoningEffort: "low"
     });
 
     const aiEstimate = combineCalorieEstimate({
@@ -1041,6 +1054,16 @@ exports.estimateCalorieDay = onCall(async (request) => {
     }, { merge: true });
 
     return { aiEstimate, inputHash };
+}
+
+exports.estimateCalorieDay = onCall(async (request) => {
+    try {
+        return await estimateCalorieDayImpl(request);
+    } catch (error) {
+        if (error instanceof HttpsError) throw error;
+        console.error("estimateCalorieDay failed", error);
+        throw new HttpsError("internal", "热量估算后端执行失败，请稍后重试或查看函数日志。");
+    }
 });
 
 exports.generateWritingExerciseEvaluation = onCall(async (request) => {
