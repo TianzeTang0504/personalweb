@@ -647,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         day.ingredients = [...normalizeIngredients(day.ingredients), nextIngredient];
         setMealExpanded(targetMealId, true);
-        await saveDayObject(day);
+        await saveDayObject(day, { force: true });
         renderCurrentDay(true);
     }
 
@@ -685,10 +685,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveDayObject(getCurrentFormOrStateDay());
     }
 
-    async function saveDayObject(day) {
+    async function saveDayObject(day, options = {}) {
         if (!state.user) return;
         const cleanDay = normalizeDayForSave(day);
-        if (!getDayByDate(cleanDay.dateId) && !isMeaningfulDay(cleanDay)) {
+        if (!options.force && !getDayByDate(cleanDay.dateId) && !isMeaningfulDay(cleanDay)) {
             els.daySaveState.textContent = '已保存';
             return;
         }
