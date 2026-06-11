@@ -1016,6 +1016,63 @@ textarea:focus {
     font-size: 11px;
 }
 
+.chart-point {
+    outline: none;
+}
+
+.chart-hit-area {
+    fill: transparent;
+    stroke: transparent;
+    pointer-events: all;
+}
+
+.chart-dot {
+    fill: #ffffff;
+    stroke-width: 2.4;
+    transition: fill 0.16s ease, stroke-width 0.16s ease, r 0.16s ease;
+}
+
+.chart-point:hover .chart-dot,
+.chart-point:focus .chart-dot,
+.chart-point:focus-visible .chart-dot {
+    fill: var(--sage-soft);
+    stroke-width: 3.2;
+}
+
+.chart-tooltip {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease;
+}
+
+.chart-point:hover .chart-tooltip,
+.chart-point:focus .chart-tooltip,
+.chart-point:focus-visible .chart-tooltip {
+    opacity: 1;
+}
+
+.chart-tooltip rect {
+    fill: var(--charcoal);
+    stroke: rgba(236, 247, 243, 0.16);
+    stroke-width: 1;
+}
+
+.chart-tooltip-title,
+.chart-tooltip-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.chart-tooltip-title {
+    fill: #a9bbb5;
+    font-size: 11px;
+}
+
+.chart-tooltip-value {
+    fill: #f8fffc;
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .line-calorie {
     stroke: var(--clay);
 }

@@ -790,10 +790,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ['line-fat', '脂肪']
             ])}
             ${renderLineChart(rows, [
-                { key: 'kcal', className: 'line-calorie' },
-                { key: 'protein', className: 'line-protein' },
-                { key: 'carbs', className: 'line-carbs' },
-                { key: 'fat', className: 'line-fat' }
+                { key: 'kcal', className: 'line-calorie', label: '热量', unit: 'kcal', digits: 0 },
+                { key: 'protein', className: 'line-protein', label: '蛋白质', unit: 'g', digits: 1 },
+                { key: 'carbs', className: 'line-carbs', label: '碳水', unit: 'g', digits: 1 },
+                { key: 'fat', className: 'line-fat', label: '脂肪', unit: 'g', digits: 1 }
             ])}
         `;
     }
@@ -899,8 +899,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ['line-bodyfat', '体脂率']
             ])}
             ${renderLineChart(rows, [
-                { key: 'weight', className: 'line-weight' },
-                { key: 'bodyfat', className: 'line-bodyfat' }
+                { key: 'weight', className: 'line-weight', label: '体重', unit: 'kg', digits: 1 },
+                { key: 'bodyfat', className: 'line-bodyfat', label: '体脂率', unit: '%', digits: 1 }
             ])}
         `;
     }
@@ -1022,10 +1022,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<polyline class="${escapeAttr(item.className)}" points="${points}" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
         }).join('');
 
+        const tooltipW = 142;
+        const tooltipH = 46;
         const dots = series.map((item) => rows.map((row, index) => {
             const value = Number(row.totals?.[item.key]?.mid || 0);
             if (!value) return '';
-            return `<circle class="${escapeAttr(item.className)}" cx="${xFor(index).toFixed(1)}" cy="${yFor(value, maxByKey[item.key]).toFixed(1)}" r="3.2"></circle>`;
+            const cx = xFor(index);
+            const cy = yFor(value, maxByKey[item.key]);
+            const tooltipX = Math.min(Math.max(cx - tooltipW / 2, pad.left), width - pad.right - tooltipW);
+            const tooltipY = cy - tooltipH - 12 < pad.top
+                ? cy + 14
+                : cy - tooltipH - 12;
+            const valueText = formatChartTooltipValue(item, value);
+            const labelText = `${shortDate(row.dateId)} ${item.label || item.key}`;
+            const ariaLabel = `${formatDateLabel(row.dateId)} ${item.label || item.key} ${valueText}`;
+            return `
+                <g class="chart-point" tabindex="0" aria-label="${escapeAttr(ariaLabel)}">
+                    <title>${escapeHtml(ariaLabel)}</title>
+                    <circle class="chart-hit-area" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="12"></circle>
+                    <circle class="chart-dot ${escapeAttr(item.className)}" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.8"></circle>
+                    <g class="chart-tooltip" transform="translate(${tooltipX.toFixed(1)} ${tooltipY.toFixed(1)})">
+                        <rect width="${tooltipW}" height="${tooltipH}" rx="6"></rect>
+                        <text class="chart-tooltip-title" x="10" y="17">${escapeHtml(labelText)}</text>
+                        <text class="chart-tooltip-value" x="10" y="34">${escapeHtml(valueText)}</text>
+                    </g>
+                </g>
+            `;
         }).join('')).join('');
 
         const labelStep = rows.length > 30 ? 7 : rows.length > 14 ? 4 : 2;
@@ -1042,8 +1064,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `<line class="chart-grid-line" x1="${pad.left}" y1="${y.toFixed(1)}" x2="${width - pad.right}" y2="${y.toFixed(1)}"></line>`;
                 }).join('')}
                 ${lines}
-                ${dots}
                 ${dateLabels}
+                ${dots}
             </svg>
         `;
     }
@@ -1640,6 +1662,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const suffix = unit ? ` ${unit}` : '';
         if (Math.abs(clean.low - clean.high) < 0.05) return `${formatNumber(clean.mid, digits)}${suffix}`;
         return `${formatNumber(clean.low, digits)}-${formatNumber(clean.high, digits)}${suffix}`;
+    }
+
+    function formatChartTooltipValue(series, value) {
+        const digits = Number.isFinite(Number(series?.digits)) ? Number(series.digits) : 1;
+        const unit = series?.unit ? ` ${series.unit}` : '';
+        return `${formatNumber(value, digits)}${unit}`;
     }
 
     function formatMealTotal(totals, itemCount = 0) {
