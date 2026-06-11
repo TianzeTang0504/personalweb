@@ -634,6 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
             day = { ...day, meals };
         }
         const targetMealId = mealId || meals[0].id;
+        const currentIngredients = normalizeIngredients(day.ingredients);
         const nextIngredient = {
             id: makeId('ing'),
             mealId: targetMealId,
@@ -643,9 +644,16 @@ document.addEventListener('DOMContentLoaded', () => {
             state: 'raw',
             note: '',
             labelPer100g: {},
-            order: normalizeIngredients(day.ingredients).filter((item) => item.mealId === targetMealId).length
+            order: 0
         };
-        day.ingredients = [...normalizeIngredients(day.ingredients), nextIngredient];
+        day.ingredients = [
+            nextIngredient,
+            ...currentIngredients.map((item) => (
+                item.mealId === targetMealId
+                    ? { ...item, order: Number(item.order || 0) + 1 }
+                    : item
+            ))
+        ];
         setMealExpanded(targetMealId, true);
         await saveDayObject(day, { force: true });
         renderCurrentDay(true);
